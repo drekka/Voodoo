@@ -1,30 +1,30 @@
 # Simulcra
 
-A mock server built specifically for Swift Unit and UI testing.
+A mock server built specifically to mock out server APIs for testing and debugging the apps that talk to them.
 
 * Mock server for Swift unit and UI testing.
-* Testing orientated API.
-* Randomised ports for parallel test suites.
-* Scenarios for matching tests with multiple requests.
+* Port range search for parallel testing.
+* The ability to group API responses into scenarios for fast loading.
 * Expectations and validations.
-* Variety of response sources including inline, file and external.
-* Mock or redirect to other servers.
+* Variety of response options including inline, local files, and external redirects.
 * Pure Swift implementation. 
+* Ability to pick information out of a request and pass it to other requests.
 
 #FAQ
 
 ## There's a bazillion mock servers on GitHub, why do we need another?
 
-Because after many rounds of searching for one to meet the needs of the projects I've worked on, I've never found one that had all the features I was looking for. All the mock and web servers I looked at based their interactions around simple serving. ie. matching incoming requests in some fashion and generating a response. Sure for simple testing that's all that's needed, but when dealing with server dependant apps such as those often found in the Enterprise world, something more is needed. And in that respect none of the servers I looked at communicated with the developers test suites in a fashion that addressed their needs.  
+Because after numerous searches I've not found one that has all the features I need. Most of the the ones I found handled simple serving. ie. matching an incoming request in some fashion and generating a response, but couldn't handle the more complex scenarios that come with larger and more complex apps. Nor could they handle things like parallel testing and dynamically changing responses.   
 
 ## How fast is Simulcra
 
-First off, if you need a fast mock server, you're probably doing something wrong. Trying to write a unit test that would load a mock server heavily enough to matter is not something you really want to contemplate. 
-
-But ... just in case (and because I wanted to try out the technology!) Simulcra is built using SwiftNIO for maximum performance. Pray you never need it.
+First off, if you need a super fast mock server, you probably need to build a custom one of your own. In that respect I'd suggest looking at some of the [Swift NIO][swift-nio] servers such as [Hummingbird][hummingbird] (which is what Simulcra runs on :-). However Simulcra is built around [HummingBird][hummingbird] (why re-invent the wheel) so it should be reasonably performant.
 
 ## What dependencies does Simulcra have?
 
-Honestly I wrestled with this a bit. I could for example, have built Simulcra on top of another server. [Swifter]() or [Vapor]() for example. But there where several reasons I didn't want to. One was that I wanted to reduce any downstream dependencies to as near zero as possible. The other was that I didn't want to have to deal with a bunch of technology I didn't need, or potentially have to work around ways they wanted to do things that I didn't. So Simulcra is built from the ground up using Apple only technologies.
+At the moment, just [Hummingbird][hummingbird]. I did toy with the idea of building a server from the ground up based on [Swift NIO][swift-nio] to minimise dependencies, but after looking at HummingBird I thought why re-invent the wheel when there is such a good implementation already done.
 
+  
+[hummingbird]: https://github.com/hummingbird-project/hummingbird
+[swift-nio]: https://github.com/apple/swift-nio 
   

@@ -1,43 +1,67 @@
 //
-//  Created by Derek Clarkson on 1/10/21.
+//  Created by Derek Clarkson.
 //
 
-import Swifter
+import UIKit
+import Hummingbird
 
+/// Type for template data used to inject values.
+public typealias TemplateData = [String: Any]
+
+/// Defines a response to an API call.
 public enum HTTPResponse {
-    case switchProtocols(_ headers: [String: String], _ handler: (Socket) -> Void)
-    case ok(_ responseBody: HTTPResponseBody)
-    case created
-    case accepted
+
+    // MARK: Base responses.
+
+    /// The base type of response where everything is specified
+    case raw(_ :HTTPResponseStatus, headers: Headers? = nil, body:Body? = nil)
+
+    /// Custom closure run to generate a response.
+    case dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)
+
+    // MARK: Convenience responses.
+
+    /// Return a HTTP 200  with an optional body and headers.
+    case ok(headers: Headers? = nil, body: Body? = nil)
+
+    case created(headers: Headers? = nil, body: Body? = nil)
+    case accepted(headers: Headers? = nil, body: Body? = nil)
+
     case movedPermanently(_ url: String)
     case movedTemporarily(_ url: String)
-    case badRequest(_ responseBody: HTTPResponseBody?)
-    case unauthorized
-    case forbidden
+
+    case badRequest(headers: Headers? = nil, body: Body? = nil)
+    case unauthorised(headers: Headers? = nil, body: Body? = nil)
+    case forbidden(headers: Headers? = nil, body: Body? = nil)
+
     case notFound
     case notAcceptable
     case tooManyRequests
-    case internalServerError
-    case raw(_ code: Int, _ phrase: String, _ headers: [String: String]?, _ writer: ((HttpResponseBodyWriter) throws -> Void)?)
-    case custom(_ handler: (HttpRequest) -> HTTPResponse)
 
-    func asSwifterResponse(forRequest request: HttpRequest) throws -> HttpResponse {
-        switch self {
-        case .switchProtocols(let headers, let handler): return .switchProtocols(headers, handler)
-        case .ok(let responseBody): return .ok(try responseBody.asSwifterResponseBody(forRequest: request))
-        case .created: return .created
-        case .accepted: return .accepted
-        case .movedPermanently(let url): return .movedPermanently(url)
-        case .movedTemporarily(let url): return .movedTemporarily(url)
-        case .badRequest(let responseBody): return .badRequest(try responseBody?.asSwifterResponseBody(forRequest: request))
-        case .unauthorized: return .unauthorized
-        case .forbidden: return .forbidden
-        case .notFound: return .notFound
-        case .notAcceptable: return .notAcceptable
-        case .tooManyRequests: return .tooManyRequests
-        case .internalServerError: return .internalServerError
-        case .raw(let code, let phrase, let headers, let writer): return .raw(code, phrase, headers, writer)
-        case .custom(let handler): return try handler(request).asSwifterResponse(forRequest: request)
-        }
+    case internalServerError(headers: Headers? = nil, body: Body? = nil)
+
+    /// Defines the body of a response where a response can have one.
+    public enum Body {
+
+        /// Loads the body by serialising a `Encodable` object into JSON.
+        case template(_ templateName: TemplateNameSource, templateData: TemplateData? = nil)
+
+        /// Loads the body by serialising a `Encodable` object into JSON.
+        ///
+        /// `templateData` is passed because it allows an ``Encodable`` object to have values injected into the resulting JSON.
+        case json(_ encodable: Encodable, templateData: TemplateData? = nil)
+
+        /// Use the data returned from the passed url as the body of response.
+        /// Can be a remote or local file URL.
+        case url(_ url: URL)
+
+        /// Returns the passed text as the body.
+        ///
+        /// Before returning the text will be passed to the Mustache template engine with the template data.
+        case text(_ text: String, templateData: TemplateData? = nil)
+
+        /// Returns raw data as the specified content type.
+        case data(_ data: Data, contentType: String? = nil)
     }
+
 }

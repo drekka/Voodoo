@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/mattgallagher/CwlCatchException.git",
         "state": {
           "branch": null,
-          "revision": "682841464136f8c66e04afe5dbd01ab51a3a56f2",
-          "version": "2.1.0"
+          "revision": "35f9e770f54ce62dd8526470f14c6e137cef3eea",
+          "version": "2.1.1"
         }
       },
       {
@@ -15,26 +15,143 @@
         "repositoryURL": "https://github.com/mattgallagher/CwlPreconditionTesting.git",
         "state": {
           "branch": null,
-          "revision": "02b7a39a99c4da27abe03cab2053a9034379639f",
-          "version": "2.0.0"
+          "revision": "c21f7bab5ca8eee0a9998bbd17ca1d0eb45d4688",
+          "version": "2.1.0"
+        }
+      },
+      {
+        "package": "hummingbird",
+        "repositoryURL": "https://github.com/hummingbird-project/hummingbird",
+        "state": {
+          "branch": "main",
+          "revision": "8a117a1b757a455f8804afa94371cda8850f6d6c",
+          "version": null
+        }
+      },
+      {
+        "package": "hummingbird-core",
+        "repositoryURL": "https://github.com/hummingbird-project/hummingbird-core.git",
+        "state": {
+          "branch": null,
+          "revision": "393859303185bbfe21b3b042248495df169a94bb",
+          "version": "0.14.0"
+        }
+      },
+      {
+        "package": "hummingbird-mustache",
+        "repositoryURL": "https://github.com/hummingbird-project/hummingbird-mustache",
+        "state": {
+          "branch": null,
+          "revision": "f95e19206e2d1108e84736dca008389d4d5a6b6b",
+          "version": "1.0.2"
+        }
+      },
+      {
+        "package": "JXKit",
+        "repositoryURL": "https://github.com/jectivex/JXKit.git",
+        "state": {
+          "branch": null,
+          "revision": "47ef24d04d4fff8fbcee7805e3f3757f68be05f5",
+          "version": "2.0.2"
         }
       },
       {
         "package": "Nimble",
         "repositoryURL": "https://github.com/quick/nimble",
         "state": {
-          "branch": "main",
-          "revision": "92dd63d2dbd9bf5ef733e83febc94f035004573e",
-          "version": null
+          "branch": null,
+          "revision": "1f3bde57bde12f5e7b07909848c071e9b73d6edc",
+          "version": "10.0.0"
         }
       },
       {
-        "package": "Swifter",
-        "repositoryURL": "https://github.com/httpswift/swifter",
+        "package": "swift-atomics",
+        "repositoryURL": "https://github.com/apple/swift-atomics.git",
         "state": {
           "branch": null,
-          "revision": "9483a5d459b45c3ffd059f7b55f9638e268632fd",
-          "version": "1.5.0"
+          "revision": "919eb1d83e02121cdb434c7bfc1f0c66ef17febe",
+          "version": "1.0.2"
+        }
+      },
+      {
+        "package": "swift-backtrace",
+        "repositoryURL": "https://github.com/swift-server/swift-backtrace.git",
+        "state": {
+          "branch": null,
+          "revision": "f25620d5d05e2f1ba27154b40cafea2b67566956",
+          "version": "1.3.3"
+        }
+      },
+      {
+        "package": "swift-log",
+        "repositoryURL": "https://github.com/apple/swift-log.git",
+        "state": {
+          "branch": null,
+          "revision": "6fe203dc33195667ce1759bf0182975e4653ba1c",
+          "version": "1.4.4"
+        }
+      },
+      {
+        "package": "swift-metrics",
+        "repositoryURL": "https://github.com/apple/swift-metrics.git",
+        "state": {
+          "branch": null,
+          "revision": "53be78637ecd165d1ddedc4e20de69b8f43ec3b7",
+          "version": "2.3.2"
+        }
+      },
+      {
+        "package": "swift-nio",
+        "repositoryURL": "https://github.com/apple/swift-nio.git",
+        "state": {
+          "branch": null,
+          "revision": "b4e0a274f7f34210e97e2f2c50ab02a10b549250",
+          "version": "2.41.1"
+        }
+      },
+      {
+        "package": "swift-nio-extras",
+        "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
+        "state": {
+          "branch": null,
+          "revision": "5334d949febb396a4e2e5235e9fbcd9c3c014bb3",
+          "version": "1.13.0"
+        }
+      },
+      {
+        "package": "swift-nio-http2",
+        "repositoryURL": "https://github.com/apple/swift-nio-http2.git",
+        "state": {
+          "branch": null,
+          "revision": "f9ab1c94c80d568efd762d2a638f25162691d766",
+          "version": "1.22.1"
+        }
+      },
+      {
+        "package": "swift-nio-ssl",
+        "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
+        "state": {
+          "branch": null,
+          "revision": "ba7c0d7f82affc518147ea61d240330bf7f7ea9b",
+          "version": "2.22.1"
+        }
+      },
+      {
+        "package": "swift-nio-transport-services",
+        "repositoryURL": "https://github.com/apple/swift-nio-transport-services.git",
+        "state": {
+          "branch": null,
+          "revision": "4e02d9cf35cabfb538c96613272fb027dd0c8692",
+          "version": "1.13.1"
+        }
+      },
+      {
+        "package": "swift-service-lifecycle",
+        "repositoryURL": "https://github.com/swift-server/swift-service-lifecycle.git",
+        "state": {
+          "branch": null,
+          "revision": "22363fed316cd9942b56bcd1a1df8875df79b794",
+          "version": "1.0.0-alpha.11"
         }
       }
     ]

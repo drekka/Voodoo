@@ -5,9 +5,6 @@
 import UIKit
 
 extension Bundle {
-    
-    static var testBundle: Bundle = {
-        let testBundlePath = Bundle(for: SimulcraTests.self).resourcePath
-        return Bundle(path: testBundlePath! + "/Simulcra_SimulcraTests.bundle")!
-    }()
+
+    static let testBundle = Bundle.module
 }

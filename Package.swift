@@ -5,8 +5,8 @@ import PackageDescription
 import SwiftUI
 
 let package = Package(
-    name: "Simulcra",
-    platforms: [.iOS(.v14)],
+     name: "Simulcra",
+    platforms: [.iOS(.v15)],
     products: [
         .library(
             name: "Simulcra",
@@ -14,14 +14,17 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(name: "Nimble", url: "https://github.com/quick/nimble", branch: "main"),
-        .package(name: "Swifter", url: "https://github.com/httpswift/swifter", from: "1.5.0"),
+        .package(name: "Nimble", url: "https://github.com/quick/nimble", .upToNextMajor(from: "10.0.0")),
+        .package(name: "Hummingbird", url: "https://github.com/hummingbird-project/hummingbird", branch: "main"),
+        .package(name: "HummingbirdMustache", url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
+        .package(name: "JXKit", url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "2.0.0")),
     ],
     targets: [
         .target(
             name: "Simulcra",
             dependencies: [
-                "Swifter",
+                "Hummingbird",
+                "HummingbirdMustache",
             ],
             path: "Sources"
         ),
