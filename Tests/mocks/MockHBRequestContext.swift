@@ -5,7 +5,7 @@
 import Hummingbird
 import NIOEmbedded
 
-struct MockContext: HBRequestContext {
+struct MockHBRequestContext: HBRequestContext {
     let eventLoop: EventLoop = EmbeddedEventLoop()
     let allocator = ByteBufferAllocator()
     let remoteAddress: SocketAddress? = nil

@@ -9,22 +9,21 @@ import Foundation
 import Hummingbird
 import System
 
-struct AdminConsole: HBMiddleware, CustomStringConvertible {
+struct AdminConsole: HBMiddleware {
 
-    private let adminRoot: FilePath = "/_admin"
-    private let shutdown: FilePath = "shutdown"
+    private let adminRoot = "_admin"
+    private let shutdown = "shutdown"
 
     func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
 
-        let pathComponents = request.uri.path.split(separator: "/")
-        var adminPath = FilePath(request.uri.path)
+        var adminPath = request.uri.path.urlPathComponents.dropFirst(1)
 
         // Bail if the path is not an admin path and if it is, remove the admin component.
-        guard adminPath.removePrefix(adminRoot) else {
+        guard adminPath.removeFirst() == adminRoot else {
             return next.respond(to: request)
         }
 
-        switch adminPath {
+        switch adminPath.removeFirst() {
 
         case shutdown:
             print("👻 Received shutdown request, shutting down server ...")
@@ -34,9 +33,5 @@ struct AdminConsole: HBMiddleware, CustomStringConvertible {
         default:
             return request.success(HBResponse(status: .notFound))
         }
-    }
-
-    var description: String {
-        adminRoot.pushing(shutdown).string
     }
 }

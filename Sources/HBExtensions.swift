@@ -8,7 +8,8 @@ import HummingbirdMustache
 
 // Simulcra extensions to Hummingbird
 
-extension HBApplication {
+extension HBApplication: ServerContext {
+
     var address: URL? {
         let address = configuration.address
         if let host = address.host, let port = address.port {
@@ -21,7 +22,7 @@ extension HBApplication {
     }
 
     /// Stores a mustache rendering engine for payload templates.
-    var mustacheRenderer: HBMustacheLibrary? {
+    var mustacheRenderer: HBMustacheLibrary {
         get { extensions.get(\.mustacheRenderer) }
         set { extensions.set(\.mustacheRenderer, value: newValue) }
     }
@@ -37,7 +38,7 @@ extension HBRouter {
 
     func add(_ endpoint: Endpoint) {
         on(endpoint.path, method: endpoint.method) {
-            await endpoint.response.hbResponse(for: HBRequestWrapper(request: $0), cache: $0.application.cache)
+            try await endpoint.response.hbResponse(for: HBRequestWrapper(request: $0), inServerContext: $0.application)
         }
     }
 }

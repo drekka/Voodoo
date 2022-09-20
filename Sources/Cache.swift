@@ -6,6 +6,9 @@
 @dynamicMemberLookup
 public protocol Cache {
 
+    /// Returns the cache as a dictionary.
+    func dictionaryRepresentation() -> [String: Any]
+
     /// Removes the key the store.
     func remove(_ key: String)
 
@@ -48,6 +51,8 @@ class InMemoryCache: Cache {
         get { get(key) as Any? }
         set { set(newValue, forKey: key) }
     }
+
+    func dictionaryRepresentation() -> [String: Any] { cache }
 
     func remove(_ key: String) { cache.removeValue(forKey: key) }
 

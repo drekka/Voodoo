@@ -24,7 +24,7 @@ class AdminConsoleTests: XCTestCase {
     }
 
     func testForwardsIfNotAdminPath() async {
-        let mockRequest = MockRequest.create(url: "http://127.0.0.1/abc/def")
+        let mockRequest: HBRequest = MockRequest.create(url: "http://127.0.0.1/abc/def")
         mockRequest.application.lifecycle.shutdown()
         let response = console.apply(to: mockRequest, next: mockResponder)
         expect(self.mockResponder.gotRequest) == true
@@ -32,14 +32,14 @@ class AdminConsoleTests: XCTestCase {
     }
 
     func testShutdownRequest() async {
-        let mockRequest = MockRequest.create(url: "http://127.0.0.1/_admin/shutdown")
+        let mockRequest: HBRequest = MockRequest.create(url: "http://127.0.0.1/_admin/shutdown")
         let response = console.apply(to: mockRequest, next: mockResponder)
         expect(self.mockResponder.gotRequest) == false
         await assert(response: response, hasStatus: .ok)
     }
 
     func testUnknownAdminRequest() async {
-        let mockRequest = MockRequest.create(url: "http://127.0.0.1/_admin/xxx")
+        let mockRequest: HBRequest = MockRequest.create(url: "http://127.0.0.1/_admin/xxx")
         let response = console.apply(to: mockRequest, next: mockResponder)
         expect(self.mockResponder.gotRequest) == false
         await assert(response: response, hasStatus: .notFound)

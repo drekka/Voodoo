@@ -29,6 +29,9 @@ public protocol HTTPRequest {
     /// The URL path.
     var path: String { get }
 
+    /// The components of the path. Always starts with the root '/' component.
+    var pathComponents: [String] { get }
+
     /// A dictionary of parameters extracted from the path.
     var pathParameters: PathParameters { get }
 

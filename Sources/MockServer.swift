@@ -7,11 +7,6 @@ import HummingbirdMustache
 import Network
 import UIKit
 
-public enum MockServerError: Error {
-    case noPortAvailable
-    case unexpectedError(Error)
-}
-
 /// The main Simulcra server.
 public class MockServer {
 
