@@ -20,6 +20,13 @@ class HBRequestWrapperTests: XCTestCase {
         expect(wrapper.headers["def"]) == "xyz"
     }
 
+    func testPathComponents() {
+        expect(MockRequest.create(url: "https://127.0.0.1").pathComponents) == ["/"]
+        expect(MockRequest.create(url: "https://127.0.0.1/").pathComponents) == ["/"]
+        expect(MockRequest.create(url: "https://127.0.0.1/abc/def").pathComponents) == ["/", "abc", "def"]
+        expect(MockRequest.create(url: "https://127.0.0.1/abc//def/").pathComponents) == ["/", "abc", "def"]
+    }
+
     func testPathParameters() {
         let wrapper: HTTPRequest = MockRequest.create(url: "https://127.0.0.1", pathParameters: ["def": "xyz"])
         expect(wrapper.pathParameters["def"]) == "xyz"

@@ -17,8 +17,8 @@ public struct Endpoint {
     ///   - method: The HTTP method to watch for.
     ///   - path: The path to watch. May contains wildcard placeholders for path elements. Placeholders
     ///   are defined with a leading `:` character and the name of a variable which that path element will be stored under.
-    ///   For example a path of `/a/:productID` will respond to `/a/1234`, storing `1234` under the key `productID` in the requests ``pathParameters``.
-    ///   - response: The response to generate.
+    ///   For example a path of `/a/:productID` will respond to `/a/1234`, storing `1234` under the key `productID` in the requests ``HTTPRequest/pathParameters``.
+    ///   - response: The response to generate when this API is called.
     public init(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
         self.method = method
         self.path = path

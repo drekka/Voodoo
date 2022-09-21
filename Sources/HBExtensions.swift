@@ -10,15 +10,13 @@ import HummingbirdMustache
 
 extension HBApplication: ServerContext {
 
-    var address: URL? {
+    var address: URL {
         let address = configuration.address
-        if let host = address.host, let port = address.port {
-            var components = URLComponents()
-            components.host = host
-            components.port = port
-            return components.url
-        }
-        return nil
+        var components = URLComponents()
+        components.scheme = "http"
+        components.host = address.host!
+        components.port = address.port!
+        return components.url!
     }
 
     /// Stores a mustache rendering engine for payload templates.

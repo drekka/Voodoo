@@ -16,6 +16,13 @@ class CacheTests: XCTestCase {
         cache = InMemoryCache()
     }
 
+    func testDictionaryRepresentation() {
+        cache["abc"] = "def"
+        let rep = cache.dictionaryRepresentation()
+        expect(rep.count) == 1
+        expect(rep["abc"] as? String) == "def"
+    }
+
     func testGetSetValue() {
         cache["abc"] = "def"
         expect(self.cache["abc"]) == "def"

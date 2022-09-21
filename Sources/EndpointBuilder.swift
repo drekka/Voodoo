@@ -4,7 +4,7 @@
 
 import Foundation
 
-/// Using a protocol to drive the ``APIBuilder`` means that a variety of types can produce API endpoints.
+/// Using a protocol to drive the ``EndpointBuilder`` means that a variety of types can produce API endpoints.
 public protocol EndpointSource {
     var apis: [Endpoint] { get }
 }

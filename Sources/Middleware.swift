@@ -16,6 +16,7 @@ struct RequestLogger: HBMiddleware {
     }
 }
 
+/// Logs an errors when no response is found for a request.
 public struct NoResponseFoundMiddleware: HBMiddleware {
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         next.respond(to: request).map { $0 }

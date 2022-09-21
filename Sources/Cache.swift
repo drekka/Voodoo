@@ -14,7 +14,7 @@ public protocol Cache {
 
     /// Key based access to stored data.
     ///
-    /// Passing a `nil` will remove a value the same as using ``remove(key:)``.
+    /// Passing a `nil` will remove a value the same as using ``remove(_:)``.
     subscript<Value>(_: String) -> Value? { get set }
 
     /// Subscript that supports setting `nil` without having to cast to a type.
@@ -22,13 +22,13 @@ public protocol Cache {
 
     /// Dynamic lookup access to stored data.
     ///
-    /// This passes through to ``subscript(_:)``.
+    /// This passes through to ``subscript(_:)-4d6z6``.
     subscript<Value>(dynamicMember _: String) -> Value? { get set }
 
     /// Dynamic lookup access to stored data.
     ///
     /// This subscript supports setting `nil` without having to cast to a type.
-    /// This passes through to ``subscript(_:)``.
+    /// This passes through to ``subscript(_:)-8jok5``.
     subscript(dynamicMember _: String) -> Any? { get set }
 }
 

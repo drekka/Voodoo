@@ -8,8 +8,8 @@ import HummingbirdMustache
 /// Defines various features of the server's context.
 protocol ServerContext {
 
-    /// The address of the server if it's started. `nil` otherwise.
-    var address: URL? { get }
+    /// The address of the server.
+    var address: URL { get }
 
     /// The current mustache render.
     var mustacheRenderer: HBMustacheLibrary { get }
@@ -30,10 +30,6 @@ protocol ServerContext {
 extension ServerContext {
 
     func requestTemplateData(adding requestData: TemplateData) -> TemplateData {
-        var data: TemplateData = [:]
-        if let url = address {
-            data["mockServer"] = url.absoluteString
-        }
-        return data.merging(cache.dictionaryRepresentation()) { $1 }.merging(requestData) { $1 }
+        ["mockServer": address.absoluteString].merging(cache.dictionaryRepresentation()) { $1 }.merging(requestData) { $1 }
     }
 }

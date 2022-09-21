@@ -12,6 +12,6 @@ struct MockServerContext: ServerContext {
 
     let mustacheRenderer = HBMustacheLibrary()
 
-    let cache: Cache = InMemoryCache()
+    var cache: Cache = InMemoryCache()
 
 }

@@ -68,7 +68,7 @@ public enum HTTPResponse {
 
         /// Loads the body by serialising a `Encodable` object into JSON.
         ///
-        /// `templateData` is passed because it allows an ``Encodable`` object to have values injected into the resulting JSON.
+        /// `templateData` is passed because it allows a `Encodable` object to have values injected into the resulting JSON.
         case json(_ encodable: Encodable, templateData: TemplateData = [:])
 
         /// Use the data returned from the passed file url as the body of response.
