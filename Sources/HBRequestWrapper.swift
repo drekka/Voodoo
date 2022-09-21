@@ -39,10 +39,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     var queryParameters: QueryParameters { HBQueryParametersWrapper(parameters: request.uri.queryParameters) }
 
-    var body: Data? {
-        let bodyLength = request.body.buffer?.readableBytes ?? 0
-        return request.body.buffer?.getData(at: 0, length: bodyLength)
-    }
+    var body: Data? { return request.body.buffer?.data }
 
     var bodyJSON: Any? {
         guard request.headers[ContentType.key].first == ContentType.applicationJSON,

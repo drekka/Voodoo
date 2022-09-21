@@ -14,10 +14,11 @@ public enum ContentType {
 
     static let key = "content-type"
 
-    static let textPlain = "text/plain"
-    static let applicationJSON = "application/json"
-    static let applicationFormData = "application/x-www-form-urlencoded"
-    }
+    public static let textPlain = "text/plain"
+    public static let textHTML = "text/html"
+    public static let applicationJSON = "application/json"
+    public static let applicationFormData = "application/x-www-form-urlencoded"
+}
 
 /// Defines a response to an API call.
 public enum HTTPResponse {
@@ -57,17 +58,21 @@ public enum HTTPResponse {
         /// No body to be returned.
         case empty
 
-        /// Loads the body by serialising a `Encodable` object into JSON.
-        case template(_ templateName: TemplateNameSource, templateData: TemplateData = [:])
+        /// Loads the body from a template registered with the Mustache template engine.
+        ///
+        /// - parameters:
+        ///   - templateName: The name of the template as registered in the template engine.
+        ///   - templateData: A dictionary containing additional data required by the template.
+        ///   - contentType: The `content-type` to be returned in the HTTP response. This should match the content-type of the template.
+        case template(_ templateName: String, templateData: TemplateData = [:], contentType: String = ContentType.applicationJSON)
 
         /// Loads the body by serialising a `Encodable` object into JSON.
         ///
         /// `templateData` is passed because it allows an ``Encodable`` object to have values injected into the resulting JSON.
         case json(_ encodable: Encodable, templateData: TemplateData = [:])
 
-        /// Use the data returned from the passed url as the body of response.
-        /// Can be a remote or local file URL.
-        case url(_ url: URL)
+        /// Use the data returned from the passed file url as the body of response.
+        case file(_ url: URL, contentType: String)
 
         /// Returns the passed text as the body.
         ///
@@ -166,21 +171,50 @@ extension HTTPResponse.Body {
             guard let json = String(data: jsonData, encoding: .utf8) else {
                 throw MockServerError.conversionError("Unable to convert JSON data to a String")
             }
-            let finalTemplateData = context.requestTemplateData(adding: templateData)
-            let content = try HBMustacheTemplate(string: json).render(finalTemplateData)
-            return (.byteBuffer(ByteBuffer(string: content)), ContentType.applicationJSON)
+            return (try json.render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
 
         case .data(let data, let contentType):
-            return (.empty, nil)
+            return (data.hbResponseBody, contentType)
 
         case .text(let text, let templateData):
-            return (.byteBuffer(ByteBuffer(string: text)), ContentType.textPlain)
+            return (try text.render(withTemplateData: templateData, context: context), ContentType.textPlain)
 
-        case .url(let url):
-            return (.empty, nil)
+        case .file(let url, let contentType):
+            let contents = try Data(contentsOf: url)
+            return (contents.hbResponseBody, contentType)
 
-        case .template(_, templateData: let templateData):
-            return (.empty, nil)
+        case .template(let templateName, let templateData, let contentType):
+            let renderer = context.mustacheRenderer
+            let finalTemplateData = context.requestTemplateData(adding: templateData)
+            guard let json = renderer.render(finalTemplateData, withTemplate: templateName) else {
+                throw MockServerError.templateRender("Rendering template '\(templateName)' failed.")
+            }
+            return (json.hbResponseBody, contentType)
         }
+    }
+}
+
+// MARK: - Supporting extensions
+
+extension String {
+
+    var hbRequestBody: HBRequestBody {
+        .byteBuffer(ByteBuffer(string: self))
+    }
+
+    var hbResponseBody: HBResponseBody {
+        .byteBuffer(ByteBuffer(string: self))
+    }
+
+    func render(withTemplateData templateData: TemplateData, context: ServerContext) throws -> HBResponseBody {
+        let finalTemplateData = context.requestTemplateData(adding: templateData)
+        return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
+    }
+}
+
+extension Data {
+
+    var hbResponseBody: HBResponseBody {
+        .byteBuffer(ByteBuffer(data: self))
     }
 }

@@ -7,6 +7,7 @@
 
 import Foundation
 import Hummingbird
+import HummingbirdMustache
 import Nimble
 @testable import Simulcra
 import XCTest
@@ -86,8 +87,7 @@ class HTTPResponseTests: XCTestCase {
         }
 
         if let expectedBody = expectedBody {
-            let expectedBuffer = ByteBuffer(string: expectedBody)
-            expect(hbResponse.body) == .byteBuffer(expectedBuffer)
+            expect(hbResponse.body) == expectedBody.hbResponseBody
         } else {
             expect(hbResponse.body) == .empty
         }
@@ -102,11 +102,7 @@ extension HBResponseBody: Equatable {
             return true
 
         case (.byteBuffer(let lhsBuffer), .byteBuffer(let rhsBuffer)):
-            let lhsLength = lhsBuffer.readableBytes
-            let lhsData = lhsBuffer.getData(at: 0, length: lhsLength)
-            let rhsLength = rhsBuffer.readableBytes
-            let rhsData = rhsBuffer.getData(at: 0, length: rhsLength)
-            return lhsData == rhsData
+            return lhsBuffer.data == rhsBuffer.data
 
         default:
             return false
@@ -122,40 +118,62 @@ extension Dictionary {
 
 class TestHTTPReponseBodyTests: XCTestCase {
 
+    private var context: ServerContext!
+
+    override func setUp() {
+        super.setUp()
+        context = MockServerContext()
+    }
+
     struct JSONTest: Codable {
         let abc: String
     }
 
     func testEmpty() throws {
-        try assert(.empty, returns: nil, contentType: nil)
+        let context = MockServerContext()
+        let hbBody = try HTTPResponse.Body.empty.hbBody(serverContext: context)
+        expect(hbBody.0) == .empty
+        expect(hbBody.1) == nil
     }
 
     func testJSON() throws {
-        try assert(.json(JSONTest(abc: "def")),
-                   returns: #"{"abc":"def"}"#,
+        try assert(.json(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
+                   generates: #"{"abc":"def 123"}"#,
                    contentType: ContentType.applicationJSON)
     }
 
-    func testJSONWithTemplateData() throws {
-        try assert(.json(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
-                   returns: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
+    func testData() throws {
+        try assert(.data("abc".data(using: .utf8)!, contentType: ContentType.textPlain),
+                   generates: "abc",
+                   contentType: ContentType.textPlain)
+    }
+
+    func testText() throws {
+        try assert(.text(#"def {{xyz}}"#, templateData: ["xyz": 123]),
+                   generates: #"def 123"#,
+                   contentType: ContentType.textPlain)
+    }
+
+    func testTemplate() throws {
+        let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
+        context.mustacheRenderer.register(template, named: "fred")
+        try assert(.template("fred", templateData: ["xyz": 123], contentType: ContentType.textPlain),
+                   generates: #"Hello 123"#,
+                   contentType: ContentType.textPlain)
+    }
+
+    func testFile() throws {
+        let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "html")!
+        try assert(.file(url, contentType: ContentType.textHTML),
+                   generates: #"<html><body></body></html>\#n"#,
+                   contentType: ContentType.textHTML)
     }
 
     // MARK: - Support functions
 
-    func assert(_ body: HTTPResponse.Body, returns expectedBody: String?, contentType expectedContentType: String?) throws {
-
-        let context = MockServerContext()
+    func assert(_ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
         let hbBody = try body.hbBody(serverContext: context)
-
-        if let expectedbody = expectedBody {
-            let expectedBuffer = ByteBuffer(string: expectedbody)
-            expect(hbBody.0) == .byteBuffer(expectedBuffer)
-            expect(hbBody.1) == expectedContentType
-        } else {
-            expect(hbBody.0) == .empty
-            expect(hbBody.1) == nil
-        }
+        expect(hbBody.0) == expectedBody.hbResponseBody
+        expect(hbBody.1) == expectedContentType
     }
 }

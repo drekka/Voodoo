@@ -35,8 +35,7 @@ enum MockRequest {
 
         let head = HTTPRequestHead(version: .http1_1, method: .GET, uri: url, headers: hbHeaders)
 
-        let byteBuffer = ByteBuffer(string: body)
-        let body = HBRequestBody.byteBuffer(byteBuffer)
+        let body = body.hbRequestBody
 
         let application = HBApplication()
         let context = MockHBRequestContext()

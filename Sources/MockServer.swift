@@ -27,11 +27,6 @@ public class MockServer {
         for port in portRange {
             let server = try createServer(onPort: port)
 
-            // Add middleware. This must occur before starting or the router will execute first.
-            server.middleware.add(AdminConsole())
-            server.middleware.add(RequestLogger(verbose: verbose))
-            server.middleware.add(NoResponseFoundMiddleware())
-
             // Now start the server.
             do {
                 try server.start()
@@ -86,6 +81,9 @@ public class MockServer {
         // the middleware will execute after Hummingbird's ``TrieRouter``.
         // This is a result of the way hummingbird wires middleware and the router
         // together.
+        server.middleware.add(AdminConsole())
+        server.middleware.add(RequestLogger(verbose: verbose))
+        server.middleware.add(NoResponseFoundMiddleware())
 
         // Setup an in-memory cache.
         server.cache = InMemoryCache()
