@@ -7,12 +7,19 @@ import Hummingbird
 
 // Type definitions
 
-public typealias Headers = [String: String]
 public typealias PathParameters = [String: String]
 public typealias FormParameters = [String: String]
 
-/// Simple protocol for accessing query parameters.
+/// Provides access to query parameters.
 public protocol QueryParameters {
+    subscript(_: String) -> String? { get }
+    subscript(_: String) -> [String] { get }
+}
+
+/// Provides acess to headers in a request.
+///
+/// Note that header keys are case-insensitive.
+public protocol Headers {
     subscript(_: String) -> String? { get }
     subscript(_: String) -> [String] { get }
 }

@@ -58,7 +58,7 @@ class HTTPResponseTests: XCTestCase {
 
     // MARK: - Supporting functions
 
-    func assertConvenienceCase(_ enumInit: (Headers, HTTPResponse.Body) -> HTTPResponse, returnsStatus expectedStatus: HTTPResponseStatus) async throws {
+    func assertConvenienceCase(_ enumInit: (HeaderDictionary, HTTPResponse.Body) -> HTTPResponse, returnsStatus expectedStatus: HTTPResponseStatus) async throws {
         let response = enumInit(testHeaders, .text("hello"))
         try await assert(response: response,
                          returnsStatus: expectedStatus,
@@ -72,7 +72,7 @@ class HTTPResponseTests: XCTestCase {
                 body expectedBody: String? = nil) async throws {
 
         let request: HTTPRequest = MockRequest.create(url: "http://127.0.0.1")
-        let context = MockServerContext()
+        let context = MockMockServerContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 
         expect(hbResponse.status) == expectedStatus
@@ -118,11 +118,11 @@ extension Dictionary {
 
 class TestHTTPReponseBodyTests: XCTestCase {
 
-    private var context: ServerContext!
+    private var context: MockServerContext!
 
     override func setUp() {
         super.setUp()
-        context = MockServerContext()
+        context = MockMockServerContext()
     }
 
     struct JSONTest: Codable {
@@ -130,7 +130,7 @@ class TestHTTPReponseBodyTests: XCTestCase {
     }
 
     func testEmpty() throws {
-        let context = MockServerContext()
+        let context = MockMockServerContext()
         let hbBody = try HTTPResponse.Body.empty.hbBody(serverContext: context)
         expect(hbBody.0) == .empty
         expect(hbBody.1) == nil

@@ -20,6 +20,11 @@ class HBRequestWrapperTests: XCTestCase {
         expect(wrapper.headers["def"]) == "xyz"
     }
 
+    func testHeadersCaseInsensitivity() {
+        let wrapper: HTTPRequest = MockRequest.create(url: "https://127.0.0.1", headers: ["def": "xyz"])
+        expect(wrapper.headers["DeF"]) == "xyz"
+    }
+
     func testPathComponents() {
         expect(MockRequest.create(url: "https://127.0.0.1").pathComponents) == ["/"]
         expect(MockRequest.create(url: "https://127.0.0.1/").pathComponents) == ["/"]

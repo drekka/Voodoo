@@ -8,7 +8,7 @@ import HummingbirdMustache
 
 // Simulcra extensions to Hummingbird
 
-extension HBApplication: ServerContext {
+extension HBApplication: MockServerContext {
 
     var address: URL {
         let address = configuration.address
@@ -34,9 +34,9 @@ extension HBApplication: ServerContext {
 
 extension HBRouter {
 
-    func add(_ endpoint: Endpoint) {
-        on(endpoint.path, method: endpoint.method) {
-            try await endpoint.response.hbResponse(for: HBRequestWrapper(request: $0), inServerContext: $0.application)
+    func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
+        on(path, method: method) {
+            try await response.hbResponse(for: HBRequestWrapper(request: $0), inServerContext: $0.application)
         }
     }
 }

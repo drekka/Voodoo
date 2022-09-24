@@ -17,7 +17,8 @@ public class MockServer {
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 templatePath: URL? = nil,
                 templateExtension: String = "json",
-                verbose: Bool = false) throws {
+                verbose: Bool = false,
+                @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
 
         for port in portRange {
 
@@ -45,7 +46,11 @@ public class MockServer {
 
                 try server.start()
                 self.server = server
-                break
+
+                // Add any passed endpoints.
+                add(endpoints)
+
+                return
 
             } catch {
                 if error as? NWError == NWError.posix(.EADDRINUSE) {
@@ -62,11 +67,33 @@ public class MockServer {
         throw MockServerError.noPortAvailable
     }
 
-    func add(_ endpoint: Endpoint) {
-        server.router.add(endpoint)
+    // MARK: - Convenience registration
+
+    public func add(@EndpointBuilder _ endpoints: () -> [Endpoint]) {
+        endpoints().forEach { add($0.method, $0.path, response: $0.response) }
     }
 
-    func stop() {
+    public func add(_ endpoints: [Endpoint]) {
+        endpoints.forEach { add($0.method, $0.path, response: $0.response) }
+    }
+
+    public func add(_ endpoint: Endpoint) {
+        add(endpoint.method, endpoint.path, response: endpoint.response)
+    }
+
+    public func add(_ method: HTTPMethod, _ path: String, response handler: @escaping (HTTPRequest, Cache) async -> HTTPResponse) {
+        add(method, path, response: .dynamic(handler))
+    }
+
+    // MARK: - Core registration
+
+    public func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
+        server.router.add(method, path, response: response)
+    }
+
+    // MARK: - Server functions
+
+    public func stop() {
         server.stop()
     }
 }

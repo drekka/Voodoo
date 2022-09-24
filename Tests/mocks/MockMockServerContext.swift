@@ -6,9 +6,9 @@ import Foundation
 @testable import Simulcra
 import HummingbirdMustache
 
-struct MockServerContext: ServerContext {
+struct MockMockServerContext: MockServerContext {
 
-    let address: URL? = URL(string: "http://127.0.0.1:8080")
+    let address: URL = URL(string: "http://127.0.0.1:8080")!
 
     let mustacheRenderer = HBMustacheLibrary()
 

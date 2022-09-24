@@ -8,6 +8,7 @@ import UIKit
 
 /// Type for template data used to inject values.
 public typealias TemplateData = [String: Any]
+public typealias HeaderDictionary = [String: String]
 
 /// Commonly used content types..
 public enum ContentType {
@@ -26,7 +27,7 @@ public enum HTTPResponse {
     // MARK: Core
 
     /// The base type of response where everything is specified
-    case raw(_: HTTPResponseStatus, headers: Headers = [:], body: Body = .empty)
+    case raw(_: HTTPResponseStatus, headers: HeaderDictionary = [:], body: Body = .empty)
 
     /// Custom closure run to generate a response.
     case dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)
@@ -34,23 +35,23 @@ public enum HTTPResponse {
     // MARK: Convenience responses.
 
     /// Return a HTTP 200  with an optional body and headers.
-    case ok(headers: Headers = [:], body: Body = .empty)
+    case ok(headers: HeaderDictionary = [:], body: Body = .empty)
 
-    case created(headers: Headers = [:], body: Body = .empty)
-    case accepted(headers: Headers = [:], body: Body = .empty)
+    case created(headers: HeaderDictionary = [:], body: Body = .empty)
+    case accepted(headers: HeaderDictionary = [:], body: Body = .empty)
 
     case movedPermanently(_ url: String)
     case movedTemporarily(_ url: String)
 
-    case badRequest(headers: Headers = [:], body: Body = .empty)
-    case unauthorised(headers: Headers = [:], body: Body = .empty)
-    case forbidden(headers: Headers = [:], body: Body = .empty)
+    case badRequest(headers: HeaderDictionary = [:], body: Body = .empty)
+    case unauthorised(headers: HeaderDictionary = [:], body: Body = .empty)
+    case forbidden(headers: HeaderDictionary = [:], body: Body = .empty)
 
     case notFound
     case notAcceptable
     case tooManyRequests
 
-    case internalServerError(headers: Headers = [:], body: Body = .empty)
+    case internalServerError(headers: HeaderDictionary = [:], body: Body = .empty)
 
     /// Defines the body of a response where a response can have one.
     public enum Body {
@@ -86,10 +87,10 @@ public enum HTTPResponse {
 
 extension HTTPResponse {
 
-    func hbResponse(for request: HTTPRequest, inServerContext context: ServerContext) async throws -> HBResponse {
+    func hbResponse(for request: HTTPRequest, inServerContext context: MockServerContext) async throws -> HBResponse {
 
         // Captures the request and cache before generating the response.
-        func hbResponse(_ status: HTTPResponseStatus, headers: Headers, body: HTTPResponse.Body) throws -> HBResponse {
+        func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary, body: HTTPResponse.Body) throws -> HBResponse {
 
             let body = try body.hbBody(serverContext: context)
 
@@ -151,7 +152,7 @@ extension HTTPResponse {
 
 // MARK: - Headers
 
-extension Headers {
+extension HeaderDictionary {
 
     var hbHeaders: HTTPHeaders {
         HTTPHeaders(map { $0 })
@@ -160,7 +161,7 @@ extension Headers {
 
 extension HTTPResponse.Body {
 
-    func hbBody(serverContext context: ServerContext) throws -> (HBResponseBody, String?) {
+    func hbBody(serverContext context: MockServerContext) throws -> (HBResponseBody, String?) {
         switch self {
 
         case .empty:
@@ -206,7 +207,7 @@ extension String {
         .byteBuffer(ByteBuffer(string: self))
     }
 
-    func render(withTemplateData templateData: TemplateData, context: ServerContext) throws -> HBResponseBody {
+    func render(withTemplateData templateData: TemplateData, context: MockServerContext) throws -> HBResponseBody {
         let finalTemplateData = context.requestTemplateData(adding: templateData)
         return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
     }

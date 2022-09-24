@@ -4,7 +4,7 @@
 
 /// Protocol for types that can store data between requests.
 @dynamicMemberLookup
-public protocol Cache {
+public protocol Cache: AnyObject {
 
     /// Returns the cache as a dictionary.
     func dictionaryRepresentation() -> [String: Any]

@@ -9,17 +9,23 @@ extension String {
 
     /// The same effect as ``URL``s `pathComponents` property but assuming the string is a path.
     var urlPathComponents: [String.SubSequence] {
-        ["/"] + self.split(separator: "/")
+        ["/"] + split(separator: "/")
     }
 }
 
 /// Thin wrapper around the core Hummingbird request that provides some additional processing.
 struct HBRequestWrapper: HTTPRequest {
 
-    struct HBQueryParametersWrapper: QueryParameters {
+    public struct HBQueryParameters: QueryParameters {
         let parameters: HBParameters
-        subscript(key: String) -> String? { parameters[key] }
-        subscript(key: String) -> [String] { parameters.getAll(key) }
+        public subscript(key: String) -> String? { parameters[key] }
+        public subscript(key: String) -> [String] { parameters.getAll(key) }
+    }
+
+    public struct HBHeaders: Headers {
+        let headers: HTTPHeaders
+        public subscript(key: String) -> String? { headers.first(name: key) }
+        public subscript(key: String) -> [String] { headers[key] }
     }
 
     /// The wrapped Hummingbird request.
@@ -27,7 +33,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     var method: HTTPMethod { request.method }
 
-    var headers: Headers { Dictionary(request.headers.map { ($0, $1) }) { $1 } }
+    var headers: Headers { HBHeaders(headers: request.headers) }
 
     var path: String { request.uri.path }
 
@@ -37,7 +43,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     var query: String? { request.uri.query }
 
-    var queryParameters: QueryParameters { HBQueryParametersWrapper(parameters: request.uri.queryParameters) }
+    var queryParameters: QueryParameters { HBQueryParameters(parameters: request.uri.queryParameters) }
 
     var body: Data? { return request.body.buffer?.data }
 
