@@ -39,6 +39,7 @@ let package = Package(
                 .copy("Test files/Simple.json"),
                 .copy("Test files/Invalid.json"),
                 .copy("Test files/Simple.html"),
+                .copy("Test files/Template.json"),
             ]
         ),
     ]

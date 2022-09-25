@@ -15,7 +15,8 @@ class MockServerIntegrationTests: XCTestCase {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        server = try MockServer()
+        let templatePath = Bundle.testBundle.resourceURL!
+        server = try MockServer(templatePath: templatePath, verbose: true)
     }
 
     override func tearDown() {
@@ -131,10 +132,10 @@ class MockServerIntegrationTests: XCTestCase {
 
         expect(httpResponse?.allHeaderFields.count) == 6
         expect(String(data: response.data!, encoding: .utf8)) == "Hello"
-        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "text/plain"
+        expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
     }
 
-    func testResponseWithTemplate() async {
+    func testResponseWithInlineTemplate() async {
 
         server.add(.POST, "/abc", response: .accepted(body: .text("Hello {{name}}", templateData: ["name": "Derek"])))
         let response = await assert(.POST, "/abc", returns: .accepted)
@@ -142,7 +143,18 @@ class MockServerIntegrationTests: XCTestCase {
 
         expect(httpResponse?.allHeaderFields.count) == 5
         expect(String(data: response.data!, encoding: .utf8)) == "Hello Derek"
-        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "text/plain"
+        expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
+    }
+
+    func testResponseWithFileTemplate() async {
+
+        server.add(.POST, "/abc", response: .accepted(body: .template("Template", templateData: ["path": "/abc"])))
+        let response = await assert(.POST, "/abc", returns: .accepted)
+        let httpResponse = response.response
+
+        expect(httpResponse?.allHeaderFields.count) == 5
+        expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(server.address.absoluteString)",\#n    "path": "/abc"\#n}\#n"#
+        expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
     }
 
     // MARK: - Cache

@@ -13,7 +13,7 @@ public typealias HeaderDictionary = [String: String]
 /// Commonly used content types..
 public enum ContentType {
 
-    static let key = "content-type"
+    public static let key = "content-type"
 
     public static let textPlain = "text/plain"
     public static let textHTML = "text/html"

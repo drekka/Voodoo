@@ -1,0 +1,4 @@
+{
+    "url": "{{mockServer}}",
+    "path": "{{path}}"
+}
