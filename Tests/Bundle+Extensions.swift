@@ -2,7 +2,7 @@
 //  Created by Derek Clarkson on 13/9/21.
 //
 
-import UIKit
+import Foundation
 
 extension Bundle {
 

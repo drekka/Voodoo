@@ -2,9 +2,10 @@
 //  Created by Derek Clarkson.
 //
 
+import Foundation
 import Hummingbird
 import HummingbirdMustache
-import UIKit
+import JXKit
 
 /// Type for template data used to inject values.
 public typealias TemplateData = [String: Any]
@@ -24,7 +25,7 @@ public enum ContentType {
 /// Defines a response to an API call.
 public enum HTTPResponse {
 
-    // MARK: Core
+    // Core
 
     /// The base type of response where everything is specified
     case raw(_: HTTPResponseStatus, headers: HeaderDictionary = [:], body: Body = .empty)
@@ -32,7 +33,11 @@ public enum HTTPResponse {
     /// Custom closure run to generate a response.
     case dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)
 
-    // MARK: Convenience responses.
+    /// Similar to ``dynamic(_:)``, ``javascript(_:)`` is a dynamic response. The difference is that instead of compiled Swift code, we are calling
+    /// javascript at runtime which allows developers to execute dynamic responses without having to compile the server.
+    case javascript(_ script: String)
+
+    // Convenience
 
     /// Return a HTTP 200  with an optional body and headers.
     case ok(headers: HeaderDictionary = [:], body: Body = .empty)
@@ -105,8 +110,48 @@ extension HTTPResponse {
 
         switch self {
 
+            // Core
+
         case .raw(let statusCode, headers: let headers, body: let body):
             return try hbResponse(statusCode, headers: headers, body: body)
+
+        case .dynamic(let handler):
+            return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
+
+        case .javascript(let script):
+
+            let context = JXContext()
+
+            // trap errors
+            context.exceptionHandler = { _, exception in
+                print("Error \(String(describing: exception))")
+            }
+
+            // Add logging
+//            let logFunction : @convention(block) (String) -> Void = { print("Log: \($0)") }
+            let myFunction = JXValue(newFunctionIn: context) { context, _, messages in
+                print("Log: \(messages)")
+                return context.null()
+            }
+            var console = try context.global["console"]
+            try console.setProperty("log", myFunction)
+
+            // let console = context["console"]
+//            if let console = context.object(forKeyedSubscript: "console") {
+//                console.setObject(logFunction, forKeyedSubscript: "log")
+//            }
+
+            // Load the function into the context.
+            try context.eval(script)
+
+            // Execute the script
+//            let function = try context.eval(script)
+
+            // let result: JXValue = try function.call(withArguments: [
+
+            return try hbResponse(.ok, headers: [:], body: .empty)
+
+            // Convenience
 
         case .ok(let headers, let body):
             return try hbResponse(.ok, headers: headers, body: body)
@@ -143,9 +188,6 @@ extension HTTPResponse {
 
         case .internalServerError(headers: let headers, body: let body):
             return try hbResponse(.internalServerError, headers: headers, body: body)
-
-        case .dynamic(let handler):
-            return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
         }
     }
 }

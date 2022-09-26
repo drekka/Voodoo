@@ -2,10 +2,10 @@
 //  Created by Derek Clarkson.
 //
 
+import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Network
-import UIKit
 
 /// The main Simulcra server.
 public class MockServer {

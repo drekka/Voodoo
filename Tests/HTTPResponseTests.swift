@@ -44,6 +44,16 @@ class HTTPResponseTests: XCTestCase {
         try await assert(response: response, returnsStatus: .ok)
     }
 
+    func testJavascript() async throws {
+        let response = HTTPResponse.javascript(#"""
+        console.log("Hello");
+        function response(request, cache) {
+            return ok
+        }
+        """#)
+        try await assert(response: response, returnsStatus: .ok)
+    }
+
     // MARK: - Convenience cases
 
     func testConvenienceCasesWithBodies() async throws {

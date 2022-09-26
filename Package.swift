@@ -5,26 +5,37 @@ import PackageDescription
 import SwiftUI
 
 let package = Package(
-     name: "Simulcra",
-    platforms: [.iOS(.v15)],
+    name: "Simulcra",
+    platforms: [
+        .iOS(.v15),
+        .macOS(.v10_15),
+    ],
     products: [
-        .library(
-            name: "Simulcra",
-            targets: ["Simulcra"]
-        ),
+        .executable(name: "simulcra", targets: ["SimulcraCMD"]),
+        .library(name: "Simulcra", targets: ["Simulcra"]),
     ],
     dependencies: [
         .package(name: "Nimble", url: "https://github.com/quick/nimble", .upToNextMajor(from: "10.0.0")),
         .package(name: "Hummingbird", url: "https://github.com/hummingbird-project/hummingbird", branch: "main"),
         .package(name: "HummingbirdMustache", url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
         .package(name: "JXKit", url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
     ],
     targets: [
+        .executableTarget(
+            name: "SimulcraCMD",
+            dependencies: [
+                "Simulcra",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            path: "cmd"
+        ),
         .target(
             name: "Simulcra",
             dependencies: [
                 "Hummingbird",
                 "HummingbirdMustache",
+                "JXKit",
             ],
             path: "Sources"
         ),
