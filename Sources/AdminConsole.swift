@@ -7,7 +7,6 @@
 
 import Foundation
 import Hummingbird
-import System
 
 struct AdminConsole: HBMiddleware {
 
