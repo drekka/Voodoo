@@ -5,7 +5,20 @@
 import Foundation
 import Hummingbird
 import HummingbirdMustache
-import Network
+
+#if os(macOS) || os(iOS)
+    import Network
+#endif
+
+extension Error {
+    var isPortTakenError: Bool {
+        #if os(iOS)
+            return self as? NWError == .posix(.EADDRINUSE)
+        #else
+            return (self as? IOError)?.errnoCode == POSIXErrorCode.EADDRINUSE.rawValue
+        #endif
+    }
+}
 
 /// The main Simulcra server.
 public class MockServer {
@@ -53,7 +66,7 @@ public class MockServer {
                 return
 
             } catch {
-                if error as? NWError == NWError.posix(.EADDRINUSE) {
+                if error.isPortTakenError {
                     print("👻 Port \(port) busy, trying next port in range")
                     continue
                 }
