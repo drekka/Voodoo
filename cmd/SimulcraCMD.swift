@@ -112,7 +112,7 @@ extension SimulcraCMD {
 
 //            filePaths.map { URL(fileURLWithPath: $0) }.forEach { server.addFileDirectory($0) }
 
-            //try server.wait()
+            server.wait()
         }
 
         mutating func validate() throws {

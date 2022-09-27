@@ -24,6 +24,7 @@ extension Error {
 public class MockServer {
 
     private let server: HBApplication
+    private let verbose: Bool
 
     public var address: URL { server.address }
 
@@ -32,6 +33,8 @@ public class MockServer {
                 templateExtension: String = "json",
                 verbose: Bool = false,
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
+
+        self.verbose = verbose
 
         for port in portRange {
 
@@ -78,6 +81,16 @@ public class MockServer {
 
         print("👻 Exhausted all ports in range \(portRange)")
         throw MockServerError.noPortAvailable
+    }
+
+    public func wait() {
+        if verbose {
+            print(#"👻 CTRL+C or "curl \#(address.absoluteString)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
+            print(#"👻 Have a nice day 🙂"#)
+        } else {
+            print(address.absoluteString)
+        }
+        server.wait()
     }
 
     // MARK: - Convenience registration
