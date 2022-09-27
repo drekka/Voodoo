@@ -76,7 +76,7 @@ extension SimulcraCMD {
                 """)
             }
         )
-        var portRange: ClosedRange<Int>
+        var portRange: ClosedRange<Int> = 8080 ... 8090
 
         @Option(
             name: [.customShort("t"), .customLong("template-dir")],
