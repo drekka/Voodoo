@@ -40,14 +40,18 @@ public class MockServer {
 
             do {
 
-                let configuration = HBApplication.Configuration(address: .hostname(port: port), serverName: "Simulcra API simulator")
+                let configuration = HBApplication.Configuration(
+                    address: .hostname(port: port),
+                    serverName: "Simulcra API simulator",
+                    logLevel: verbose ? .trace : .info
+                )
                 let server = HBApplication(configuration: configuration)
 
                 // Add middleware. This must be done before starting the server or
                 // the middleware will execute after Hummingbird's ``TrieRouter``.
                 // This is due to the way hummingbird wires middleware and the router together.
-                server.middleware.add(AdminConsole())
                 server.middleware.add(RequestLogger(verbose: verbose))
+                server.middleware.add(AdminConsole())
                 server.middleware.add(NoResponseFoundMiddleware())
 
                 // Setup an in-memory cache.

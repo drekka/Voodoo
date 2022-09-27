@@ -24,7 +24,7 @@ struct AdminConsole: HBMiddleware {
 
         switch adminPath.removeFirst() {
 
-        case AdminConsole.shutdown:
+        case AdminConsole.shutdown where request.method == .POST:
             print("👻 Received shutdown request, shutting down server ...")
             request.application.stop()
             return request.success(HBResponse(status: .ok))
