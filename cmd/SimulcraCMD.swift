@@ -87,7 +87,7 @@ extension SimulcraCMD {
             Reference here: https://hummingbird-project.github.io/hummingbird/current/hummingbird-mustache/mustache-syntax.html
             """
         )
-        var templatePath: String
+        var templatePath: String?
 
 //        @Option(name: [.customLong("file-dir")],
 //                help: "A directory path where files are stored. Mostly locations of image files and other web like resources.")
@@ -98,9 +98,13 @@ extension SimulcraCMD {
 
         mutating func run() throws {
 
+            var templatePathURL: URL?
+            if let templatePath = templatePath {
+                templatePathURL = URL(fileURLWithPath: templatePath)
+            }
             let server = try MockServer(portRange: portRange,
-                                    templatePath: URL(fileURLWithPath: templatePath),
-                                    verbose: options.verbose)
+                                        templatePath: templatePathURL,
+                                        verbose: options.verbose)
 
             // Load the scenarios.
 //            try scenario.forEach { name in
@@ -139,7 +143,7 @@ extension SimulcraCMD {
             print("\tTemplate path: \(templatePath)")
 
             print("\tFile paths:")
-            //filePaths.forEach { print("\t ‣ \($0)") }
+            // filePaths.forEach { print("\t ‣ \($0)") }
             print("")
         }
     }
