@@ -5,6 +5,7 @@
 import Foundation
 import Hummingbird
 import NIOCore
+import NIOFoundationCompat
 
 extension String {
 

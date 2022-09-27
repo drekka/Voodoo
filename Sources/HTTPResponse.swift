@@ -6,6 +6,7 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import JXKit
+import NIOFoundationCompat
 
 /// Type for template data used to inject values.
 public typealias TemplateData = [String: Any]
