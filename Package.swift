@@ -10,39 +10,40 @@ let package = Package(
         .macOS(.v10_15),
     ],
     products: [
-        .executable(name: "simulcra", targets: ["SimulcraCMD"]),
-        .library(name: "Simulcra", targets: ["Simulcra"]),
+        .executable(name: "simulcra", targets: ["simulcra-cmd"]),
+        .library(name: "simulcra-core", targets: ["SimulcraCore"]),
     ],
     dependencies: [
-        .package(name: "Nimble", url: "https://github.com/quick/nimble", .upToNextMajor(from: "10.0.0")),
-        .package(name: "Hummingbird", url: "https://github.com/hummingbird-project/hummingbird", branch: "main"),
-        .package(name: "HummingbirdMustache", url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
-        .package(name: "JXKit", url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "10.0.0")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird", branch: "main"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "2.0.0")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
     ],
     targets: [
-        .executableTarget(
-            name: "SimulcraCMD",
-            dependencies: [
-                "Simulcra",
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            ],
-            path: "cmd"
-        ),
         .target(
-            name: "Simulcra",
+            name: "SimulcraCore",
             dependencies: [
-                "Hummingbird",
-                "HummingbirdMustache",
+                .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
                 "JXKit",
             ],
             path: "Sources"
         ),
+        .executableTarget(
+            name: "simulcra-cmd",
+            dependencies: [
+                "SimulcraCore",
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ],
+            path: "cmd"
+        ),
         .testTarget(
             name: "SimulcraTests",
             dependencies: [
-                "Simulcra",
-                "Nimble",
+                "SimulcraCore",
+                .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "Nimble", package: "nimble"),
             ],
             path: "Tests",
             resources: [

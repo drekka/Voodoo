@@ -4,7 +4,7 @@
 
 import Nimble
 import NIOHTTP1
-import Simulcra
+import SimulcraCore
 import XCTest
 
 class MockServerIntegrationTests: XCTestCase {

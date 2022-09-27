@@ -4,7 +4,7 @@
 
 import Foundation
 @testable import Hummingbird
-@testable import Simulcra
+@testable import SimulcraCore
 
 enum MockRequest {
 

@@ -4,7 +4,7 @@
 
 import Foundation
 import Nimble
-@testable import Simulcra
+@testable import SimulcraCore
 import XCTest
 
 class EndpointBuilderTests: XCTestCase {

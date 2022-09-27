@@ -5,7 +5,7 @@
 import Foundation
 import Hummingbird
 import Nimble
-@testable import Simulcra
+@testable import SimulcraCore
 import XCTest
 
 class HBExtensionsTests: XCTestCase {

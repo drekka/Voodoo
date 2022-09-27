@@ -9,7 +9,7 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import Simulcra
+@testable import SimulcraCore
 import XCTest
 
 class HTTPResponseTests: XCTestCase {

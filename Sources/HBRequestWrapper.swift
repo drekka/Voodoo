@@ -4,6 +4,7 @@
 
 import Foundation
 import Hummingbird
+import NIOCore
 
 extension String {
 

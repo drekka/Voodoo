@@ -3,7 +3,7 @@
 //
 
 import Foundation
-@testable import Simulcra
+@testable import SimulcraCore
 import HummingbirdMustache
 
 struct MockMockServerContext: MockServerContext {

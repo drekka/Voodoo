@@ -4,7 +4,7 @@
 
 import ArgumentParser
 import Foundation
-import Simulcra
+import SimulcraCore
 
 /// Provides a command line wrapper around the server.
 @main
