@@ -41,7 +41,7 @@ public class MockServer {
             do {
 
                 let configuration = HBApplication.Configuration(
-                    address: .hostname("172.17.0.2", port: port), // Use the "everything" address.
+                    address: .hostname("0.0.0.0", port: port), // Use the "everything" address.
                     serverName: "Simulcra API simulator",
                     logLevel: verbose ? .trace : .error
                 )
