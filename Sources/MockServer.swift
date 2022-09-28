@@ -67,6 +67,8 @@ public class MockServer {
                 try server.start()
                 self.server = server
 
+                add(.GET, "/abc", response:.ok(body: .text("hello")))
+
                 // Add any passed endpoints.
                 add(endpoints)
 
