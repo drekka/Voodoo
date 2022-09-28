@@ -44,7 +44,7 @@ extension SimulcraCMD {
         @OptionGroup var options: SimulcraCMD.Options
 
         @Option(
-            name: [.long],
+            name: [.short, .long],
             help: """
             The port range to start the server on. \
             Must be either a single port or a valid range written as \"xxxx-yyyy\" where xxxx is the lower bound \
@@ -79,7 +79,7 @@ extension SimulcraCMD {
         var portRange: ClosedRange<Int> = 8080 ... 8090
 
         @Option(
-            name: [.customShort("t"), .customLong("template-dir")],
+            name: [.short, .customLong("template-dir")],
             help: """
             A directory path where response template files can be found. \
             Templates are used to generate response bodies. They can contain mustache template keys to insert data \
