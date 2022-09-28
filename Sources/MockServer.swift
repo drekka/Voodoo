@@ -71,6 +71,13 @@ public class MockServer {
                 // Add any passed endpoints.
                 add(endpoints)
 
+                add(.GET, "/javascript", response: .javascript(#"""
+                console.log("Hello");
+                function response(request, cache) {
+                    return ok
+                }
+                """#))
+
                 return
 
             } catch {
