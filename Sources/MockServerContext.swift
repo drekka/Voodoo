@@ -30,6 +30,6 @@ protocol MockServerContext {
 extension MockServerContext {
 
     func requestTemplateData(adding requestData: TemplateData = [:]) -> TemplateData {
-        ["mockServer": address.absoluteString].merging(cache.dictionaryRepresentation()) { $1 }.merging(requestData) { $1 }
+        cache.dictionaryRepresentation().merging(requestData) { $1 }
     }
 }

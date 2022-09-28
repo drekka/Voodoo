@@ -41,7 +41,7 @@ public class MockServer {
             do {
 
                 let configuration = HBApplication.Configuration(
-                    address: .hostname("0.0.0.0", port: port), // Use the "everything" address.
+                    address: .hostname("0.0.0.0", port: port), // Use the "everything" address so this server works in containers suck as docker.
                     serverName: "Simulcra API simulator",
                     logLevel: verbose ? .trace : .error
                 )
@@ -50,6 +50,7 @@ public class MockServer {
                 // Add middleware. This must be done before starting the server or
                 // the middleware will execute after Hummingbird's ``TrieRouter``.
                 // This is due to the way hummingbird wires middleware and the router together.
+                server.middleware.add(HostCapture())
                 server.middleware.add(RequestLogger(verbose: verbose))
                 server.middleware.add(AdminConsole())
                 server.middleware.add(NoResponseFoundMiddleware())
@@ -66,11 +67,6 @@ public class MockServer {
 
                 try server.start()
                 self.server = server
-
-                add(.GET, "/abc") { request, cache in
-                    print("HOST header: \(request.headers["host"])")
-                    return .ok(body: .text("hello"))
-                }
 
                 // Add any passed endpoints.
                 add(endpoints)
@@ -93,11 +89,15 @@ public class MockServer {
     }
 
     public func wait() {
+        var port = ""
+        if let actualPort = address.port {
+            port = "\(actualPort)"
+        }
         if verbose {
-            print(#"👻 CTRL+C or "curl \#(address.absoluteString)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
+            print(#"👻 CTRL+C or "curl <server-address>:\#(port)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
             print(#"👻 Have a nice day 🙂"#)
         } else {
-            print(address.absoluteString)
+            print("port:\(port)")
         }
         server.wait()
     }

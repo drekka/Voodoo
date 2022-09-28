@@ -21,7 +21,8 @@ enum MockRequest {
         )
     }
 
-    static func create(url: String,
+    static func create(method: HTTPMethod = .GET,
+                       url: String,
                        pathParameters: [String: String] = [:],
                        headers: [String: String] = [:],
                        contentType: String? = nil,
@@ -33,7 +34,7 @@ enum MockRequest {
             hbHeaders.add(name: "Content-Type", value: contentType)
         }
 
-        let head = HTTPRequestHead(version: .http1_1, method: .GET, uri: url, headers: hbHeaders)
+        let head = HTTPRequestHead(version: .http1_1, method: method, uri: url, headers: hbHeaders)
 
         let body = body.hbRequestBody
 

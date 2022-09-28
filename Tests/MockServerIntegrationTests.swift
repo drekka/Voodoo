@@ -21,14 +21,14 @@ class MockServerIntegrationTests: XCTestCase {
 
     override func tearDown() {
         // Make sure we stop the server to avoid chewing up ports.
-        server.stop()
+        server?.stop()
         super.tearDown()
     }
 
     // MARK: - Init
 
     func testInit() throws {
-        expect(self.server.address.absoluteString).to(match(#"127\.0\.0\.1:\d\d\d\d"#))
+        expect(self.server.address.absoluteString).to(match(#"0\.0\.0\.0:\d\d\d\d"#))
     }
 
     func testInitWithMulitpleServers() throws {
