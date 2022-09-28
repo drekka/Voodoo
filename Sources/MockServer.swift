@@ -41,7 +41,7 @@ public class MockServer {
             do {
 
                 let configuration = HBApplication.Configuration(
-                    address: .hostname("0.0.0.0", port: port), // Use the "everything" address.
+                    address: .hostname("172.17.0.2", port: port), // Use the "everything" address.
                     serverName: "Simulcra API simulator",
                     logLevel: verbose ? .trace : .error
                 )
@@ -67,7 +67,10 @@ public class MockServer {
                 try server.start()
                 self.server = server
 
-                add(.GET, "/abc", response:.ok(body: .text("hello")))
+                add(.GET, "/abc") { request, cache in
+                    print("HOST header: \(request.headers["host"])")
+                    return .ok(body: .text("hello"))
+                }
 
                 // Add any passed endpoints.
                 add(endpoints)
