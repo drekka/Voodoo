@@ -18,13 +18,13 @@ extension String {
 /// Thin wrapper around the core Hummingbird request that provides some additional processing.
 struct HBRequestWrapper: HTTPRequest {
 
-    public struct HBQueryParameters: QueryParameters {
+    public struct HBQueryParameters: KeyedValues {
         let parameters: HBParameters
         public subscript(key: String) -> String? { parameters[key] }
         public subscript(key: String) -> [String] { parameters.getAll(key) }
     }
 
-    public struct HBHeaders: Headers {
+    public struct HBHeaders: KeyedValues {
         let headers: HTTPHeaders
         public subscript(key: String) -> String? { headers.first(name: key) }
         public subscript(key: String) -> [String] { headers[key] }
@@ -35,7 +35,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     var method: HTTPMethod { request.method }
 
-    var headers: Headers { HBHeaders(headers: request.headers) }
+    var headers: KeyedValues { HBHeaders(headers: request.headers) }
 
     var path: String { request.uri.path }
 
@@ -45,7 +45,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     var query: String? { request.uri.query }
 
-    var queryParameters: QueryParameters { HBQueryParameters(parameters: request.uri.queryParameters) }
+    var queryParameters: KeyedValues { HBQueryParameters(parameters: request.uri.queryParameters) }
 
     var body: Data? { return request.body.buffer?.data }
 

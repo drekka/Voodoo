@@ -10,16 +10,8 @@ import Hummingbird
 public typealias PathParameters = [String: String]
 public typealias FormParameters = [String: String]
 
-/// Provides access to query parameters.
-public protocol QueryParameters {
-    subscript(_: String) -> String? { get }
-    subscript(_: String) -> [String] { get }
-}
-
-/// Provides acess to headers in a request.
-///
-/// Note that header keys are case-insensitive.
-public protocol Headers {
+/// Provides access to header and query parameters.
+public protocol KeyedValues {
     subscript(_: String) -> String? { get }
     subscript(_: String) -> [String] { get }
 }
@@ -31,7 +23,7 @@ public protocol HTTPRequest {
     var method: HTTPMethod { get }
 
     /// A dictionary of headers.
-    var headers: Headers { get }
+    var headers: KeyedValues { get }
 
     /// The URL path.
     var path: String { get }
@@ -48,7 +40,7 @@ public protocol HTTPRequest {
     /// An array of query key value tuples.
     ///
     /// This is done as an array because it's possible to repeat keys with different values.
-    var queryParameters: QueryParameters { get }
+    var queryParameters: KeyedValues { get }
 
     /// The raw body of the request if there is one.
     var body: Data? { get }

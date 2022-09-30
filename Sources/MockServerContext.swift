@@ -6,7 +6,7 @@ import Foundation
 import HummingbirdMustache
 
 /// Defines various features of the server's context.
-protocol MockServerContext {
+public protocol MockServerContext {
 
     /// The address of the server.
     var address: URL { get }
@@ -17,6 +17,10 @@ protocol MockServerContext {
     /// Local in-memory cache for storing data between requests.
     var cache: Cache { get }
 
+}
+
+extension MockServerContext {
+
     /// Called just before rendering a template, this combines all the server template data, cache data and an individual request additional data
     /// into a single ``TemplateData`` instance for the render.
     ///
@@ -24,11 +28,6 @@ protocol MockServerContext {
     /// detected in the merges then the new value will be used, overriding any prior data.
     ///
     /// - parameter requestData: Additional data unique to the current request.
-    func requestTemplateData(adding requestData: TemplateData) -> TemplateData
-}
-
-extension MockServerContext {
-
     func requestTemplateData(adding requestData: TemplateData = [:]) -> TemplateData {
         cache.dictionaryRepresentation().merging(requestData) { $1 }
     }

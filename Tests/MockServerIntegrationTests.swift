@@ -107,11 +107,18 @@ class MockServerIntegrationTests: XCTestCase {
         await assert(.GET, "/ccc", returns: .ok)
     }
 
-    // MARK: - Responses
+    // MARK: - Swift responses
 
     func testResponse() async {
         server.add(.POST, "/abc", response: .accepted())
         await assert(.POST, "/abc", returns: .accepted)
+    }
+
+    func testResponseFromClosure() async {
+        server.add(.POST, "/abc") { _, _ in
+            .ok()
+        }
+        await assert(.POST, "/abc", returns: .ok)
     }
 
     func testResponseWithHeaders() async {
@@ -157,23 +164,114 @@ class MockServerIntegrationTests: XCTestCase {
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
     }
 
-    // MARK: - Cache
-
-    func testPassingValuesBetweenRequests() async {
-        server.add(.POST, "/send", response: .dynamic { _, cache in
-            cache.value = 5
+    func testResponsePassingCacheData() async {
+        server.add(.POST, "/abc") { _, cache in
+            cache.abc = "123"
             return .ok()
-        })
-        var result: Int?
-        server.add(.GET, "/value", response: .dynamic { _, cache in
-            result = cache.value
-            return .ok()
-        })
+        }
+        await assert(.POST, "/abc", returns: .ok)
 
-        await assert(.POST, "/send", returns: .ok)
-        await assert(.GET, "/value", returns: .ok)
+        server.add(.GET, "/def") { _, cache in
+            .ok(headers: ["def": cache.abc as? String ?? ""])
+        }
+        let response = await assert(.GET, "/abc", returns: .ok)
+        expect(response.response?.value(forHTTPHeaderField: "def")) == "123"
+    }
 
-        expect(result) == 5
+    // MARK: - Javascript responses
+
+    func testJavascriptResponseText() async {
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        function response(request, cache) {
+            return Response.ok(Body.text("Hello world!"));
+        }
+        """#))
+
+        let response = await assert(.GET, "/abc", returns: .ok)
+        expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"
+        expect(response.response?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
+    }
+
+    func testJavascriptResponseEmptyDefault() async {
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        function response(request, cache) {
+            return Response.ok();
+        }
+        """#))
+
+        let response = await assert(.GET, "/abc", returns: .ok)
+        expect(response.data) == Data()
+        expect(response.response?.value(forHTTPHeaderField: ContentType.key)).to(beNil())
+    }
+
+    func testJavascriptNoFunction() async {
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        """#))
+
+        let response = await assert(.GET, "/abc", returns: .internalServerError)
+        expect(response.response?.value(forHTTPHeaderField: MockServerError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
+    }
+
+    func testJavascriptIncorrectSignatureArgumentsTooFew() async {
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        function response() {
+            return Response.ok();
+        }
+        """#))
+
+        await assert(.GET, "/abc", returns: .ok)
+    }
+
+    func testJavascriptIncorrectSignatureArgumentsTooMany() async {
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        function response(a,b,c,d,e) {
+            return Response.ok();
+        }
+        """#))
+
+        await assert(.GET, "/abc", returns: .ok)
+    }
+
+    func testJavascriptInvalidResponse() async {
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        function response(request, cache) {
+            return;
+        }
+        """#))
+
+        let response = await assert(.GET, "/abc", returns: .internalServerError)
+        expect(response.response?.value(forHTTPHeaderField: MockServerError.headerKey)) == "The javascript function failed to return a response."
+    }
+
+    func testJavascriptResponseSetAndGetFromCache() async {
+
+        server.add(.POST, "/abc", response: .javascript(#"""
+        function response(request, cache) {
+            cache.set("abc", "Hello world!");
+            return Response.ok();
+        }
+        """#))
+
+        await assert(.POST, "/abc", returns: .ok)
+
+        server.add(.GET, "/abc", response: .javascript(#"""
+        function response(request, cache) {
+            var abc = cache.get("abc");
+            return Response.ok(Body.text(abc));
+        }
+        """#))
+
+        let response = await assert(.GET, "/abc", returns: .ok)
+        let httpResponse = response.response
+
+        expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"
+        expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
     }
 
     // MARK: - Middleware
@@ -189,24 +287,18 @@ class MockServerIntegrationTests: XCTestCase {
 
         var request = URLRequest(url: server.address.appendingPathComponent(path))
         request.httpMethod = method.rawValue
-        let response = await getData(from: request)
+
+        let response: ServerResponse
+        do {
+            let callResponse = try await URLSession.shared.data(for: request)
+            response = ServerResponse(data: callResponse.0, response: callResponse.1 as? HTTPURLResponse, error: nil)
+        } catch {
+            response = ServerResponse(data: nil, response: nil, error: error)
+        }
 
         expect(response.response!.statusCode) == Int(expectedStatus.code)
         expect(response.error).to(beNil())
 
         return response
-    }
-
-    private func getData(from url: URL) async -> ServerResponse {
-        await getData(from: URLRequest(url: url))
-    }
-
-    private func getData(from request: URLRequest) async -> ServerResponse {
-        do {
-            let response = try await URLSession.shared.data(for: request)
-            return ServerResponse(data: response.0, response: response.1 as? HTTPURLResponse, error: nil)
-        } catch {
-            return ServerResponse(data: nil, response: nil, error: error)
-        }
     }
 }

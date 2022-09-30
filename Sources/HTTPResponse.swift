@@ -100,7 +100,7 @@ extension HTTPResponse {
 
             let body = try body.hbBody(serverContext: context)
 
-            // Set any headers returned with the body.
+            // Add additional headers returned with the body.
             var finalHeaders = headers
             if let contentType = body.1 {
                 finalHeaders[ContentType.key] = contentType
@@ -120,37 +120,8 @@ extension HTTPResponse {
             return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
 
         case .javascript(let script):
-
-            let context = JXContext()
-
-            // trap errors
-            context.exceptionHandler = { _, exception in
-                print("Error \(String(describing: exception))")
-            }
-
-            // Add logging
-//            let logFunction : @convention(block) (String) -> Void = { print("Log: \($0)") }
-            let myFunction = JXValue(newFunctionIn: context) { context, _, messages in
-                print("Log: \(messages)")
-                return context.null()
-            }
-            var console = try context.global["console"]
-            try console.setProperty("log", myFunction)
-
-            // let console = context["console"]
-//            if let console = context.object(forKeyedSubscript: "console") {
-//                console.setObject(logFunction, forKeyedSubscript: "log")
-//            }
-
-            // Load the function into the context.
-            try context.eval(script)
-
-            // Execute the script
-//            let function = try context.eval(script)
-
-            // let result: JXValue = try function.call(withArguments: [
-
-            return try hbResponse(.ok, headers: [:], body: .empty)
+            let executor = try JavascriptExecutor(forContext: context)
+            return try executor.executeMockAPI(script: script, for: request, completion: hbResponse)
 
             // Convenience
 
@@ -193,6 +164,68 @@ extension HTTPResponse {
     }
 }
 
+// MARK: - Javascript types
+
+// extension HTTPRequest {
+//    var javascriptRequest: [String: Encodable] {
+//
+//
+//
+//    }
+// }
+//
+// struct JavascriptHTTPRequest: Encodable {
+//
+//    let request: HTTPRequest
+//
+//    enum CodingKeys: String, CodingKey {
+//        case method
+//    }
+//
+//    var method: String { request.method.rawValue }
+//    var headers: [String: Encodable] {
+//        var results: [String: Encodable] = [:]
+//        request.headers.forEach {
+//            let values: [String] = self[$0.0]
+//            switch values.endIndex {
+//            case 0:
+//                break
+//            case 1:
+//                results[$0] = values.first
+//            default:
+//                results[$0] = values
+//            }
+//        }
+//        return results }
+//    var path: String { request.path }
+//    var pathComponents: [String] { request.pathComponents }
+//    var pathParameters: PathParameters { request.pathParameters }
+//    var query: String? { request.query }
+//    var queryParameters: [String: Encodable] { request.queryParameters.encodable }
+//    var body: Data? { request.body }
+//    var bodyJSON: Any? { request.bodyJSON }
+//    var formParameters: FormParameters { request.formParameters }
+//
+// }
+
+extension KeyedValues {
+    func encodable(allKeys: () -> [String]) -> [String: Encodable] {
+        var results: [String: Encodable] = [:]
+        allKeys().forEach {
+            let values: [String] = self[$0]
+            switch values.endIndex {
+            case 0:
+                break
+            case 1:
+                results[$0] = values.first
+            default:
+                results[$0] = values
+            }
+        }
+        return results
+    }
+}
+
 // MARK: - Headers
 
 extension HeaderDictionary {
@@ -201,6 +234,8 @@ extension HeaderDictionary {
         HTTPHeaders(map { $0 })
     }
 }
+
+// MARK: - Response bodies
 
 extension HTTPResponse.Body {
 
