@@ -46,9 +46,8 @@ class HTTPResponseTests: XCTestCase {
 
     func testJavascript() async throws {
         let response = HTTPResponse.javascript(#"""
-        console.log("Hello");
         function response(request, cache) {
-            return ok
+            return Response.ok();
         }
         """#)
         try await assert(response: response, returnsStatus: .ok)
@@ -82,7 +81,7 @@ class HTTPResponseTests: XCTestCase {
                 body expectedBody: String? = nil) async throws {
 
         let request: HTTPRequest = MockRequest.create(url: "http://127.0.0.1")
-        let context = MockMockServerContext()
+        let context = MockSimulcraContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 
         expect(hbResponse.status) == expectedStatus
@@ -126,13 +125,13 @@ extension Dictionary {
     }
 }
 
-class TestHTTPReponseBodyTests: XCTestCase {
+class HTTPReponseBodyTests: XCTestCase {
 
-    private var context: MockServerContext!
+    private var context: SimulcraContext!
 
     override func setUp() {
         super.setUp()
-        context = MockMockServerContext()
+        context = MockSimulcraContext()
     }
 
     struct JSONTest: Codable {
@@ -140,7 +139,7 @@ class TestHTTPReponseBodyTests: XCTestCase {
     }
 
     func testEmpty() throws {
-        let context = MockMockServerContext()
+        let context = MockSimulcraContext()
         let hbBody = try HTTPResponse.Body.empty.hbBody(serverContext: context)
         expect(hbBody.0) == .empty
         expect(hbBody.1) == nil

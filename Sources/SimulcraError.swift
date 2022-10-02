@@ -6,22 +6,24 @@ import Foundation
 import Hummingbird
 import NIOCore
 
-public enum MockServerError: Error, HBHTTPResponseError {
+public enum SimulcraError: Error, HBHTTPResponseError {
 
     public static let headerKey = "Simulcra-Error"
 
     case conversionError(String)
-    case templateRender(String)
+    case templateRenderingFailure(String)
     case noPortAvailable
     case unexpectedError(Error)
+    case javascriptError(String)
 
     public var status: HTTPResponseStatus { .internalServerError }
 
     public var headers: HTTPHeaders {
         switch self {
-        case .conversionError(let error),
-             .templateRender(let error):
-            return [Self.headerKey: error]
+        case .conversionError(let message),
+             .templateRenderingFailure(let message),
+             .javascriptError(let message):
+            return [Self.headerKey: message]
 
         case .noPortAvailable:
             return [Self.headerKey: "All ports taken."]

@@ -6,7 +6,7 @@ import Foundation
 import HummingbirdMustache
 
 /// Defines various features of the server's context.
-public protocol MockServerContext {
+public protocol SimulcraContext {
 
     /// The address of the server.
     var address: URL { get }
@@ -19,7 +19,7 @@ public protocol MockServerContext {
 
 }
 
-extension MockServerContext {
+extension SimulcraContext {
 
     /// Called just before rendering a template, this combines all the server template data, cache data and an individual request additional data
     /// into a single ``TemplateData`` instance for the render.

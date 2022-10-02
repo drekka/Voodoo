@@ -10,10 +10,9 @@ import Hummingbird
 import JXKit
 import NIOCore
 
-
 /// Defines the response returned from executing a javascript response generator.
 struct JavascriptCallResponse: Decodable {
-    let statusCode: Int
+    let statusCode: UInt
     let body: HTTPResponse.Body
 }
 
@@ -21,56 +20,68 @@ struct JavascriptCallResponse: Decodable {
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
-    let serverCtx: MockServerContext
+    let serverCtx: SimulcraContext
 
-    init(forContext serverCtx: MockServerContext) throws {
+    init(forContext serverCtx: SimulcraContext) throws {
 
         self.serverCtx = serverCtx
 
         // trap errors
         jsCtx.exceptionHandler = { _, exception in
-            print("Javascript error: \(String(describing: exception))")
+            print("☕️ Javascript error: \(String(describing: exception))")
         }
 
+        try redirectLogging()
+
+        // Inject dependencies.
+        try injectTypes()
+    }
+
+    func execute(script: String, for _: HTTPRequest) throws -> JavascriptCallResponse {
+
+        // Load the script into the context then retrieve the function.
+        do {
+            try jsCtx.eval(script)
+        } catch {
+            throw SimulcraError.javascriptError("Error evaluating javascript: \(error)")
+        }
+
+        // Extract the function.
+        let responseFunction = try jsCtx.global["response"]
+        guard responseFunction.isFunction else {
+            throw SimulcraError.javascriptError("The executed javascript does not contain a function with the signature 'response(request, cache)'.")
+        }
+
+        // Call it.
+        let rawResponse: JXValue
+        do {
+            rawResponse = try responseFunction.call(withArguments: [
+                // try jsCtx.encode(request.javascriptObject),
+                jsCtx.object(),
+                serverCtx.cache.asJavascriptObject(in: jsCtx),
+            ])
+        } catch {
+            throw SimulcraError.javascriptError("Javascript execution failed. Error: \(error)")
+        }
+
+        if rawResponse.isUndefined {
+            throw SimulcraError.javascriptError("The javascript function failed to return a response.")
+        }
+
+        do {
+            return try rawResponse.toDecodable(ofType: JavascriptCallResponse.self) as JavascriptCallResponse
+        } catch {
+            throw SimulcraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error.localizedDescription)")
+        }
+    }
+
+    private func redirectLogging() throws {
         // Update the log function to print log messages.
         let myFunction = JXValue(newFunctionIn: jsCtx) { context, _, messages in
             messages.forEach { print("Javascript: \($0)") }
             return context.undefined()
         }
         try jsCtx.global["console"].setProperty("log", myFunction)
-
-        // Inject dependencies.
-        try injectTypes()
-    }
-
-    func executeMockAPI(
-        script: String,
-        for _: HTTPRequest,
-        completion: (HTTPResponseStatus, HeaderDictionary, HTTPResponse.Body) throws -> HBResponse
-    ) throws -> HBResponse {
-
-        // Load the script into the context then retrieve the function.
-        try jsCtx.eval(script)
-
-        // Extract the function.
-        let responseFunction = try jsCtx.global["response"]
-        guard responseFunction.isFunction else {
-            throw JavascriptError.responseFunctionNotFound
-        }
-
-        // Call it.
-        let rawResponse = try responseFunction.call(withArguments: [
-            // try jsCtx.encode(request.javascriptObject),
-            jsCtx.object(),
-            serverCtx.cache.asJavascriptObject(in: jsCtx),
-        ])
-        if rawResponse.isUndefined {
-            throw JavascriptError.noResponseReturned
-        }
-
-        let response: JavascriptCallResponse = try rawResponse.toDecodable(ofType: JavascriptCallResponse.self)
-
-        return try completion(HTTPResponseStatus(statusCode: response.statusCode), [:], response.body)
     }
 
     private func injectTypes() throws {
@@ -78,20 +89,27 @@ struct JavascriptExecutor {
         try jsCtx.eval(#"""
 
         class Response {
-            static ok(body) {
+
+            static raw(code, body) {
                 return {
-                    statusCode: 200,
+                    statusCode: code,
                     body: body ?? Body.empty()
                 };
+            }
+
+            static ok(body) {
+                return this.raw(200, body);
             }
         }
 
         class Body {
+
             static empty() {
                 return {
                     type: "empty"
                 };
             }
+
             static text(text, templateData) {
                 return {
                     type: "text",

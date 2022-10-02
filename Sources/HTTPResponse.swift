@@ -93,7 +93,7 @@ public enum HTTPResponse {
 
 extension HTTPResponse {
 
-    func hbResponse(for request: HTTPRequest, inServerContext context: MockServerContext) async throws -> HBResponse {
+    func hbResponse(for request: HTTPRequest, inServerContext context: SimulcraContext) async throws -> HBResponse {
 
         // Captures the request and cache before generating the response.
         func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary, body: HTTPResponse.Body) throws -> HBResponse {
@@ -121,7 +121,8 @@ extension HTTPResponse {
 
         case .javascript(let script):
             let executor = try JavascriptExecutor(forContext: context)
-            return try executor.executeMockAPI(script: script, for: request, completion: hbResponse)
+            let response = try executor.execute(script: script, for: request)
+            return try hbResponse(HTTPResponseStatus(statusCode: Int(response.statusCode)), headers: [:], body: response.body)
 
             // Convenience
 
@@ -239,7 +240,7 @@ extension HeaderDictionary {
 
 extension HTTPResponse.Body {
 
-    func hbBody(serverContext context: MockServerContext) throws -> (HBResponseBody, String?) {
+    func hbBody(serverContext context: SimulcraContext) throws -> (HBResponseBody, String?) {
         switch self {
 
         case .empty:
@@ -248,7 +249,7 @@ extension HTTPResponse.Body {
         case .json(let encodable, let templateData):
             let jsonData = try JSONEncoder().encode(encodable)
             guard let json = String(data: jsonData, encoding: .utf8) else {
-                throw MockServerError.conversionError("Unable to convert JSON data to a String")
+                throw SimulcraError.conversionError("Unable to convert JSON data to a String")
             }
             return (try json.render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
 
@@ -266,7 +267,7 @@ extension HTTPResponse.Body {
             let renderer = context.mustacheRenderer
             let finalTemplateData = context.requestTemplateData(adding: templateData)
             guard let json = renderer.render(finalTemplateData, withTemplate: templateName) else {
-                throw MockServerError.templateRender("Rendering template '\(templateName)' failed.")
+                throw SimulcraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
             return (json.hbResponseBody, contentType)
         }
@@ -285,7 +286,7 @@ extension String {
         .byteBuffer(ByteBuffer(string: self))
     }
 
-    func render(withTemplateData templateData: TemplateData, context: MockServerContext) throws -> HBResponseBody {
+    func render(withTemplateData templateData: TemplateData, context: SimulcraContext) throws -> HBResponseBody {
         let finalTemplateData = context.requestTemplateData(adding: templateData)
         return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
     }

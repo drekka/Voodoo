@@ -7,12 +7,12 @@ import Nimble
 @testable import SimulcraCore
 import XCTest
 
-class MockServerContextTests: XCTestCase {
+class SimulcraContextTests: XCTestCase {
 
-    var context: MockMockServerContext!
+    var context: MockSimulcraContext!
 
     override func setUp() {
-        context = MockMockServerContext()
+        context = MockSimulcraContext()
     }
 
     func testRequestTemplateData() {

@@ -8,7 +8,7 @@ import HummingbirdMustache
 
 // Simulcra extensions to Hummingbird
 
-extension HBApplication: MockServerContext {
+extension HBApplication: SimulcraContext {
 
     public var address: URL {
         let address = configuration.address

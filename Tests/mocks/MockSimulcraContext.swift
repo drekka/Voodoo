@@ -6,7 +6,7 @@ import Foundation
 @testable import SimulcraCore
 import HummingbirdMustache
 
-struct MockMockServerContext: MockServerContext {
+struct MockSimulcraContext: SimulcraContext {
 
     let address: URL = URL(string: "http://127.0.0.1:8080")!
 

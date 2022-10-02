@@ -102,7 +102,7 @@ extension SimulcraCMD {
             if let templatePath = templatePath {
                 templatePathURL = URL(fileURLWithPath: templatePath)
             }
-            let server = try MockServer(portRange: portRange,
+            let server = try Simulcra(portRange: portRange,
                                         templatePath: templatePathURL,
                                         verbose: options.verbose)
 
@@ -140,7 +140,7 @@ extension SimulcraCMD {
             guard options.verbose else { return }
 
             print("Configuration:")
-            print("\tTemplate path: \(templatePath)")
+            print("\tTemplate path: \(templatePath ?? "")")
 
             print("\tFile paths:")
             // filePaths.forEach { print("\t ‣ \($0)") }

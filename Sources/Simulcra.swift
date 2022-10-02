@@ -21,7 +21,7 @@ extension Error {
 }
 
 /// The main Simulcra server.
-public class MockServer {
+public class Simulcra {
 
     private let server: HBApplication
     private let verbose: Bool
@@ -80,12 +80,12 @@ public class MockServer {
                 }
 
                 print("👻 Unexpected error: \(error.localizedDescription)")
-                throw MockServerError.unexpectedError(error)
+                throw SimulcraError.unexpectedError(error)
             }
         }
 
         print("👻 Exhausted all ports in range \(portRange)")
-        throw MockServerError.noPortAvailable
+        throw SimulcraError.noPortAvailable
     }
 
     public func wait() {

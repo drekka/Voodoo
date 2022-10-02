@@ -7,21 +7,17 @@ import NIOHTTP1
 import SimulcraCore
 import XCTest
 
-class MockServerIntegrationTests: XCTestCase {
+class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
-    typealias ServerResponse = (data: Data?, response: HTTPURLResponse?, error: Error?)
-
-    private var server: MockServer!
+    var server: Simulcra!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        let templatePath = Bundle.testBundle.resourceURL!
-        server = try MockServer(templatePath: templatePath, verbose: true)
+        try setUpServer()
     }
 
     override func tearDown() {
-        // Make sure we stop the server to avoid chewing up ports.
-        server?.stop()
+        tearDownServer()
         super.tearDown()
     }
 
@@ -32,20 +28,20 @@ class MockServerIntegrationTests: XCTestCase {
     }
 
     func testInitWithMulitpleServers() throws {
-        let s2 = try MockServer()
+        let s2 = try Simulcra()
         expect(s2.address.port) != server.address.port
     }
 
     func testInitRunsOutOfPorts() {
         let currentPort = server.address.port!
         expect {
-            try MockServer(portRange: currentPort ... currentPort)
+            try Simulcra(portRange: currentPort ... currentPort)
         }
-        .to(throwError(MockServerError.noPortAvailable))
+        .to(throwError(SimulcraError.noPortAvailable))
     }
 
     func testInitWithEndpoints() async throws {
-        server = try MockServer {
+        server = try Simulcra {
             Endpoint(.GET, "/abc")
             Endpoint(.GET, "/def", response: .created())
         }
@@ -174,7 +170,7 @@ class MockServerIntegrationTests: XCTestCase {
         server.add(.GET, "/def") { _, cache in
             .ok(headers: ["def": cache.abc as? String ?? ""])
         }
-        let response = await assert(.GET, "/abc", returns: .ok)
+        let response = await assert(.GET, "/def", returns: .ok)
         expect(response.response?.value(forHTTPHeaderField: "def")) == "123"
     }
 
@@ -212,7 +208,7 @@ class MockServerIntegrationTests: XCTestCase {
         """#))
 
         let response = await assert(.GET, "/abc", returns: .internalServerError)
-        expect(response.response?.value(forHTTPHeaderField: MockServerError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
+        expect(response.response?.value(forHTTPHeaderField: SimulcraError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
     }
 
     func testJavascriptIncorrectSignatureArgumentsTooFew() async {
@@ -246,7 +242,7 @@ class MockServerIntegrationTests: XCTestCase {
         """#))
 
         let response = await assert(.GET, "/abc", returns: .internalServerError)
-        expect(response.response?.value(forHTTPHeaderField: MockServerError.headerKey)) == "The javascript function failed to return a response."
+        expect(response.response?.value(forHTTPHeaderField: SimulcraError.headerKey)) == "The javascript function failed to return a response."
     }
 
     func testJavascriptResponseSetAndGetFromCache() async {
@@ -278,27 +274,5 @@ class MockServerIntegrationTests: XCTestCase {
 
     func testNoResponseFoundMiddleware() async {
         await assert(.GET, "/abc", returns: .notFound)
-    }
-
-    // MARK: - Support functions
-
-    @discardableResult
-    private func assert(_ method: HTTPMethod = .GET, _ path: String, returns expectedStatus: HTTPResponseStatus) async -> ServerResponse {
-
-        var request = URLRequest(url: server.address.appendingPathComponent(path))
-        request.httpMethod = method.rawValue
-
-        let response: ServerResponse
-        do {
-            let callResponse = try await URLSession.shared.data(for: request)
-            response = ServerResponse(data: callResponse.0, response: callResponse.1 as? HTTPURLResponse, error: nil)
-        } catch {
-            response = ServerResponse(data: nil, response: nil, error: error)
-        }
-
-        expect(response.response!.statusCode) == Int(expectedStatus.code)
-        expect(response.error).to(beNil())
-
-        return response
     }
 }
