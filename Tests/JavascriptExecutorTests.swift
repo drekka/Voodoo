@@ -177,7 +177,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     private func expectResponse(_ response: String,
                                 toReturn expectedStatusCode: HTTPResponseStatus,
-                                withBody expectedbody: HTTPResponse.Body = .empty,
+                                withBody expectedBody: HTTPResponse.Body = .empty,
                                 headers expectedHeaders: [String: String] = [:]) throws {
         let result = try execute(#"""
             function response(request, cache) {
@@ -185,7 +185,7 @@ class JavascriptExecutorTests: XCTestCase {
             }
         """#)
         expect(result.statusCode) == expectedStatusCode.code
-        expect(result.body) == expectedbody
+        expect(result.body) == expectedBody
         expect(result.headers.count) == expectedHeaders.count
         expectedHeaders.forEach { expect(result.headers[$0]) == $1 }
     }
