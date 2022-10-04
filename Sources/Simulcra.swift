@@ -59,7 +59,7 @@ public class Simulcra {
                 server.cache = InMemoryCache()
 
                 // Initiate the mustache template renderer if it's been set.
-                if let templatePath = templatePath {
+                if let templatePath {
                     server.mustacheRenderer = try HBMustacheLibrary(directory: templatePath.path, withExtension: templateExtension)
                 } else {
                     server.mustacheRenderer = HBMustacheLibrary()

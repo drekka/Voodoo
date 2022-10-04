@@ -46,4 +46,11 @@ class CacheTests: XCTestCase {
         cache.abc = nil
         expect(self.cache.abc).to(beNil())
     }
+
+    func testRemove() {
+        cache.abc = "def"
+        expect(self.cache.abc) == "def"
+        cache.remove("abc")
+        expect(self.cache.abc).to(beNil())
+    }
 }

@@ -128,12 +128,13 @@ extension Cache {
 
             let key = try args[0].stringValue
 
-            guard let value = self[key] else {
+            let value: Any? = self[key]
+            guard let value else {
                 return context.null()
             }
 
             // If the value is an array or dictionary we encode it to JSON and then to an object.
-            if value as? Dictionary<String, Any> != nil,
+            if value as? [String: Any] != nil || value as? [Any] != nil,
                let json = String(data: try JSONSerialization.data(withJSONObject: value), encoding: .utf8) {
                 return context.json(json)
             }

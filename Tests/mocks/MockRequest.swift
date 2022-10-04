@@ -30,7 +30,7 @@ enum MockRequest {
 
         var hbHeaders = HTTPHeaders()
         headers.forEach { hbHeaders.add(name: $0, value: $1) }
-        if let contentType = contentType {
+        if let contentType {
             hbHeaders.add(name: "Content-Type", value: contentType)
         }
 

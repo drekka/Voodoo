@@ -168,7 +168,7 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
         await assert(.POST, "/abc", returns: .ok)
 
         server.add(.GET, "/def") { _, cache in
-            .ok(headers: ["def": cache.abc as? String ?? ""])
+            .ok(headers: ["def": cache.abc as String? ?? ""])
         }
         let response = await assert(.GET, "/def", returns: .ok)
         expect(response.response?.value(forHTTPHeaderField: "def")) == "123"

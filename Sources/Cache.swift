@@ -13,22 +13,19 @@ public protocol Cache: AnyObject {
     func remove(_ key: String)
 
     /// Key based access to stored data.
-    ///
-    /// Passing a `nil` will remove a value the same as using ``remove(_:)``.
-    subscript<Value>(_: String) -> Value? { get set }
+    subscript<Value>(_: String) -> Value? { get }
 
+    /// Dynamic lookup access to stored data.
+    subscript<Value>(dynamicMember _: String) -> Value? { get }
+
+    /// Base subscript for accessing and storing cache values.
+    ///
     /// Subscript that supports setting `nil` without having to cast to a type.
     subscript(_: String) -> Any? { get set }
 
     /// Dynamic lookup access to stored data.
     ///
-    /// This passes through to ``subscript(_:)-4d6z6``.
-    subscript<Value>(dynamicMember _: String) -> Value? { get set }
-
-    /// Dynamic lookup access to stored data.
-    ///
     /// This subscript supports setting `nil` without having to cast to a type.
-    /// This passes through to ``subscript(_:)-8jok5``.
     subscript(dynamicMember _: String) -> Any? { get set }
 }
 
@@ -37,18 +34,17 @@ class InMemoryCache: Cache {
 
     private var cache: [String: Any] = [:]
 
-    subscript<Value>(dynamicMember key: String) -> Value? {
-        get { get(key) }
-        set { set(newValue, forKey: key) }
-    }
+    subscript<Value>(key: String) -> Value? { self[key] as? Value }
 
-    subscript<Value>(key: String) -> Value? {
-        get { get(key) }
-        set { set(newValue, forKey: key) }
-    }
+    subscript<Value>(dynamicMember key: String) -> Value? { self[key] as? Value }
 
     subscript(key: String) -> Any? {
-        get { get(key) as Any? }
+        get { get(key) }
+        set { set(newValue, forKey: key) }
+    }
+
+    subscript(dynamicMember key: String) -> Any? {
+        get { get(key) }
         set { set(newValue, forKey: key) }
     }
 
@@ -58,8 +54,8 @@ class InMemoryCache: Cache {
 
     // MARK: - Support functions
 
-    private func get<Value>(_ key: String) -> Value? { cache[key] as? Value }
-    private func set<Value>(_ value: Value?, forKey key: String) {
+    private func get(_ key: String) -> Any? { cache[key] }
+    private func set(_ value: Any?, forKey key: String) {
         if let value = value {
             cache[key] = value
         } else {

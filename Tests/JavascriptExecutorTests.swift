@@ -38,7 +38,7 @@ class JavascriptExecutorTests: XCTestCase {
                            headers: ["abc": "123"])
     }
 
-    func testExecutOOkResponse() throws {
+    func testExecuteOkResponse() throws {
         try expectResponse(#"return Response.ok();"#, toReturn: .ok)
     }
 
@@ -95,6 +95,14 @@ class JavascriptExecutorTests: XCTestCase {
 
     // MARK: - Cache
 
+    func testCacheMiss() throws {
+        try expectResponse(#"""
+                           return Response.ok(Body.text("Hello " + cache.get("abc")));
+                           """#,
+                           toReturn: .ok,
+                           withBody: .text("Hello null"))
+    }
+
     func testCacheString() throws {
         try expectResponse(#"""
                            cache.set("abc", "Hello world!");
@@ -135,6 +143,34 @@ class JavascriptExecutorTests: XCTestCase {
                            """#,
                            toReturn: .ok,
                            withBody: .text("Hello world!"))
+    }
+
+    func testCacheJSArray() throws {
+        try expectResponse(#"""
+                           cache.set("abc", [
+                           {
+                               def: "Hello world!"
+                           },
+                           {
+                               def: "Goodbye world!"
+                           }
+                           ]
+                           );
+                           return Response.ok();
+                           """#,
+                           toReturn: .ok)
+        try expectResponse(#"""
+                           var array = cache.get("abc");
+                           return Response.ok(Body.text(array[0].def));
+                           """#,
+                           toReturn: .ok,
+                           withBody: .text("Hello world!"))
+        try expectResponse(#"""
+                           var array = cache.get("abc");
+                           return Response.ok(Body.text(array[1].def));
+                           """#,
+                           toReturn: .ok,
+                           withBody: .text("Goodbye world!"))
     }
 
     // MARK: - Support

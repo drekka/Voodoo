@@ -99,7 +99,7 @@ extension SimulcraCMD {
         mutating func run() throws {
 
             var templatePathURL: URL?
-            if let templatePath = templatePath {
+            if let templatePath {
                 templatePathURL = URL(fileURLWithPath: templatePath)
             }
             let server = try Simulcra(portRange: portRange,

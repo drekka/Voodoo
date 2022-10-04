@@ -95,7 +95,7 @@ class HTTPResponseTests: XCTestCase {
             expect(value) == $1
         }
 
-        if let expectedBody = expectedBody {
+        if let expectedBody {
             expect(hbResponse.body) == expectedBody.hbResponseBody
         } else {
             expect(hbResponse.body) == .empty
