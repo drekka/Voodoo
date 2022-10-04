@@ -136,7 +136,7 @@ extension Cache {
             // If the value is an array or dictionary we encode it to JSON and then to an object.
             if value as? [String: Any] != nil || value as? [Any] != nil,
                let json = String(data: try JSONSerialization.data(withJSONObject: value), encoding: .utf8) {
-                return context.json(json)
+                return try context.json(json)
             }
 
             // If the value is encodable the we encode it into a JXValue.

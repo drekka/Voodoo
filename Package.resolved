@@ -48,11 +48,11 @@
       },
       {
         "package": "JXKit",
-        "repositoryURL": "https://github.com/drekka/JXKit.git",
+        "repositoryURL": "https://github.com/jectivex/JXKit.git",
         "state": {
-          "branch": "feature/exposing-json-object",
-          "revision": "0aec3e1f6e99a77dd130c0cfe2b0a73453c72e51",
-          "version": null
+          "branch": null,
+          "revision": "eb3644f7664757144ac9accad70523b407e2a60f",
+          "version": "3.0.2"
         }
       },
       {
