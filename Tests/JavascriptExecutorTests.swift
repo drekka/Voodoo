@@ -23,16 +23,46 @@ class JavascriptExecutorTests: XCTestCase {
 
     // MARK: - Response
 
-    func testExecuteWithRawResponse() throws {
-        try expectScript(response: #"Response.raw(201)"#, toReturn: .created, expectedBody: .empty)
+    func testExecuteRawResponseWithStatusCode() throws {
+        try expectResponse(#"return Response.raw(201);"#, toReturn: .created)
     }
 
-    func testExecuteWithOkResponse() throws {
-        try expectScript(response: #"Response.ok()"#, toReturn: .ok, expectedBody: .empty)
+    func testExecuteRawResponseWithStatusCodeBody() throws {
+        try expectResponse(#"return Response.raw(201, Body.text("Hello"));"#, toReturn: .created, withBody: .text("Hello"))
     }
 
-    func testExecuteWithOkResponseWithTextBody() throws {
-        try expectScript(response: #"Response.ok(Body.text("Hello"))"#, toReturn: .ok, expectedBody: .text("Hello"))
+    func testExecuteRawResponseWithStatusCodeBodyHeaders() throws {
+        try expectResponse(#"return Response.raw(201, Body.text("Hello"), {abc:"123"});"#,
+                           toReturn: .created,
+                           withBody: .text("Hello"),
+                           headers: ["abc": "123"])
+    }
+
+    func testExecutOOkResponse() throws {
+        try expectResponse(#"return Response.ok();"#, toReturn: .ok)
+    }
+
+    func testExecuteOkResponseWithBody() throws {
+        try expectResponse(#"return Response.ok( Body.text("Hello"));"#, toReturn: .ok, withBody: .text("Hello"))
+    }
+
+    func testExecuteOkResponseWithBodyHeaders() throws {
+        try expectResponse(#"return Response.ok( Body.text("Hello"), {"abc": "123"});"#,
+                           toReturn: .ok,
+                           withBody: .text("Hello"),
+                           headers: ["abc": "123"])
+    }
+
+    // MARK: - Body
+
+    func testExecuteBodyEmpty() throws {
+        try expectResponse(#"return Response.ok();"#, toReturn: .ok)
+    }
+
+    func testExecuteBodyText() throws {
+        try expectResponse(#"return Response.ok(Body.text("Hello"));"#,
+                           toReturn: .ok,
+                           withBody: .text("Hello"))
     }
 
     // MARK: - Errors
@@ -40,79 +70,117 @@ class JavascriptExecutorTests: XCTestCase {
     func testExecuteWithMissingFunction() throws {
         expectScript(#"""
                      """#,
-                     toFailWith: "The executed javascript does not contain a function with the signature 'response(request, cache)'.")
+                     toThrowError: "The executed javascript does not contain a function with the signature 'response(request, cache)'.")
     }
 
     func testExecuteWithNoResponse() throws {
-        expectScript(#"""
-                     function response() {
-                     }
-                     """#,
-                     toFailWith: "The javascript function failed to return a response.")
+        expectResponse(#"""
+                       """#,
+                       toThrowError: "The javascript function failed to return a response.")
     }
 
     func testExecuteWithInvalidResponse() throws {
-        expectScript(#"""
-                     function response() {
-                         return "abc";
-                     }
-                     """#,
-                     toFailWith: #"The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: The data couldn’t be read because it isn’t in the correct format."#)
+        expectResponse(#"""
+                       return "abc";
+                       """#,
+                       toThrowError: #"The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: typeMismatch(Swift.Dictionary<Swift.String, Any>, Swift.DecodingError.Context(codingPath: [], debugDescription: "Expected to decode Dictionary<String, Any> but found JXValue instead.", underlyingError: nil))"#)
     }
 
     func testExecuteInvalidJavascript() throws {
-        expectScript(#"""
-                     function response() {
-                         return Response.ok(Body.text("Hello"); // <- Missing bracket here.
-                     }
-                     """#,
-                     toFailWith: "Error evaluating javascript: SyntaxError: Unexpected token ';'. Expected ')' to end an argument list.")
+        expectResponse(#"""
+                       return Response.ok(Body.text("Hello"); // <- Missing bracket here.
+                       """#,
+                       toThrowError: "Error evaluating javascript: SyntaxError: Unexpected token ';'. Expected ')' to end an argument list.")
     }
 
     // MARK: - Cache
 
-    func testCacheString(file: StaticString = #file, line: UInt = #line) {
-        expect(file: file, line: line, try self.execute(
-            #"""
-                function response(request, cache) {
-                    cache.set("abc", "xyz");
-                    return Response.ok(Body.text(cache.get("abc")));
-                }
-            """#
-        ).statusCode) == HTTPResponseStatus.ok.code
+    func testCacheString() throws {
+        try expectResponse(#"""
+                           cache.set("abc", "Hello world!");
+                           return Response.ok();
+                           """#,
+                           toReturn: .ok)
+        try expectResponse(#"""
+                           return Response.ok(Body.text(cache.get("abc")));
+                           """#,
+                           toReturn: .ok,
+                           withBody: .text("Hello world!"))
+    }
+
+    func testCacheInt() throws {
+        try expectResponse(#"""
+                           cache.set("abc", 123);
+                           return Response.ok();
+                           """#,
+                           toReturn: .ok)
+        try expectResponse(#"""
+                           return Response.ok(Body.text(cache.get("abc").toString()));
+                           """#,
+                           toReturn: .ok,
+                           withBody: .text("123"))
+    }
+
+    func testCacheJSObject() throws {
+        try expectResponse(#"""
+                           cache.set("abc", {
+                               def: "Hello world!"
+                           });
+                           return Response.ok();
+                           """#,
+                           toReturn: .ok)
+        try expectResponse(#"""
+                           var abc = cache.get("abc");
+                           return Response.ok(Body.text(abc.def));
+                           """#,
+                           toReturn: .ok,
+                           withBody: .text("Hello world!"))
     }
 
     // MARK: - Support
 
-    func expectScript(file: StaticString = #file,
-                      line: UInt = #line,
-                      response: String,
-                      toReturn expectedStatusCode: HTTPResponseStatus,
-                      expectedBody: HTTPResponse.Body) throws {
+    private func expectResponse(_ response: String,
+                                toReturn expectedStatusCode: HTTPResponseStatus,
+                                withBody expectedbody: HTTPResponse.Body = .empty,
+                                headers expectedHeaders: [String: String] = [:]) throws {
         let result = try execute(#"""
-            function response() {
-                return \#(response);
+            function response(request, cache) {
+                \#(response)
             }
         """#)
-        expect(file: file, line: line, result.statusCode) == expectedStatusCode.code
-        expect(file: file, line: line, result.body) == expectedBody
+        expect(result.statusCode) == expectedStatusCode.code
+        expect(result.body) == expectedbody
+        expect(result.headers.count) == expectedHeaders.count
+        expectedHeaders.forEach { expect(result.headers[$0]) == $1 }
     }
 
-    private func expectScript(file: StaticString = #file, line: UInt = #line, _ script: String, toFailWith expectedMessage: String) {
+    private func expectResponse(_ response: String,
+                                toThrowError expectedMessage: String) {
+        expectScript(#"""
+                     function response(request, cache) {
+                         \#(response)
+                     }
+                     """#,
+                     toThrowError: expectedMessage)
+    }
+
+    private func expectScript(_ script: String,
+                              toThrowError expectedMessage: String) {
         do {
-            _ = try execute(script)
-            fail("Exception not thrown", file: file, line: line)
+            try execute(script)
+            fail("Expected exception not thrown")
         } catch {
             if case SimulcraError.javascriptError(let message) = error {
                 if message != expectedMessage {
-                    fail("expected '\(expectedMessage)' got '\(message)'", file: file, line: line)
+                    fail("expected '\(expectedMessage)' got '\(message)'")
                 }
                 return
             }
-            fail("Unexpected error: \(error)", file: file, line: line)
+            fail("Unexpected error: \(error)")
         }
     }
 
+    @discardableResult
     private func execute(_ script: String) throws -> JavascriptCallResponse {
         let request = MockRequest.create(url: "http://127.0.0.1:8080/abc")
         return try executor.execute(script: script, for: request)

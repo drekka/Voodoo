@@ -13,6 +13,7 @@ import NIOCore
 /// Defines the response returned from executing a javascript response generator.
 struct JavascriptCallResponse: Decodable {
     let statusCode: UInt
+    let headers: [String: String]
     let body: HTTPResponse.Body
 }
 
@@ -25,11 +26,6 @@ struct JavascriptExecutor {
     init(forContext serverCtx: SimulcraContext) throws {
 
         self.serverCtx = serverCtx
-
-        // trap errors
-        jsCtx.exceptionHandler = { _, exception in
-            print("☕️ Javascript error: \(String(describing: exception))")
-        }
 
         try redirectLogging()
 
@@ -71,7 +67,7 @@ struct JavascriptExecutor {
         do {
             return try rawResponse.toDecodable(ofType: JavascriptCallResponse.self) as JavascriptCallResponse
         } catch {
-            throw SimulcraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error.localizedDescription)")
+            throw SimulcraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
         }
     }
 
@@ -90,15 +86,16 @@ struct JavascriptExecutor {
 
         class Response {
 
-            static raw(code, body) {
+            static raw(code, body, headers) {
                 return {
                     statusCode: code,
-                    body: body ?? Body.empty()
+                    body: body ?? Body.empty(),
+                    headers: headers ?? {}
                 };
             }
 
-            static ok(body) {
-                return this.raw(200, body);
+            static ok(body, headers) {
+                return this.raw(200, body, headers);
             }
         }
 
@@ -128,8 +125,18 @@ extension Cache {
     func asJavascriptObject(in jsCtx: JXContext) throws -> JXValue {
 
         let jsGet = JXValue(newFunctionIn: jsCtx) { context, _, args in
+
             let key = try args[0].stringValue
-            let value = self[key]
+
+            guard let value = self[key] else {
+                return context.null()
+            }
+
+            // If the value is an array or dictionary we encode it to JSON and then to an object.
+            if value as? Dictionary<String, Any> != nil,
+               let json = String(data: try JSONSerialization.data(withJSONObject: value), encoding: .utf8) {
+                return context.json(json)
+            }
 
             // If the value is encodable the we encode it into a JXValue.
             if let encodable = value as? Encodable {
@@ -160,8 +167,8 @@ extension Cache {
                     self[key] = date
                 }
 
-            case let value where try value.isArray, let value where value.isObject:
-                let json = try value.toJSON(indent: 0)
+            case let value where value.isObject:
+                let json = try value.toJSON()
                 if let jsonData = json.data(using: .utf8) {
                     self[key] = try JSONSerialization.jsonObject(with: jsonData, options: [])
                 }
@@ -178,14 +185,17 @@ extension Cache {
         }
 
         let cache = jsCtx.object()
-        try cache.set("get", object: jsGet)
-        try cache.set("set", object: jsSet)
+        try cache.set("get", convertible: jsGet)
+        try cache.set("set", convertible: jsSet)
 
         return cache
     }
 }
 
-/// This extension supports decoding responses from javascript calls using a pre-defined structure.
+/// This extension supports decoding the response body objects returned from a javascript call.
+///
+/// In the data the field `type` contains the enum to map into. The rest of the fields depend on what
+/// the `type` has defined.
 extension HTTPResponse.Body: Decodable {
 
     enum CodingKeys: String, CodingKey {
