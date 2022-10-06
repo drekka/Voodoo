@@ -1,0 +1,8 @@
+method: get
+path: /abc
+response:
+  statusCode: ok
+  headers: ~
+  body:
+    type: text
+    templateData: ~

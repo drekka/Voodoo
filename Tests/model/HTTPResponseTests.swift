@@ -77,7 +77,7 @@ class HTTPResponseTests: XCTestCase {
 
     func assert(response: HTTPResponse,
                 returnsStatus expectedStatus: HTTPResponseStatus,
-                withHeaders expectedHeaders: [String: String] = [:],
+                withHeaders expectedHeaders: [String: String]? = nil,
                 body expectedBody: String? = nil) async throws {
 
         let request: HTTPRequest = MockRequest.create(url: "http://127.0.0.1")
@@ -86,8 +86,8 @@ class HTTPResponseTests: XCTestCase {
 
         expect(hbResponse.status) == expectedStatus
 
-        expect(hbResponse.headers.count) == expectedHeaders.count
-        expectedHeaders.forEach {
+        expect(hbResponse.headers.count) == expectedHeaders?.count ?? 0
+        expectedHeaders?.forEach {
             guard let value = hbResponse.headers.first(name: $0) else {
                 fail("Header '\($0) not found in response.")
                 return
@@ -99,22 +99,6 @@ class HTTPResponseTests: XCTestCase {
             expect(hbResponse.body) == expectedBody.hbResponseBody
         } else {
             expect(hbResponse.body) == .empty
-        }
-    }
-}
-
-extension HBResponseBody: Equatable {
-    public static func == (lhs: HummingbirdCore.HBResponseBody, rhs: HummingbirdCore.HBResponseBody) -> Bool {
-        switch (lhs, rhs) {
-
-        case (.empty, .empty):
-            return true
-
-        case (.byteBuffer(let lhsBuffer), .byteBuffer(let rhsBuffer)):
-            return lhsBuffer.data == rhsBuffer.data
-
-        default:
-            return false
         }
     }
 }
@@ -146,7 +130,7 @@ class HTTPReponseBodyTests: XCTestCase {
     }
 
     func testJSON() throws {
-        try assert(.json(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
+        try assert(.jsonEncodable(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
                    contentType: ContentType.applicationJSON)
     }

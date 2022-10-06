@@ -66,6 +66,10 @@
       <CommandLineArguments>
          <CommandLineArgument
             argument = "-p 9090-9099"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--help"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

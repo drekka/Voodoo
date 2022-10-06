@@ -1,107 +1,25 @@
 //
-//  Created by Derek Clarkson.
+//  File.swift
+//  
+//
+//  Created by Derek Clarkson on 5/10/2022.
 //
 
 import Foundation
 import Hummingbird
 import HummingbirdMustache
-import JXKit
-import NIOFoundationCompat
-
-/// Type for template data used to inject values.
-public typealias TemplateData = [String: Any]
-public typealias HeaderDictionary = [String: String]
-
-/// Commonly used content types..
-public enum ContentType {
-
-    public static let key = "content-type"
-
-    public static let textPlain = "text/plain"
-    public static let textHTML = "text/html"
-    public static let applicationJSON = "application/json"
-    public static let applicationFormData = "application/x-www-form-urlencoded"
-}
-
-/// Defines a response to an API call.
-public enum HTTPResponse {
-
-    // Core
-
-    /// The base type of response where everything is specified
-    case raw(_: HTTPResponseStatus, headers: HeaderDictionary = [:], body: Body = .empty)
-
-    /// Custom closure run to generate a response.
-    case dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)
-
-    /// Similar to ``dynamic(_:)``, ``javascript(_:)`` is a dynamic response. The difference is that instead of compiled Swift code, we are calling
-    /// javascript at runtime which allows developers to execute dynamic responses without having to compile the server.
-    case javascript(_ script: String)
-
-    // Convenience
-
-    /// Return a HTTP 200  with an optional body and headers.
-    case ok(headers: HeaderDictionary = [:], body: Body = .empty)
-
-    case created(headers: HeaderDictionary = [:], body: Body = .empty)
-    case accepted(headers: HeaderDictionary = [:], body: Body = .empty)
-
-    case movedPermanently(_ url: String)
-    case movedTemporarily(_ url: String)
-
-    case badRequest(headers: HeaderDictionary = [:], body: Body = .empty)
-    case unauthorised(headers: HeaderDictionary = [:], body: Body = .empty)
-    case forbidden(headers: HeaderDictionary = [:], body: Body = .empty)
-
-    case notFound
-    case notAcceptable
-    case tooManyRequests
-
-    case internalServerError(headers: HeaderDictionary = [:], body: Body = .empty)
-
-    /// Defines the body of a response where a response can have one.
-    public enum Body {
-
-        /// No body to be returned.
-        case empty
-
-        /// Loads the body from a template registered with the Mustache template engine.
-        ///
-        /// - parameters:
-        ///   - templateName: The name of the template as registered in the template engine.
-        ///   - templateData: A dictionary containing additional data required by the template.
-        ///   - contentType: The `content-type` to be returned in the HTTP response. This should match the content-type of the template.
-        case template(_ templateName: String, templateData: TemplateData = [:], contentType: String = ContentType.applicationJSON)
-
-        /// Loads the body by serialising a `Encodable` object into JSON.
-        ///
-        /// `templateData` is passed because it allows a `Encodable` object to have values injected into the resulting JSON.
-        case json(_ encodable: Encodable, templateData: TemplateData = [:])
-
-        /// Use the data returned from the passed file url as the body of response.
-        case file(_ url: URL, contentType: String)
-
-        /// Returns the passed text as the body.
-        ///
-        /// Before returning the text will be passed to the Mustache template engine with the template data.
-        case text(_ text: String, templateData: TemplateData = [:])
-
-        /// Returns raw data as the specified content type.
-        case data(_ data: Data, contentType: String? = nil)
-    }
-}
 
 extension HTTPResponse {
 
     func hbResponse(for request: HTTPRequest, inServerContext context: SimulcraContext) async throws -> HBResponse {
 
         // Captures the request and cache before generating the response.
-        func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary, body: HTTPResponse.Body) throws -> HBResponse {
+        func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {
 
             let body = try body.hbBody(serverContext: context)
 
             // Add additional headers returned with the body.
-            var finalHeaders = headers
+            var finalHeaders = headers ?? [:]
             if let contentType = body.1 {
                 finalHeaders[ContentType.key] = contentType
             }
@@ -122,7 +40,7 @@ extension HTTPResponse {
         case .javascript(let script):
             let executor = try JavascriptExecutor(forContext: context)
             let response = try executor.execute(script: script, for: request)
-            return try hbResponse(HTTPResponseStatus(statusCode: Int(response.statusCode)), headers: [:], body: response.body)
+            return try await response.hbResponse(for: request, inServerContext: context)
 
             // Convenience
 
@@ -185,7 +103,7 @@ extension HTTPResponse {
 //
 //    var method: String { request.method.rawValue }
 //    var headers: [String: Encodable] {
-//        var results: [String: Encodable] = [:]
+//        var results: [String: Encodable]? = nil
 //        request.headers.forEach {
 //            let values: [String] = self[$0.0]
 //            switch values.endIndex {
@@ -246,11 +164,21 @@ extension HTTPResponse.Body {
         case .empty:
             return (.empty, nil)
 
-        case .json(let encodable, let templateData):
+        case .jsonObject(let object, let templateData):
+            let jsonData = try JSONSerialization.data(withJSONObject: object)
+            guard let json = String(data: jsonData, encoding: .utf8) else {
+                throw SimulcraError.conversionError("Unable to convert JSON data to a String")
+            }
+            return (try json.render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
+
+        case .jsonEncodable(let encodable, let templateData):
             let jsonData = try JSONEncoder().encode(encodable)
             guard let json = String(data: jsonData, encoding: .utf8) else {
                 throw SimulcraError.conversionError("Unable to convert JSON data to a String")
             }
+            return (try json.render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
+
+        case .json(let json, let templateData):
             return (try json.render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
 
         case .data(let data, let contentType):
@@ -278,15 +206,22 @@ extension HTTPResponse.Body {
 
 extension String {
 
+    /// Returns this string as a `HBRequestBody.byteBuffer`.
     var hbRequestBody: HBRequestBody {
         .byteBuffer(ByteBuffer(string: self))
     }
 
+    /// Returns this string as a `HBResponseBody.byteBuffer`.
     var hbResponseBody: HBResponseBody {
         .byteBuffer(ByteBuffer(string: self))
     }
 
-    func render(withTemplateData templateData: TemplateData, context: SimulcraContext) throws -> HBResponseBody {
+    /// Renders this string as a response body.
+    ///
+    /// - parameters:
+    ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys..
+    ///     - context: The server context.
+    func render(withTemplateData templateData: TemplateData?, context: SimulcraContext) throws -> HBResponseBody {
         let finalTemplateData = context.requestTemplateData(adding: templateData)
         return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
     }

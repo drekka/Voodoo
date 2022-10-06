@@ -2,10 +2,10 @@
 //  Created by Derek Clarkson.
 //
 
-import Hummingbird
+import NIOHTTP1
 
 /// The definition of a mocked endpoint.
-public struct Endpoint {
+public struct Endpoint: Decodable {
 
     let method: HTTPMethod
     let path: String
@@ -23,5 +23,13 @@ public struct Endpoint {
         self.method = method
         self.path = path
         self.response = response
+    }
+}
+
+extension HTTPMethod: Decodable {
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self = Self(rawValue: try container.decode(String.self).uppercased())
     }
 }

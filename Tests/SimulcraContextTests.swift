@@ -15,6 +15,15 @@ class SimulcraContextTests: XCTestCase {
         context = MockSimulcraContext()
     }
 
+    func testRequestTemplateDataWithNil() {
+
+        context.cache["abc"] = "def"
+        let templateData = context.requestTemplateData(adding: nil)
+
+        expect(templateData.count) == 1
+        expect(templateData["abc"] as? String) == "def"
+    }
+
     func testRequestTemplateData() {
 
         context.cache["abc"] = "def"

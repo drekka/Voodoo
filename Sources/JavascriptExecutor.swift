@@ -10,13 +10,6 @@ import Hummingbird
 import JXKit
 import NIOCore
 
-/// Defines the response returned from executing a javascript response generator.
-struct JavascriptCallResponse: Decodable {
-    let statusCode: UInt
-    let headers: [String: String]
-    let body: HTTPResponse.Body
-}
-
 /// Wraps up the initialisation an execution of javascript based API responses.
 struct JavascriptExecutor {
 
@@ -33,7 +26,7 @@ struct JavascriptExecutor {
         try injectTypes()
     }
 
-    func execute(script: String, for _: HTTPRequest) throws -> JavascriptCallResponse {
+    func execute(script: String, for _: HTTPRequest) throws -> HTTPResponse {
 
         // Load the script into the context then retrieve the function.
         do {
@@ -65,7 +58,7 @@ struct JavascriptExecutor {
         }
 
         do {
-            return try rawResponse.toDecodable(ofType: JavascriptCallResponse.self) as JavascriptCallResponse
+            return try rawResponse.toDecodable(ofType: HTTPResponse.self) as HTTPResponse
         } catch {
             throw SimulcraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
         }
@@ -90,7 +83,7 @@ struct JavascriptExecutor {
                 return {
                     statusCode: code,
                     body: body ?? Body.empty(),
-                    headers: headers ?? {}
+                    headers: headers
                 };
             }
 
@@ -111,7 +104,16 @@ struct JavascriptExecutor {
                 return {
                     type: "text",
                     text: text,
-                    templateData: templateData ?? {}
+                    templateData: templateData
+                };
+            }
+
+            static json(json, templateData) {
+                var jsonString = typeof json === 'object' && json !== null ? JSON.stringify(json) : json
+                return {
+                    type: "json",
+                    json: jsonString,
+                    templateData: templateData
                 };
             }
         }
@@ -193,30 +195,3 @@ extension Cache {
     }
 }
 
-/// This extension supports decoding the response body objects returned from a javascript call.
-///
-/// In the data the field `type` contains the enum to map into. The rest of the fields depend on what
-/// the `type` has defined.
-extension HTTPResponse.Body: Decodable {
-
-    enum CodingKeys: String, CodingKey {
-        case type
-        case text
-        case templateData
-    }
-
-    public init(from decoder: Decoder) throws {
-
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-
-        switch try container.decode(String.self, forKey: .type) {
-        case "text":
-            let text = try container.decode(String.self, forKey: .text)
-            let templateData = try container.decode([String: String].self, forKey: .templateData)
-            self = .text(text, templateData: templateData)
-
-        default: // Also handles .empty
-            self = .empty
-        }
-    }
-}

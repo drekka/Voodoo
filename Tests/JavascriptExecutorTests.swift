@@ -21,48 +21,64 @@ class JavascriptExecutorTests: XCTestCase {
         executor = try JavascriptExecutor(forContext: mockContext)
     }
 
-    // MARK: - Response
+    // MARK: - Raw Response
 
     func testExecuteRawResponseWithStatusCode() throws {
-        try expectResponse(#"return Response.raw(201);"#, toReturn: .created)
+        try expectResponse(#"return Response.raw(201);"#, toReturn: .created())
     }
 
     func testExecuteRawResponseWithStatusCodeBody() throws {
-        try expectResponse(#"return Response.raw(201, Body.text("Hello"));"#, toReturn: .created, withBody: .text("Hello"))
+        try expectResponse(#"return Response.raw(201, Body.text("Hello"));"#, toReturn: .created(body: .text("Hello")))
     }
 
-    func testExecuteRawResponseWithStatusCodeBodyHeaders() throws {
+    func testExecuteRawResponseWithStatusCodeTextBodyHeaders() throws {
         try expectResponse(#"return Response.raw(201, Body.text("Hello"), {abc:"123"});"#,
-                           toReturn: .created,
-                           withBody: .text("Hello"),
-                           headers: ["abc": "123"])
+                           toReturn: .created(headers: ["abc": "123"], body: .text("Hello")))
     }
+
+    func testExecuteRawResponseWithStatusCodeJSONStringBody() throws {
+        try expectResponse(#"""
+                           var obj = {
+                                abc:"Hello world!"
+                           }
+                           return Response.raw(201, Body.json(JSON.stringify(obj)));
+                           """#,
+                           toReturn: .created(body: .json(#"{"abc":"Hello world!"}"#)))
+    }
+
+    func testExecuteRawResponseWithStatusCodeJSONObjectBody() throws {
+        try expectResponse(#"""
+                           var obj = {
+                                abc:"Hello world!"
+                           }
+                           return Response.raw(201, Body.json(obj));
+                           """#,
+                           toReturn: .created(body: .json(#"{"abc":"Hello world!"}"#)))
+    }
+
+    // MARK: - Other responses
 
     func testExecuteOkResponse() throws {
-        try expectResponse(#"return Response.ok();"#, toReturn: .ok)
+        try expectResponse(#"return Response.ok();"#, toReturn: .ok())
     }
 
     func testExecuteOkResponseWithBody() throws {
-        try expectResponse(#"return Response.ok( Body.text("Hello"));"#, toReturn: .ok, withBody: .text("Hello"))
+        try expectResponse(#"return Response.ok( Body.text("Hello"));"#, toReturn: .ok(body: .text("Hello")))
     }
 
     func testExecuteOkResponseWithBodyHeaders() throws {
         try expectResponse(#"return Response.ok( Body.text("Hello"), {"abc": "123"});"#,
-                           toReturn: .ok,
-                           withBody: .text("Hello"),
-                           headers: ["abc": "123"])
+                           toReturn: .ok(headers: ["abc": "123"], body: .text("Hello")))
     }
 
     // MARK: - Body
 
     func testExecuteBodyEmpty() throws {
-        try expectResponse(#"return Response.ok();"#, toReturn: .ok)
+        try expectResponse(#"return Response.ok();"#, toReturn: .ok())
     }
 
     func testExecuteBodyText() throws {
-        try expectResponse(#"return Response.ok(Body.text("Hello"));"#,
-                           toReturn: .ok,
-                           withBody: .text("Hello"))
+        try expectResponse(#"return Response.ok(Body.text("Hello"));"#, toReturn: .ok(body: .text("Hello")))
     }
 
     // MARK: - Errors
@@ -99,8 +115,7 @@ class JavascriptExecutorTests: XCTestCase {
         try expectResponse(#"""
                            return Response.ok(Body.text("Hello " + cache.get("abc")));
                            """#,
-                           toReturn: .ok,
-                           withBody: .text("Hello null"))
+                           toReturn: .ok(body: .text("Hello null")))
     }
 
     func testCacheString() throws {
@@ -108,12 +123,11 @@ class JavascriptExecutorTests: XCTestCase {
                            cache.set("abc", "Hello world!");
                            return Response.ok();
                            """#,
-                           toReturn: .ok)
+                           toReturn: .ok())
         try expectResponse(#"""
                            return Response.ok(Body.text(cache.get("abc")));
                            """#,
-                           toReturn: .ok,
-                           withBody: .text("Hello world!"))
+                           toReturn: .ok(body: .text("Hello world!")))
     }
 
     func testCacheInt() throws {
@@ -121,12 +135,11 @@ class JavascriptExecutorTests: XCTestCase {
                            cache.set("abc", 123);
                            return Response.ok();
                            """#,
-                           toReturn: .ok)
+                           toReturn: .ok())
         try expectResponse(#"""
                            return Response.ok(Body.text(cache.get("abc").toString()));
                            """#,
-                           toReturn: .ok,
-                           withBody: .text("123"))
+                           toReturn: .ok(body: .text("123")))
     }
 
     func testCacheJSObject() throws {
@@ -136,13 +149,12 @@ class JavascriptExecutorTests: XCTestCase {
                            });
                            return Response.ok();
                            """#,
-                           toReturn: .ok)
+                           toReturn: .ok())
         try expectResponse(#"""
                            var abc = cache.get("abc");
                            return Response.ok(Body.text(abc.def));
                            """#,
-                           toReturn: .ok,
-                           withBody: .text("Hello world!"))
+                           toReturn: .ok(body: .text("Hello world!")))
     }
 
     func testCacheJSArray() throws {
@@ -158,36 +170,28 @@ class JavascriptExecutorTests: XCTestCase {
                            );
                            return Response.ok();
                            """#,
-                           toReturn: .ok)
+                           toReturn: .ok())
         try expectResponse(#"""
                            var array = cache.get("abc");
                            return Response.ok(Body.text(array[0].def));
                            """#,
-                           toReturn: .ok,
-                           withBody: .text("Hello world!"))
+                           toReturn: .ok(body: .text("Hello world!")))
         try expectResponse(#"""
                            var array = cache.get("abc");
                            return Response.ok(Body.text(array[1].def));
                            """#,
-                           toReturn: .ok,
-                           withBody: .text("Goodbye world!"))
+                           toReturn: .ok(body: .text("Goodbye world!")))
     }
 
     // MARK: - Support
 
-    private func expectResponse(_ response: String,
-                                toReturn expectedStatusCode: HTTPResponseStatus,
-                                withBody expectedBody: HTTPResponse.Body = .empty,
-                                headers expectedHeaders: [String: String] = [:]) throws {
+    private func expectResponse(_ response: String, toReturn expectedResponse: HTTPResponse) throws {
         let result = try execute(#"""
             function response(request, cache) {
                 \#(response)
             }
         """#)
-        expect(result.statusCode) == expectedStatusCode.code
-        expect(result.body) == expectedBody
-        expect(result.headers.count) == expectedHeaders.count
-        expectedHeaders.forEach { expect(result.headers[$0]) == $1 }
+        expect(result) == expectedResponse
     }
 
     private func expectResponse(_ response: String,
@@ -217,23 +221,8 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     @discardableResult
-    private func execute(_ script: String) throws -> JavascriptCallResponse {
+    private func execute(_ script: String) throws -> HTTPResponse {
         let request = MockRequest.create(url: "http://127.0.0.1:8080/abc")
         return try executor.execute(script: script, for: request)
-    }
-}
-
-extension HTTPResponse.Body: Equatable {
-    public static func == (lhs: SimulcraCore.HTTPResponse.Body, rhs: SimulcraCore.HTTPResponse.Body) -> Bool {
-        switch (lhs, rhs) {
-        case (.empty, .empty):
-            return true
-        case (.template(let lhsName, _, _), .template(let rhsName, _, _)):
-            return lhsName == rhsName
-        case (.text(let lhsText, _), .text(let rhsText, _)):
-            return lhsText == rhsText
-        default:
-            return false
-        }
     }
 }

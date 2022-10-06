@@ -19,6 +19,7 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "3.0.0")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
+        .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
     ],
     targets: [
         .target(
@@ -27,6 +28,7 @@ let package = Package(
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
                 "JXKit",
+                "Yams",
             ],
             path: "Sources"
         ),

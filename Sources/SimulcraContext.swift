@@ -28,7 +28,7 @@ extension SimulcraContext {
     /// detected in the merges then the new value will be used, overriding any prior data.
     ///
     /// - parameter requestData: Additional data unique to the current request.
-    func requestTemplateData(adding requestData: TemplateData = [:]) -> TemplateData {
-        cache.dictionaryRepresentation().merging(requestData) { $1 }
+    func requestTemplateData(adding requestData: TemplateData? = nil) -> TemplateData {
+        cache.dictionaryRepresentation().merging(requestData ?? [:]) { $1 }
     }
 }

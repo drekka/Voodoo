@@ -89,12 +89,20 @@ extension SimulcraCMD {
         )
         var templatePath: String?
 
+        @Option(
+            name: [.short, .customLong("config-dir")],
+            help: """
+            A directory path containing YAML files to configure the server. These files setup the APIs being mocked.
+            """
+        )
+        var configPath: String?
+
 //        @Option(name: [.customLong("file-dir")],
 //                help: "A directory path where files are stored. Mostly locations of image files and other web like resources.")
 //        var filePaths: [String] = []
 
-//        @Argument(help: "Any number of API scenarios to load.")
-//        var scenario: [String] = []
+        @Argument(help: "Any number of API scenarios to load.")
+        var scenario: [String] = []
 
         mutating func run() throws {
 
@@ -138,10 +146,9 @@ extension SimulcraCMD {
         private func logConfiguration() {
 
             guard options.verbose else { return }
-
             print("Configuration:")
             print("\tTemplate path: \(templatePath ?? "")")
-
+            print("\tConfig path: \(configPath ?? "")")
             print("\tFile paths:")
             // filePaths.forEach { print("\t ‣ \($0)") }
             print("")
