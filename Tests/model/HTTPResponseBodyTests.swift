@@ -1,0 +1,128 @@
+//
+//  File.swift
+//
+//
+//  Created by Derek Clarkson on 5/10/2022.
+//
+
+import Foundation
+import HummingbirdMustache
+import Nimble
+@testable import SimulcraCore
+import XCTest
+
+class HTTPResponseBodyTests: XCTestCase {
+
+    private var context: SimulcraContext!
+
+    override func setUp() {
+        super.setUp()
+        context = MockSimulcraContext()
+    }
+
+    func testEmpty() throws {
+        let context = MockSimulcraContext()
+        let hbBody = try HTTPResponse.Body.empty.hbBody(serverContext: context)
+        expect(hbBody.0) == .empty
+        expect(hbBody.1) == nil
+    }
+
+    func testText() throws {
+        try assert(.text(#"def {{xyz}}"#, templateData: ["xyz": 123]),
+                   generates: #"def 123"#,
+                   contentType: ContentType.textPlain)
+    }
+
+    func testData() throws {
+        try assert(.data("abc".data(using: .utf8)!, contentType: ContentType.textPlain),
+                   generates: "abc",
+                   contentType: ContentType.textPlain)
+    }
+
+    func testJSONEncodable() throws {
+
+        struct JSONTest: Codable {
+            let abc: String
+        }
+
+        try assert(.jsonEncodable(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
+                   generates: #"{"abc":"def 123"}"#,
+                   contentType: ContentType.applicationJSON)
+    }
+
+    func testJSONObject() throws {
+        try assert(.jsonObject(["abc": "def {{xyz}}"], templateData: ["xyz": 123]),
+                   generates: #"{"abc":"def 123"}"#,
+                   contentType: ContentType.applicationJSON)
+    }
+
+    func testTemplate() throws {
+        let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
+        context.mustacheRenderer.register(template, named: "fred")
+        try assert(.template("fred", templateData: ["xyz": 123], contentType: ContentType.textPlain),
+                   generates: #"Hello 123"#,
+                   contentType: ContentType.textPlain)
+    }
+
+    func testFile() throws {
+        let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "html")!
+        try assert(.file(url, contentType: ContentType.textHTML),
+                   generates: #"<html><body></body></html>\#n"#,
+                   contentType: ContentType.textHTML)
+    }
+
+    // MARK: - Support functions
+
+    func assert(_ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
+        let hbBody = try body.hbBody(serverContext: context)
+        expect(hbBody.0) == expectedBody.hbResponseBody
+        expect(hbBody.1) == expectedContentType
+    }
+}
+
+class HTTPREsponseBodyDecodableTests: XCTestCase {
+
+    func testDecodeEmpty() throws {
+        try assert(#"{"type":"empty"}"#, decodesTo: .empty)
+    }
+
+    func testDecodeText() throws {
+        try assert(#"{"type":"text","text":"abc"}"#, decodesTo: .text("abc"))
+    }
+
+    func testDecodeData() throws {
+        let data = "abc".data(using: .utf8)!
+        try assert(#"{"type":"data","data":"\#(data.base64EncodedString())","contentType":"ct"}"#,
+                   decodesTo: .data(data, contentType: "ct"))
+    }
+
+    func testDecodeJSON() throws {
+        try assert(#"""
+        {
+            "type":"json",
+            "json":"{\"abc\":\"xyz\"}"
+        }
+        """#, decodesTo: .json(#"{"abc":"xyz"}"#))
+    }
+
+    func testUnknownError() throws {
+        let data = #"{"type":"xxxx"}"#.data(using: .utf8)!
+        do {
+            _ = try JSONDecoder().decode(HTTPResponse.Body.self, from: data)
+            fail("Error not thrown")
+        }
+        catch DecodingError.dataCorrupted(let context) {
+            expect(context.codingPath.count) == 1
+            expect(context.codingPath[0].stringValue) == "type"
+            expect(context.debugDescription) == "Unknown value 'xxxx'"
+        }
+    }
+
+    // MARK: - Support functions
+
+    func assert(_ json: String, decodesTo expectedBody: HTTPResponse.Body) throws {
+        let data = json.data(using: .utf8)!
+        let body = try JSONDecoder().decode(HTTPResponse.Body.self, from: data)
+        expect(body) == expectedBody
+    }
+}

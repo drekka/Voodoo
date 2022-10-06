@@ -69,10 +69,9 @@ class HTTPResponseTests: XCTestCase {
 
     func assertConvenienceCase(_ enumInit: (HeaderDictionary, HTTPResponse.Body) -> HTTPResponse, returnsStatus expectedStatus: HTTPResponseStatus) async throws {
         let response = enumInit(testHeaders, .text("hello"))
-        try await assert(response: response,
-                         returnsStatus: expectedStatus,
-                         withHeaders: testHeaders + [ContentType.key: ContentType.textPlain],
-                         body: "hello")
+        var expectedHeaders = testHeaders
+        expectedHeaders[ContentType.key] = ContentType.textPlain
+        try await assert(response: response, returnsStatus: expectedStatus, withHeaders: expectedHeaders, body: "hello")
     }
 
     func assert(response: HTTPResponse,
@@ -103,70 +102,87 @@ class HTTPResponseTests: XCTestCase {
     }
 }
 
-extension Dictionary {
-    static func + (lhs: [Key: Value], rhs: [Key: Value]) -> [Key: Value] {
-        lhs.merging(rhs) { $1 }
-    }
-}
+class HTTPResponseDecodableTests: XCTestCase {
 
-class HTTPReponseBodyTests: XCTestCase {
-
-    private var context: SimulcraContext!
-
-    override func setUp() {
-        super.setUp()
-        context = MockSimulcraContext()
+    func testStatusCodeAndJavascriptIsInvalid() throws {
+        try assert(#"""
+                   {
+                       "statusCode":200,
+                       "javascript": "function response(request, cache) { return .ok(); }"
+                   }
+                   """#,
+                   failsOnPath: ["javascript"], withError: "Cannot have both 'statusCode' and 'javascript'.")
     }
 
-    struct JSONTest: Codable {
-        let abc: String
+    func testNoStatusCodeOrJavahkscriptIsInvalid() throws {
+        try assert(#"""
+                   {
+                   }
+                   """#,
+                   failsOnPath: ["statusCode"], withError: "Response must container either 'statusCode' or 'javascript'.")
     }
 
-    func testEmpty() throws {
-        let context = MockSimulcraContext()
-        let hbBody = try HTTPResponse.Body.empty.hbBody(serverContext: context)
-        expect(hbBody.0) == .empty
-        expect(hbBody.1) == nil
+    func testDecodeJavascript() throws {
+        try assert(#"""
+                   {
+                    "javascript": "function response(request, cache) { return .ok(); }"
+                   }
+                   """#,
+                   decodesTo: .javascript(#"function response(request, cache) { return .ok(); }"#))
     }
 
-    func testJSON() throws {
-        try assert(.jsonEncodable(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
-                   generates: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
+    func testDecodeOk() throws {
+        try assert(#"{"statusCode":200}"#, decodesTo: .ok())
     }
 
-    func testData() throws {
-        try assert(.data("abc".data(using: .utf8)!, contentType: ContentType.textPlain),
-                   generates: "abc",
-                   contentType: ContentType.textPlain)
+    func testDecodeCreated() throws {
+        try assert(#"{"statusCode":201}"#, decodesTo: .created())
     }
 
-    func testText() throws {
-        try assert(.text(#"def {{xyz}}"#, templateData: ["xyz": 123]),
-                   generates: #"def 123"#,
-                   contentType: ContentType.textPlain)
+    func testDecodeAccepted() throws {
+        try assert(#"{"statusCode":202}"#, decodesTo: .accepted())
     }
 
-    func testTemplate() throws {
-        let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
-        context.mustacheRenderer.register(template, named: "fred")
-        try assert(.template("fred", templateData: ["xyz": 123], contentType: ContentType.textPlain),
-                   generates: #"Hello 123"#,
-                   contentType: ContentType.textPlain)
+    func testDecodeMovedPermanenty() throws {
+        try assert(#"{"statusCode": 301,"url":"http://127.0.0.1"}"#, decodesTo: .movedPermanently("http://127.0.0.1"))
     }
 
-    func testFile() throws {
-        let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "html")!
-        try assert(.file(url, contentType: ContentType.textHTML),
-                   generates: #"<html><body></body></html>\#n"#,
-                   contentType: ContentType.textHTML)
+    func testDecodeTemporaryRedirect() throws {
+        try assert(#"{"statusCode": 307,"url":"http://127.0.0.1"}"#, decodesTo: .temporaryRedirect("http://127.0.0.1"))
     }
 
-    // MARK: - Support functions
+    func testDecodeNotFound() throws {
+        try assert(#"{"statusCode":404}"#, decodesTo: .notFound)
+    }
 
-    func assert(_ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
-        let hbBody = try body.hbBody(serverContext: context)
-        expect(hbBody.0) == expectedBody.hbResponseBody
-        expect(hbBody.1) == expectedContentType
+    func testDecodeNotAcceptable() throws {
+        try assert(#"{"statusCode":406}"#, decodesTo: .notAcceptable)
+    }
+
+    func testDecodeTooManyRequests() throws {
+        try assert(#"{"statusCode":429}"#, decodesTo: .tooManyRequests)
+    }
+
+    func testDecodeInternalServerError() throws {
+        try assert(#"{"statusCode":500}"#, decodesTo: .internalServerError())
+    }
+
+    // MARK: - Helpers
+
+    func assert(_ json: String, failsOnPath expectedPath: [String], withError expectedError: String) throws {
+        do {
+            let data = json.data(using: .utf8)!
+            _ = try JSONDecoder().decode(HTTPResponse.self, from: data)
+            fail("Expected error not thrown")
+        } catch DecodingError.dataCorrupted(let context) {
+            expect(context.codingPath.map { $0.stringValue }) == expectedPath
+            expect(context.debugDescription) == expectedError
+        }
+    }
+
+    func assert(_ json: String, decodesTo expectedResponse: HTTPResponse) throws {
+        let data = json.data(using: .utf8)!
+        let response = try JSONDecoder().decode(HTTPResponse.self, from: data)
+        expect(response) == expectedResponse
     }
 }

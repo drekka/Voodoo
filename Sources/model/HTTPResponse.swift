@@ -47,7 +47,7 @@ public enum HTTPResponse {
     case accepted(headers: HeaderDictionary? = nil, body: Body = .empty)
 
     case movedPermanently(_ url: String)
-    case movedTemporarily(_ url: String)
+    case temporaryRedirect(_ url: String)
 
     case badRequest(headers: HeaderDictionary? = nil, body: Body = .empty)
     case unauthorised(headers: HeaderDictionary? = nil, body: Body = .empty)
@@ -58,66 +58,154 @@ public enum HTTPResponse {
     case tooManyRequests
 
     case internalServerError(headers: HeaderDictionary? = nil, body: Body = .empty)
+}
 
-    /// Defines the body of a response where a response can have one.
-    public enum Body {
+/// This extension supports decoding the response from javascript or YAML.
+extension HTTPResponse: Decodable {
 
-        /// No body to be returned.
-        case empty
+    enum CodingKeys: String, CodingKey {
+        case statusCode
+        case body
+        case url
+        case headers
+        case javascript
+    }
 
-        /// Loads the body from a template registered with the Mustache template engine.
-        ///
-        /// - parameters:
-        ///   - templateName: The name of the template as registered in the template engine.
-        ///   - templateData: A dictionary containing additional data required by the template.
-        ///   - contentType: The `content-type` to be returned in the HTTP response. This should match the content-type of the template.
-        case template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)
+    public init(from decoder: Decoder) throws {
 
-        /// Serialises an `Encodable` object into JSON.
-        ///
-        /// This is the preferred way to generate a body from an object if the object conforms to `Encodable`. If it doesn't, then ``jsonObject(_:templateData:)`` can
-        /// be used instead.
-        ///
-        /// - parameters:
-        ///   - encodable: The object to be converted to JSON.
-        ///   - templateData: Values that can be injected into the generated JSON.
-        case jsonEncodable(_ encodable: Encodable, templateData: TemplateData? = nil)
+        let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        /// Serialises the passed object into JSON.
-        ///
-        /// This is used for things like dictionaries and arrays with the `Any` data types that are not ``Encodable``.
-        ///
-        /// - parameters:
-        ///   - object: The object to be converted to JSON.
-        ///   - templateData: Values that can be injected into the generated JSON.
-        case jsonObject(_ object: Any, templateData: TemplateData? = nil)
+        // First check for some javascript to be executed.
+        if let javascript = try container.decodeIfPresent(String.self, forKey: .javascript) {
 
-        /// Use the data returned from the passed file url as the body of response.
-        case file(_ url: URL, contentType: String)
+            if container.contains(.statusCode) {
+                throw DecodingError.dataCorruptedError(forKey: .javascript, in: container, debugDescription: "Cannot have both 'statusCode' and 'javascript'.")
+            }
+            self = .javascript(javascript)
+            return
+        }
 
-        /// Returns the passed text as a JSON body.
-        ///
-        /// Before returning the text will be passed to the Mustache template engine with the template data.
-        ///
-        /// - parameters:
-        ///   - json: The json to be used as the body of the response.
-        ///   - templateData: Additional values that can be injected into the text.
-        case json(_ json: String, templateData: TemplateData? = nil)
+        // Now look for a hard coded response.
+        guard let statusCode = try container.decodeIfPresent(Int.self, forKey: .statusCode) else {
+            throw DecodingError.dataCorruptedError(forKey: .statusCode, in: container, debugDescription: "Response must container either 'statusCode' or 'javascript'.")
+        }
 
-        /// Returns the passed text as the body.
-        ///
-        /// Before returning the text will be passed to the Mustache template engine with the template data.
-        ///
-        /// - parameters:
-        ///   - text: The text to be used as the body of the response.
-        ///   - templateData: Additional values that can be injected into the text.
-        case text(_ text: String, templateData: TemplateData? = nil)
+        let status = HTTPResponseStatus(statusCode: statusCode)
+        let body = try container.decodeIfPresent(HTTPResponse.Body.self, forKey: .body) ?? .empty
+        let headers = try container.decodeIfPresent(HeaderDictionary.self, forKey: .headers)
 
-        /// Returns raw data as the specified content type.
-        ///
-        /// - parameters
-        ///     - data: The data to be returned. This will be encoded if necessary.
-        ///     - contentType: The content type to pass in the `Content-Type` header.
-        case data(_ data: Data, contentType: String)
+        switch status {
+        case .ok:
+            self = .ok(headers: headers, body: body)
+
+        case .created:
+            self = .created(headers: headers, body: body)
+
+        case .accepted:
+            self = .accepted(headers: headers, body: body)
+
+        case .movedPermanently:
+            self = .movedPermanently(try container.decode(String.self, forKey: .url))
+
+        case .temporaryRedirect:
+            self = .temporaryRedirect(try container.decode(String.self, forKey: .url))
+
+        case .notFound:
+            self = .notFound
+        case .notAcceptable:
+            self = .notAcceptable
+        case .tooManyRequests:
+            self = .tooManyRequests
+
+        case .internalServerError:
+            self = .internalServerError(headers: headers, body: body)
+
+        default:
+            self = .raw(status, headers: headers, body: body)
+        }
+    }
+}
+
+/// This extension creates Hummingbird responses.
+extension HTTPResponse {
+
+    func hbResponse(for request: HTTPRequest, inServerContext context: SimulcraContext) async throws -> HBResponse {
+
+        // Captures the request and cache before generating the response.
+        func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {
+
+            let body = try body.hbBody(serverContext: context)
+
+            // Add additional headers returned with the body.
+            var finalHeaders = headers ?? [:]
+            if let contentType = body.1 {
+                finalHeaders[ContentType.key] = contentType
+            }
+
+            return HBResponse(status: status, headers: finalHeaders.hbHeaders, body: body.0)
+        }
+
+        switch self {
+
+            // Core
+
+        case .raw(let statusCode, headers: let headers, body: let body):
+            return try hbResponse(statusCode, headers: headers, body: body)
+
+        case .dynamic(let handler):
+            return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
+
+        case .javascript(let script):
+            let executor = try JavascriptExecutor(forContext: context)
+            let response = try executor.execute(script: script, for: request)
+            return try await response.hbResponse(for: request, inServerContext: context)
+
+            // Convenience
+
+        case .ok(let headers, let body):
+            return try hbResponse(.ok, headers: headers, body: body)
+
+        case .created(headers: let headers, body: let body):
+            return try hbResponse(.created, headers: headers, body: body)
+
+        case .accepted(headers: let headers, body: let body):
+            return try hbResponse(.accepted, headers: headers, body: body)
+
+        case .movedPermanently:
+            return HBResponse(status: .movedPermanently)
+
+        case .temporaryRedirect:
+            return HBResponse(status: .temporaryRedirect)
+
+        case .badRequest(headers: let headers, body: let body):
+            return try hbResponse(.badRequest, headers: headers, body: body)
+
+        case .unauthorised(headers: let headers, body: let body):
+            return try hbResponse(.unauthorized, headers: headers, body: body)
+
+        case .forbidden(headers: let headers, body: let body):
+            return try hbResponse(.forbidden, headers: headers, body: body)
+
+        case .notFound:
+            return HBResponse(status: .notFound)
+
+        case .notAcceptable:
+            return HBResponse(status: .notAcceptable)
+
+        case .tooManyRequests:
+            return HBResponse(status: .tooManyRequests)
+
+        case .internalServerError(headers: let headers, body: let body):
+            return try hbResponse(.internalServerError, headers: headers, body: body)
+        }
+    }
+}
+
+// MARK: - Headers
+
+extension HeaderDictionary {
+
+    var hbHeaders: HTTPHeaders {
+        HTTPHeaders(map { $0 })
     }
 }
