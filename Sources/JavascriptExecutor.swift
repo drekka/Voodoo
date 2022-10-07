@@ -22,8 +22,9 @@ struct JavascriptExecutor {
 
         try redirectLogging()
 
-        // Inject dependencies.
-        try injectTypes()
+        // Inject javascript types.
+        try jsCtx.eval(JavascriptSource.responseBodyType)
+        try jsCtx.eval(JavascriptSource.responseType)
     }
 
     func execute(script: String, for _: HTTPRequest) throws -> HTTPResponse {
@@ -72,126 +73,76 @@ struct JavascriptExecutor {
         }
         try jsCtx.global["console"].setProperty("log", myFunction)
     }
-
-    private func injectTypes() throws {
-
-        try jsCtx.eval(#"""
-
-        class Response {
-
-            static raw(code, body, headers) {
-                return {
-                    statusCode: code,
-                    body: body ?? Body.empty(),
-                    headers: headers
-                };
-            }
-
-            static ok(body, headers) {
-                return this.raw(200, body, headers);
-            }
-        }
-
-        class Body {
-
-            static empty() {
-                return {
-                    type: "empty"
-                };
-            }
-
-            static text(text, templateData) {
-                return {
-                    type: "text",
-                    text: text,
-                    templateData: templateData
-                };
-            }
-
-            static json(json, templateData) {
-                var jsonString = typeof json === 'object' && json !== null ? JSON.stringify(json) : json
-                return {
-                    type: "json",
-                    json: jsonString,
-                    templateData: templateData
-                };
-            }
-        }
-        """#)
-    }
 }
 
 extension Cache {
 
     /// Wraps this cache in a javascript object.
     func asJavascriptObject(in jsCtx: JXContext) throws -> JXValue {
+        let cache = jsCtx.object()
+        try cache.set("get", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheGet))
+        try cache.set("set", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheSet))
+        return cache
+    }
 
-        let jsGet = JXValue(newFunctionIn: jsCtx) { context, _, args in
+    private func cacheGet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
-            let key = try args[0].stringValue
+        let key = try args[0].stringValue
 
-            let value: Any? = self[key]
-            guard let value else {
-                return context.null()
-            }
-
-            // If the value is an array or dictionary we encode it to JSON and then to an object.
-            if value as? [String: Any] != nil || value as? [Any] != nil,
-               let json = String(data: try JSONSerialization.data(withJSONObject: value), encoding: .utf8) {
-                return try context.json(json)
-            }
-
-            // If the value is encodable the we encode it into a JXValue.
-            if let encodable = value as? Encodable {
-                return try context.encode(encodable)
-            }
-
-            // Otherwise we don't know how to pass it to javascript so return a null.
+        let value: Any? = self[key]
+        guard let value else {
             return context.null()
         }
 
-        let jsSet = JXValue(newFunctionIn: jsCtx) { context, _, args in
-
-            let key = try args[0].stringValue
-
-            switch args[1] {
-
-            case let value where value.isNull:
-                self.remove(key)
-
-            case let value where value.isBoolean:
-                self[key] = value.booleanValue
-
-            case let value where value.isNumber:
-                self[key] = try value.numberValue
-
-            case let value where try value.isDate:
-                if let date = try value.dateValue {
-                    self[key] = date
-                }
-
-            case let value where value.isObject:
-                let json = try value.toJSON()
-                if let jsonData = json.data(using: .utf8) {
-                    self[key] = try JSONSerialization.jsonObject(with: jsonData, options: [])
-                }
-
-            case let value where value.isString:
-                self[key] = try value.stringValue
-
-            default:
-                break
-            }
-
-            // Have to return something even though it's a void.
-            return context.undefined()
+        // If the value is an array or dictionary we encode it to JSON and then to an object.
+        if value as? [String: Any] != nil || value as? [Any] != nil,
+           let json = String(data: try JSONSerialization.data(withJSONObject: value), encoding: .utf8) {
+            return try context.json(json)
         }
 
-        let cache = jsCtx.object()
-        try cache.set("get", convertible: jsGet)
-        try cache.set("set", convertible: jsSet)
+        // If the value is encodable the we encode it into a JXValue.
+        if let encodable = value as? Encodable {
+            return try context.encode(encodable)
+        }
 
-        return cache
+        // Otherwise we don't know how to pass it to javascript so return a null.
+        return context.null()
+    }
+
+    private func cacheSet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
+
+        let key = try args[0].stringValue
+
+        switch args[1] {
+
+        case let value where value.isNull:
+            self.remove(key)
+
+        case let value where value.isBoolean:
+            self[key] = value.booleanValue
+
+        case let value where value.isNumber:
+            self[key] = try value.numberValue
+
+        case let value where try value.isDate:
+            if let date = try value.dateValue {
+                self[key] = date
+            }
+
+        case let value where value.isObject:
+            let json = try value.toJSON()
+            if let jsonData = json.data(using: .utf8) {
+                self[key] = try JSONSerialization.jsonObject(with: jsonData, options: [])
+            }
+
+        case let value where value.isString:
+            self[key] = try value.stringValue
+
+        default:
+            break
+        }
+
+        // Have to return something even though it's a void.
+        return context.undefined()
     }
 }
-

@@ -56,6 +56,12 @@ class HTTPResponseBodyTests: XCTestCase {
                    contentType: ContentType.applicationJSON)
     }
 
+    func testJSON() throws {
+        try assert(.json(#"{"abc":"def {{xyz}}"}"#, templateData: ["xyz": 123]),
+                   generates: #"{"abc":"def 123"}"#,
+                   contentType: ContentType.applicationJSON)
+    }
+
     func testTemplate() throws {
         let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
         context.mustacheRenderer.register(template, named: "fred")
@@ -73,10 +79,10 @@ class HTTPResponseBodyTests: XCTestCase {
 
     // MARK: - Support functions
 
-    func assert(_ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
+    func assert(file: StaticString = #file, line: UInt = #line, _ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
         let hbBody = try body.hbBody(serverContext: context)
-        expect(hbBody.0) == expectedBody.hbResponseBody
-        expect(hbBody.1) == expectedContentType
+        expect(file: file, line: line, hbBody.0) == expectedBody.hbResponseBody
+        expect(file: file, line: line, hbBody.1) == expectedContentType
     }
 }
 

@@ -44,9 +44,6 @@ public extension HTTPResponse {
         ///   - templateData: Values that can be injected into the generated JSON.
         case jsonObject(_ object: Any, templateData: TemplateData? = nil)
 
-        /// Use the data returned from the passed file url as the body of response.
-        case file(_ url: URL, contentType: String)
-
         /// Returns the passed text as a JSON body.
         ///
         /// Before returning the text will be passed to the Mustache template engine with the template data.
@@ -64,6 +61,9 @@ public extension HTTPResponse {
         ///   - text: The text to be used as the body of the response.
         ///   - templateData: Additional values that can be injected into the text.
         case text(_ text: String, templateData: TemplateData? = nil)
+
+        /// Use the data returned from the passed file url as the body of response.
+        case file(_ url: URL, contentType: String)
 
         /// Returns raw data as the specified content type.
         ///
@@ -83,8 +83,10 @@ extension HTTPResponse.Body: Decodable {
     enum CodingKeys: String, CodingKey {
         case type
         case text
+        case url
         case data
         case json
+        case name
         case contentType
         case templateData
     }
@@ -114,7 +116,18 @@ extension HTTPResponse.Body: Decodable {
             let templateData = try container.decodeIfPresent([String: String].self, forKey: .templateData)
             self = .json(json, templateData: templateData)
 
-        default: // Also handles .empty
+        case "file":
+            let fileURL = try container.decode(URL.self, forKey: .url)
+            let contentType = try container.decode(String.self, forKey: .contentType)
+            self = .file(fileURL, contentType: contentType)
+
+        case "template":
+            let name = try container.decode(String.self, forKey: .name)
+            let templateData = try container.decodeIfPresent([String: String].self, forKey: .templateData)
+            let contentType = try container.decode(String.self, forKey: .contentType)
+            self = .template(name, templateData: templateData, contentType: contentType)
+
+        default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown value '\(type)'")
         }
     }

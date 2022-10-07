@@ -23,20 +23,20 @@ class JavascriptExecutorTests: XCTestCase {
 
     // MARK: - Raw Response
 
-    func testExecuteRawResponseWithStatusCode() throws {
+    func testResponseRawWithStatusCode() throws {
         try expectResponse(#"return Response.raw(201);"#, toReturn: .created())
     }
 
-    func testExecuteRawResponseWithStatusCodeBody() throws {
+    func testResponseRawWithStatusCodeBody() throws {
         try expectResponse(#"return Response.raw(201, Body.text("Hello"));"#, toReturn: .created(body: .text("Hello")))
     }
 
-    func testExecuteRawResponseWithStatusCodeTextBodyHeaders() throws {
+    func testResponseRawWithStatusCodeTextBodyHeaders() throws {
         try expectResponse(#"return Response.raw(201, Body.text("Hello"), {abc:"123"});"#,
                            toReturn: .created(headers: ["abc": "123"], body: .text("Hello")))
     }
 
-    func testExecuteRawResponseWithStatusCodeJSONStringBody() throws {
+    func testResponseRawWithStatusCodeJSONStringBody() throws {
         try expectResponse(#"""
                            var obj = {
                                 abc:"Hello world!"
@@ -46,7 +46,7 @@ class JavascriptExecutorTests: XCTestCase {
                            toReturn: .created(body: .json(#"{"abc":"Hello world!"}"#)))
     }
 
-    func testExecuteRawResponseWithStatusCodeJSONObjectBody() throws {
+    func testResponseRawWithStatusCodeJSONObjectBody() throws {
         try expectResponse(#"""
                            var obj = {
                                 abc:"Hello world!"
@@ -58,51 +58,153 @@ class JavascriptExecutorTests: XCTestCase {
 
     // MARK: - Other responses
 
-    func testExecuteOkResponse() throws {
+    func testResponseOk() throws {
         try expectResponse(#"return Response.ok();"#, toReturn: .ok())
     }
 
-    func testExecuteOkResponseWithBody() throws {
+    func testResponseOkWithBody() throws {
         try expectResponse(#"return Response.ok( Body.text("Hello"));"#, toReturn: .ok(body: .text("Hello")))
     }
 
-    func testExecuteOkResponseWithBodyHeaders() throws {
+    func testResponseOkWithBodyHeaders() throws {
         try expectResponse(#"return Response.ok( Body.text("Hello"), {"abc": "123"});"#,
                            toReturn: .ok(headers: ["abc": "123"], body: .text("Hello")))
     }
 
+    func testResponseCreated() throws {
+        try expectResponse(#"return Response.created();"#, toReturn: .created())
+    }
+
+    func testResponseCreatedWithBody() throws {
+        try expectResponse(#"return Response.created( Body.text("Hello"));"#, toReturn: .created(body: .text("Hello")))
+    }
+
+    func testResponseCreatedWithBodyHeaders() throws {
+        try expectResponse(#"return Response.created( Body.text("Hello"), {"abc": "123"});"#,
+                           toReturn: .created(headers: ["abc": "123"], body: .text("Hello")))
+    }
+
+    func testResponseAccepted() throws {
+        try expectResponse(#"return Response.accepted();"#, toReturn: .accepted())
+    }
+
+    func testResponseAcceptedWithBody() throws {
+        try expectResponse(#"return Response.accepted( Body.text("Hello"));"#, toReturn: .accepted(body: .text("Hello")))
+    }
+
+    func testResponseAcceptedWithBodyHeaders() throws {
+        try expectResponse(#"return Response.accepted( Body.text("Hello"), {"abc": "123"});"#,
+                           toReturn: .accepted(headers: ["abc": "123"], body: .text("Hello")))
+    }
+
+    func testResponseMovedPermanently() throws {
+        try expectResponse(#"return Response.movedPermanently("http://127.0.0.1/abc");"#,
+                           toReturn: .movedPermanently("http://127.0.0.1/abc"))
+    }
+
+    func testResponseTemporaryRedirect() throws {
+        try expectResponse(#"return Response.temporaryRedirect("http://127.0.0.1/abc");"#,
+                           toReturn: .temporaryRedirect("http://127.0.0.1/abc"))
+    }
+
+    func testResponseNotFound() throws {
+        try expectResponse(#"return Response.notFound();"#, toReturn: .notFound)
+    }
+
+    func testResponseNotAcceptable() throws {
+        try expectResponse(#"return Response.notAcceptable();"#, toReturn: .notAcceptable)
+    }
+
+    func testResponseTooManyRequests() throws {
+        try expectResponse(#"return Response.tooManyRequests();"#, toReturn: .tooManyRequests)
+    }
+
+    func testResponseInternalServerError() throws {
+        try expectResponse(#"return Response.internalServerError();"#, toReturn: .internalServerError())
+    }
+
+    func testResponseInternalServerErrorWithBody() throws {
+        try expectResponse(#"return Response.internalServerError( Body.text("Hello"));"#,
+                           toReturn: .internalServerError(body: .text("Hello")))
+    }
+
+    func testResponseInternalServerErrorWithBodyHeaders() throws {
+        try expectResponse(#"return Response.internalServerError( Body.text("Hello"), {"abc": "123"});"#,
+                           toReturn: .internalServerError(headers: ["abc": "123"], body: .text("Hello")))
+    }
+
     // MARK: - Body
 
-    func testExecuteBodyEmpty() throws {
+    func testResponseBodyEmpty() throws {
         try expectResponse(#"return Response.ok();"#, toReturn: .ok())
     }
 
-    func testExecuteBodyText() throws {
+    func testResponseBodyText() throws {
         try expectResponse(#"return Response.ok(Body.text("Hello"));"#, toReturn: .ok(body: .text("Hello")))
+    }
+
+    func testResponseBodyTextTemplateData() throws {
+        try expectResponse(#"return Response.ok(Body.text("{{abc}}", {abc: "Hello"}));"#,
+                           toReturn: .ok(body: .text("{{abc}}", templateData: ["abc": "Hello"])))
+    }
+
+    func testResponseBodyJSON() throws {
+        try expectResponse(#"""
+                           return Response.ok(Body.json({
+                                abc: "Hello"
+                           }));
+                           """#,
+                           toReturn: .ok(body: .json(#"{"abc":"Hello"}"#)))
+    }
+
+    func testResponseBodyJSONWithTemplateData() throws {
+        try expectResponse(#"""
+                           return Response.ok(Body.json(
+                           {
+                                abc: "{{abc}}"
+                           },{
+                                abc: "Hello"
+                           }
+                           ));
+                           """#,
+                           toReturn: .ok(body: .json(#"{"abc":"{{abc}}"}"#, templateData: ["abc": "Hello"])))
+    }
+
+    func testResponseBodyFile() throws {
+        try expectResponse(#"return Response.ok(Body.file("/dir/file.dat", "text/plain"));"#,
+                           toReturn: .ok(body: .file(URL(string: "/dir/file.dat")!, contentType: "text/plain")))
+    }
+
+    func testResponseBodyTemplate() throws {
+        try expectResponse(#"return Response.ok(Body.template("template-name", "text/plain"));"#,
+                           toReturn: .ok(body: .template("template-name", contentType: "text/plain")))
+    }
+
+    func testResponseBodyTemplateWithTemplateData() throws {
+        try expectResponse(#"return Response.ok(Body.template("template-name", "text/plain", {abc: "Hello"}));"#,
+                           toReturn: .ok(body: .template("template-name", templateData: ["abc": "Hello"], contentType: "text/plain")))
     }
 
     // MARK: - Errors
 
-    func testExecuteWithMissingFunction() throws {
-        expectScript(#"""
-                     """#,
+    func testFailureWithMissingFunction() throws {
+        expectScript("",
                      toThrowError: "The executed javascript does not contain a function with the signature 'response(request, cache)'.")
     }
 
-    func testExecuteWithNoResponse() throws {
-        expectResponse(#"""
-                       """#,
+    func testFailureWithNoResponse() throws {
+        expectResponse("",
                        toThrowError: "The javascript function failed to return a response.")
     }
 
-    func testExecuteWithInvalidResponse() throws {
+    func testFailureWithInvalidResponse() throws {
         expectResponse(#"""
                        return "abc";
                        """#,
                        toThrowError: #"The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: typeMismatch(Swift.Dictionary<Swift.String, Any>, Swift.DecodingError.Context(codingPath: [], debugDescription: "Expected to decode Dictionary<String, Any> but found JXValue instead.", underlyingError: nil))"#)
     }
 
-    func testExecuteInvalidJavascript() throws {
+    func testFailureWithInvalidJavascript() throws {
         expectResponse(#"""
                        return Response.ok(Body.text("Hello"); // <- Missing bracket here.
                        """#,
@@ -208,7 +310,7 @@ class JavascriptExecutorTests: XCTestCase {
                               toThrowError expectedMessage: String) {
         do {
             try execute(script)
-            fail("Expected exception not thrown")
+            fail("Expected exception not thrown executing script")
         } catch {
             if case SimulcraError.javascriptError(let message) = error {
                 if message != expectedMessage {
@@ -216,7 +318,7 @@ class JavascriptExecutorTests: XCTestCase {
                 }
                 return
             }
-            fail("Unexpected error: \(error)")
+            fail("Unexpected error executing script: \(error.localizedDescription)")
         }
     }
 
