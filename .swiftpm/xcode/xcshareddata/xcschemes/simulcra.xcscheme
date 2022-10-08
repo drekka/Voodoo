@@ -77,6 +77,10 @@
             argument = "--verbose"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--version"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
    </LaunchAction>
    <ProfileAction

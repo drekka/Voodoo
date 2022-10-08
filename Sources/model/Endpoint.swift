@@ -24,12 +24,26 @@ public struct Endpoint: Decodable {
         self.path = path
         self.response = response
     }
-}
 
-extension HTTPMethod: Decodable {
+    enum CodingKeys: CodingKey {
+        case signature
+        case response
+    }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self = Self(rawValue: try container.decode(String.self).uppercased())
+
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        let signature = try container.decode(String.self, forKey: .signature)
+        let components = signature.split(separator: " ")
+        if components.endIndex != 2 {
+            throw DecodingError.dataCorruptedError(forKey: .signature,
+                                                   in: container,
+                                                   debugDescription: "Incorrect signature. Expected <method> <path>")
+        }
+
+        method = HTTPMethod(rawValue: components[0].uppercased())
+        path = String(components[1])
+        response = try container.decode(HTTPResponse.self, forKey: .response)
     }
 }

@@ -1,5 +1,4 @@
-method: get
-path: /abc
+signature: get /abc
 response:
   statusCode: ok
   headers: ~
