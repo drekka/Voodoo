@@ -104,22 +104,22 @@ class HTTPResponseTests: XCTestCase {
 
 class HTTPResponseDecodableTests: XCTestCase {
 
-    func testStatusCodeAndJavascriptIsInvalid() throws {
+    func testStatusAndJavascriptIsInvalid() throws {
         try assert(#"""
                    {
-                       "statusCode":200,
+                       "status":200,
                        "javascript": "function response(request, cache) { return .ok(); }"
                    }
                    """#,
-                   failsOnPath: ["javascript"], withError: "Cannot have both 'statusCode' and 'javascript'.")
+                   failsOnPath: ["javascript"], withError: "Cannot have both 'status' and 'javascript'.")
     }
 
-    func testNoStatusCodeOrJavahkscriptIsInvalid() throws {
+    func testNoStatusOrJavahkscriptIsInvalid() throws {
         try assert(#"""
                    {
                    }
                    """#,
-                   failsOnPath: ["statusCode"], withError: "Response must container either 'statusCode' or 'javascript'.")
+                   failsOnPath: ["status"], withError: "Response must container either 'status' or 'javascript'.")
     }
 
     func testDecodeJavascript() throws {
@@ -132,39 +132,39 @@ class HTTPResponseDecodableTests: XCTestCase {
     }
 
     func testDecodeOk() throws {
-        try assert(#"{"statusCode":200}"#, decodesTo: .ok())
+        try assert(#"{"status":200}"#, decodesTo: .ok())
     }
 
     func testDecodeCreated() throws {
-        try assert(#"{"statusCode":201}"#, decodesTo: .created())
+        try assert(#"{"status":201}"#, decodesTo: .created())
     }
 
     func testDecodeAccepted() throws {
-        try assert(#"{"statusCode":202}"#, decodesTo: .accepted())
+        try assert(#"{"status":202}"#, decodesTo: .accepted())
     }
 
     func testDecodeMovedPermanenty() throws {
-        try assert(#"{"statusCode": 301,"url":"http://127.0.0.1"}"#, decodesTo: .movedPermanently("http://127.0.0.1"))
+        try assert(#"{"status": 301,"url":"http://127.0.0.1"}"#, decodesTo: .movedPermanently("http://127.0.0.1"))
     }
 
     func testDecodeTemporaryRedirect() throws {
-        try assert(#"{"statusCode": 307,"url":"http://127.0.0.1"}"#, decodesTo: .temporaryRedirect("http://127.0.0.1"))
+        try assert(#"{"status": 307,"url":"http://127.0.0.1"}"#, decodesTo: .temporaryRedirect("http://127.0.0.1"))
     }
 
     func testDecodeNotFound() throws {
-        try assert(#"{"statusCode":404}"#, decodesTo: .notFound)
+        try assert(#"{"status":404}"#, decodesTo: .notFound)
     }
 
     func testDecodeNotAcceptable() throws {
-        try assert(#"{"statusCode":406}"#, decodesTo: .notAcceptable)
+        try assert(#"{"status":406}"#, decodesTo: .notAcceptable)
     }
 
     func testDecodeTooManyRequests() throws {
-        try assert(#"{"statusCode":429}"#, decodesTo: .tooManyRequests)
+        try assert(#"{"status":429}"#, decodesTo: .tooManyRequests)
     }
 
     func testDecodeInternalServerError() throws {
-        try assert(#"{"statusCode":500}"#, decodesTo: .internalServerError())
+        try assert(#"{"status":500}"#, decodesTo: .internalServerError())
     }
 
     // MARK: - Helpers

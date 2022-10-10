@@ -14,31 +14,17 @@ class URLExtensionsTests: XCTestCase {
 
     func testFileExistsWithValidFile() {
         let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "json")!
-        expect(url.fileExists) == true
+        expect(url.fileSystemExists) == .isFile
     }
 
     func testFileExistsWithInValidFile() {
         let url = URL(fileURLWithPath: "/abc/def")
-        expect(url.fileExists) == false
+        expect(url.fileSystemExists) == .notFound
     }
 
     func testFileExistsWithDirectory() {
         let url = Bundle.testBundle.url(forResource: "TestDir", withExtension: nil)!
-        expect(url.fileExists) == false
+        expect(url.fileSystemExists) == .isDirectory
     }
 
-    func testDirectoryExistsWithValidFile() {
-        let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "json")!
-        expect(url.directoryExists) == false
-    }
-
-    func testDirectoryExistsWithInValidFile() {
-        let url = URL(fileURLWithPath: "/abc/def")
-        expect(url.directoryExists) == false
-    }
-
-    func testDirectoryExistsWithDirectory() {
-        let url = Bundle.testBundle.url(forResource: "TestDir", withExtension: nil)!
-        expect(url.directoryExists) == true
-    }
 }

@@ -23,20 +23,20 @@ class JavascriptExecutorTests: XCTestCase {
 
     // MARK: - Raw Response
 
-    func testResponseRawWithStatusCode() throws {
+    func testResponseRawWithStatus() throws {
         try expectResponse(#"return Response.raw(201);"#, toReturn: .created())
     }
 
-    func testResponseRawWithStatusCodeBody() throws {
+    func testResponseRawWithStatusBody() throws {
         try expectResponse(#"return Response.raw(201, Body.text("Hello"));"#, toReturn: .created(body: .text("Hello")))
     }
 
-    func testResponseRawWithStatusCodeTextBodyHeaders() throws {
+    func testResponseRawWithStatusTextBodyHeaders() throws {
         try expectResponse(#"return Response.raw(201, Body.text("Hello"), {abc:"123"});"#,
                            toReturn: .created(headers: ["abc": "123"], body: .text("Hello")))
     }
 
-    func testResponseRawWithStatusCodeJSONStringBody() throws {
+    func testResponseRawWithStatusJSONStringBody() throws {
         try expectResponse(#"""
                            var obj = {
                                 abc:"Hello world!"
@@ -46,7 +46,7 @@ class JavascriptExecutorTests: XCTestCase {
                            toReturn: .created(body: .json(#"{"abc":"Hello world!"}"#)))
     }
 
-    func testResponseRawWithStatusCodeJSONObjectBody() throws {
+    func testResponseRawWithStatusJSONObjectBody() throws {
         try expectResponse(#"""
                            var obj = {
                                 abc:"Hello world!"

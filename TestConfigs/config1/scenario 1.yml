@@ -1,9 +1,20 @@
 - signature: post /def/xyz
   response:
-    statusCode: 201
+    status: 201
     headers: ~
     body:
       type: text
       text: Hello world!
       templateData: ~
+
 - get-empty.yml
+
+- signature: get /javascript/inline
+  javascript: |
+    function response(request, cache) {
+      return Response.ok()
+    }
+
+- signature: get /javascript/file
+  javascriptFile: scenario 1.js 
+

@@ -64,7 +64,7 @@ public enum HTTPResponse {
 extension HTTPResponse: Decodable {
 
     enum CodingKeys: String, CodingKey {
-        case statusCode
+        case status
         case body
         case url
         case headers
@@ -78,16 +78,16 @@ extension HTTPResponse: Decodable {
         // First check for some javascript to be executed.
         if let javascript = try container.decodeIfPresent(String.self, forKey: .javascript) {
 
-            if container.contains(.statusCode) {
-                throw DecodingError.dataCorruptedError(forKey: .javascript, in: container, debugDescription: "Cannot have both 'statusCode' and 'javascript'.")
+            if container.contains(.status) {
+                throw DecodingError.dataCorruptedError(forKey: .javascript, in: container, debugDescription: "Cannot have both 'status' and 'javascript'.")
             }
             self = .javascript(javascript)
             return
         }
 
         // Now look for a hard coded response.
-        guard let statusCode = try container.decodeIfPresent(Int.self, forKey: .statusCode) else {
-            throw DecodingError.dataCorruptedError(forKey: .statusCode, in: container, debugDescription: "Response must container either 'statusCode' or 'javascript'.")
+        guard let statusCode = try container.decodeIfPresent(Int.self, forKey: .status) else {
+            throw DecodingError.dataCorruptedError(forKey: .status, in: container, debugDescription: "Response must container either 'status' or 'javascript'.")
         }
 
         let status = HTTPResponseStatus(statusCode: statusCode)
@@ -149,8 +149,8 @@ extension HTTPResponse {
 
             // Core
 
-        case .raw(let statusCode, headers: let headers, body: let body):
-            return try hbResponse(statusCode, headers: headers, body: body)
+        case .raw(let status, headers: let headers, body: let body):
+            return try hbResponse(status, headers: headers, body: body)
 
         case .dynamic(let handler):
             return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)

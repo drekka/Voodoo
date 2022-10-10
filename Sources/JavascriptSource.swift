@@ -12,7 +12,7 @@ enum JavascriptSource {
         class Response {
 
             static raw(code, body, headers) {
-                return { statusCode: code, body: body ?? Body.empty(), headers: headers };
+                return { status: code, body: body ?? Body.empty(), headers: headers };
             }
 
             static ok(body, headers) {
@@ -28,11 +28,11 @@ enum JavascriptSource {
             }
 
             static movedPermanently(url) {
-                return { statusCode: 301, url: url };
+                return { status: 301, url: url };
             }
 
             static temporaryRedirect(url) {
-                return { statusCode: 307, url: url };
+                return { status: 307, url: url };
             }
 
             static notFound() {

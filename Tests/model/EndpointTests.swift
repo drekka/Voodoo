@@ -17,7 +17,7 @@ class EndpointTests: XCTestCase {
         {
             "signature": "post /abc",
             "response": {
-                "statusCode" : 200
+                "status" : 200
             }
         }
         """#.data(using: .utf8)!
@@ -33,7 +33,7 @@ class EndpointTests: XCTestCase {
         {
             "signature": "post /abc",
             "response": {
-                "statusCode" : 200,
+                "status" : 200,
                 "headers": {
                     "abc": "123"
                 },

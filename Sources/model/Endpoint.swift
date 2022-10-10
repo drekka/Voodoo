@@ -2,6 +2,7 @@
 //  Created by Derek Clarkson.
 //
 
+import Foundation
 import NIOHTTP1
 
 /// The definition of a mocked endpoint.
@@ -28,12 +29,15 @@ public struct Endpoint: Decodable {
     enum CodingKeys: CodingKey {
         case signature
         case response
+        case javascript
+        case javascriptFile
     }
 
     public init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
+        // Set the signature properties.
         let signature = try container.decode(String.self, forKey: .signature)
         if decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
             print("👻 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found endpoint config: \(signature)")
@@ -48,6 +52,42 @@ public struct Endpoint: Decodable {
 
         method = HTTPMethod(rawValue: components[0].uppercased())
         path = String(components[1])
-        response = try container.decode(HTTPResponse.self, forKey: .response)
+
+        // Now setup the response.
+
+        // First look for javascript.
+        if let script = try container.decodeIfPresent(String.self, forKey: .javascript) {
+            response = .javascript(script)
+            return
+        }
+
+        // Now a javascript file.
+        if let scriptFile = try container.decodeIfPresent(String.self, forKey: .javascriptFile) {
+
+            guard let directory = decoder.userInfo[ConfigLoader.userInfoDirectoryKey] as? URL else {
+                preconditionFailure("Directory missing from user info (developer error)")
+            }
+
+            let scriptURL = directory.appendingPathComponent(scriptFile)
+            guard scriptURL.fileSystemExists == .isFile else {
+                throw DecodingError.dataCorruptedError(forKey: .javascriptFile,
+                                                       in: container,
+                                                       debugDescription: "Unable to find referenced javascript file '\(scriptURL.relativePath)'")
+            }
+
+            response = .javascript(try String(contentsOf: scriptURL))
+            return
+        }
+
+        // Now test for a response data structure.
+        if let httpResponse = try container.decodeIfPresent(HTTPResponse.self, forKey: .response) {
+            response = httpResponse
+            return
+        }
+
+        // At this point it's an error.
+        let context = DecodingError.Context(codingPath: container.codingPath,
+                                            debugDescription: "Expected to find '\(CodingKeys.response.stringValue)', '\(CodingKeys.javascript.stringValue)' or '\(CodingKeys.javascriptFile.stringValue)'")
+        throw DecodingError.dataCorrupted(context)
     }
 }

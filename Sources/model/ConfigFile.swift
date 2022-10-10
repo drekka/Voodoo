@@ -19,7 +19,7 @@ struct EndpointReference: Decodable, EndpointSource {
 
             guard let directory = decoder.userInfo[ConfigLoader.userInfoDirectoryKey] as? URL,
             let verbose = decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool else {
-                throw SimulcraError.configLoadFailure("User info incomplete (developer error).")
+                preconditionFailure("User info incomplete (developer error).")
             }
 
             if decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {

@@ -49,8 +49,8 @@ extension IntegrationTesting {
             response = ServerResponse(data: nil, response: nil, error: error)
         }
 
-        expect(file: file, line: line,response.response!.statusCode) == Int(expectedStatus.code)
-        expect(file: file, line: line,response.error).to(beNil())
+        expect(file: file, line: line, response.response!.statusCode) == Int(expectedStatus.code)
+        expect(file: file, line: line, response.error).to(beNil())
 
         return response
     }

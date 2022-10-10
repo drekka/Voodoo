@@ -36,7 +36,7 @@ public enum SimulcraError: Error, HBHTTPResponseError {
             return [Self.headerKey: "Invalid config path \(path)"]
 
         case .directoryNotExists(let path):
-            return [Self.headerKey: "Missing or not a directory: \(path)"]
+            return [Self.headerKey: "Missing or URL was not a directory: \(path)"]
 
         case .unexpectedError(let error):
             return [Self.headerKey: error.localizedDescription]
