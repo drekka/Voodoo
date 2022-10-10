@@ -35,6 +35,10 @@ public struct Endpoint: Decodable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
         let signature = try container.decode(String.self, forKey: .signature)
+        if decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
+            print("👻 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found endpoint config: \(signature)")
+        }
+
         let components = signature.split(separator: " ")
         if components.endIndex != 2 {
             throw DecodingError.dataCorruptedError(forKey: .signature,

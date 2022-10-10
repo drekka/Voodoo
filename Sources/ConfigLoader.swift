@@ -12,6 +12,7 @@ import Yams
 public struct ConfigLoader {
 
     static let userInfoDirectoryKey = CodingUserInfoKey(rawValue: "directory")!
+    static let userInfoFilenameKey = CodingUserInfoKey(rawValue: "filename")!
     static let userInfoVerboseKey = CodingUserInfoKey(rawValue: "verbose")!
 
     private let verbose: Bool
@@ -20,38 +21,50 @@ public struct ConfigLoader {
         self.verbose = verbose
     }
 
-    public func load(from directory: URL) throws -> [Endpoint] {
+    public func load(from path: URL) throws -> [Endpoint] {
 
-        // Find all the YAML files.
+        let fileManager = FileManager.default
+        var isDirectory: ObjCBool = false
+        let fileSystemName = path.relativePath
+        guard fileManager.fileExists(atPath: fileSystemName, isDirectory: &isDirectory) else {
+            print("👻 Config file/directory does not exist \(fileSystemName)")
+            throw SimulcraError.invalidConfigPath(fileSystemName)
+        }
+
+        // If the reference is a file then load it.
+        if !isDirectory.boolValue {
+            return try readConfig(file: path)
+        }
+
+        // Otherwise find all the YAML files in the directory and load them.
         let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
-        let files = FileManager.default.enumerator(at: directory,
-                                                   includingPropertiesForKeys: resourceKeys,
-                                                   options: .skipsHiddenFiles) { _, _ in true }
+        let files = fileManager.enumerator(at: path,
+                                           includingPropertiesForKeys: resourceKeys,
+                                           options: .skipsHiddenFiles) { _, _ in true }
         guard let files else { return [] }
 
         let resourceKeysSet = Set(resourceKeys)
-        try files.lazy
+        return try files.lazy
             .compactMap { $0 as? URL }
             .filter {
                 let properties = try? $0.resourceValues(forKeys: resourceKeysSet)
                 return !(properties?.isDirectory ?? false) && $0.pathExtension.lowercased() == "yml"
             }
-            .forEach {
-                try read(file: $0)
-                print("\($0)")
-            }
-
-        return []
+            .flatMap(readConfig)
     }
 
-    private func read(file: URL) throws {
+    private func readConfig(file: URL) throws -> [Endpoint] {
+        if verbose {
+            print("👻 Reading config file \(file.relativePath)")
+        }
         let data = try Data(contentsOf: file)
         let directory = file.deletingLastPathComponent()
-        let fileContents = try YAMLDecoder().decode(ConfigFile.self,
-                                                    from: data,
-                                                    userInfo: [
-                                                        ConfigLoader.userInfoDirectoryKey: directory,
-                                                        ConfigLoader.userInfoVerboseKey: verbose,
-                                                    ])
+        return try YAMLDecoder().decode(ConfigFile.self,
+                                        from: data,
+                                        userInfo: [
+                                            ConfigLoader.userInfoDirectoryKey: directory,
+                                            ConfigLoader.userInfoFilenameKey: file.lastPathComponent,
+                                            ConfigLoader.userInfoVerboseKey: verbose,
+                                        ]).apis
     }
 }

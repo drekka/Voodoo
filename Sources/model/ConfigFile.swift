@@ -22,6 +22,10 @@ struct EndpointReference: Decodable, EndpointSource {
                 throw SimulcraError.configLoadFailure("User info incomplete (developer error).")
             }
 
+            if decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
+                print("👻 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found file reference: \(fileReference)")
+            }
+
             let subLoader = ConfigLoader(verbose: verbose)
             apis = try subLoader.load(from: directory.appendingPathComponent(fileReference))
 

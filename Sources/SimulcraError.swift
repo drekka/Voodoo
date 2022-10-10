@@ -16,6 +16,7 @@ public enum SimulcraError: Error, HBHTTPResponseError {
     case unexpectedError(Error)
     case javascriptError(String)
     case configLoadFailure(String)
+    case invalidConfigPath(String)
 
     public var status: HTTPResponseStatus { .internalServerError }
 
@@ -29,6 +30,9 @@ public enum SimulcraError: Error, HBHTTPResponseError {
 
         case .noPortAvailable:
             return [Self.headerKey: "All ports taken."]
+
+        case .invalidConfigPath(let path):
+            return [Self.headerKey: "Invalid config path \(path)"]
 
         case .unexpectedError(let error):
             return [Self.headerKey: error.localizedDescription]

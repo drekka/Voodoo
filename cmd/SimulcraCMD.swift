@@ -9,7 +9,7 @@ import SimulcraCore
 /// allows us to set a URL as an option type.
 extension URL: ExpressibleByArgument {
     public init?(argument: String) {
-        self.init(string: argument)
+        self.init(fileURLWithPath: argument)
     }
 }
 
@@ -33,7 +33,7 @@ struct SimulcraCMD: ParsableCommand {
             """,
             version: "0.1.0",
             shouldDisplay: true,
-            subcommands: [Run.self, DisplayConfiguration.self]
+            subcommands: [Run.self]
         )
     }
 }
@@ -58,7 +58,7 @@ extension SimulcraCMD {
         @OptionGroup var options: SimulcraCMD.Options
 
         @Option(
-            name: [.short, .long],
+            name: .shortAndLong,
             help: """
             The port range to start the server on. \
             Must be either a single port or a valid range written as "xxxx-yyyy" where xxxx is the lower bound \
@@ -104,7 +104,7 @@ extension SimulcraCMD {
         var templatePath: URL?
 
         @Option(
-            name: [.short, .customLong("config-dir")],
+            name: .shortAndLong,
             help: """
             either a directory path containing YAML files or a reference to a particular file. \
             If a directory is referenced then all YAML files in the directory will be loaded. \
@@ -122,14 +122,11 @@ extension SimulcraCMD {
                 If the server receives a request and does not have an end point configured for it \
                 then it scans this directory to see if the request path maps to a stored file.
                 """)
-        var filePaths: [String] = []
-
-        @Argument(help: "Any number of API scenarios to load.")
-        var scenario: [String] = []
+        var filePaths: [URL] = []
 
         mutating func run() throws {
 
-            var endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
+            let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
             let server = try Simulcra(portRange: portRange,
                                       templatePath: templatePath,
                                       verbose: options.verbose) { endpoints }
@@ -142,45 +139,14 @@ extension SimulcraCMD {
         mutating func validate() throws {
 
             // Validate passed file directories
-//            try filePaths.forEach {
-//                var isDirectory: ObjCBool = false
-//                guard FileManager.default.fileExists(atPath: $0, isDirectory: &isDirectory) else {
-//                    throw ValidationError("Directory not found: \($0)")
-//                }
-//                if !isDirectory.boolValue {
-//                    throw ValidationError("\($0) does not refer to a valid directory")
-//                }
-//            }
-
-            // validate scenarios
-        }
-
-        private func logConfiguration() {
-
-//            guard options.verbose else { return }
-//            print("Configuration:")
-//            print("\tTemplate path: \(templatePath ?? "")")
-//            print("\tConfig path: \(configPath ?? "")")
-//            print("\tFile paths:")
-//            // filePaths.forEach { print("\t ‣ \($0)") }
-//            print("")
-        }
-    }
-
-    /// Dumps the server's current configuration to assist with debugging.
-    struct DisplayConfiguration: ParsableCommand {
-
-        static var configuration: CommandConfiguration {
-            CommandConfiguration(
-                abstract: "Displays the server's current setup for debugging purposes."
-            )
-        }
-
-        // @OptionGroup var options: SimulcraCMD.Options
-
-        mutating func run() throws {
-            print("")
-            print("")
+            try filePaths.forEach {
+                var isDirectory: ObjCBool = false
+                let fileSystemName = $0.relativePath
+                guard FileManager.default.fileExists(atPath: fileSystemName, isDirectory: &isDirectory),
+                      isDirectory.boolValue else {
+                    throw ValidationError("File directory invalid: \(fileSystemName)")
+                }
+            }
         }
     }
 }

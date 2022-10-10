@@ -1,6 +1,6 @@
-- signature: get /abc
+- signature: post /def/xyz
   response:
-    statusCode: 200
+    statusCode: 201
     headers: ~
     body:
       type: text

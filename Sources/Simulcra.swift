@@ -123,6 +123,9 @@ public class Simulcra {
     // MARK: - Core registration
 
     public func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
+        if verbose {
+            print(#"👻 Adding endpoint:\#(method) \#(path)"#)
+        }
         server.router.add(method, path, response: response)
     }
 

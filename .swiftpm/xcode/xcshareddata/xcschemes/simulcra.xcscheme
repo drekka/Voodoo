@@ -74,8 +74,16 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--config-dir /Users/DerekClarkson/projects/simulcra/TestConfig"
+            argument = "--config-dir /Users/DerekClarkson/projects/simulcra/TestConfigs/Config1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--config-dir &quot;/Users/DerekClarkson/projects/simulcra/TestConfigs/Config1/scenario 1.yml&quot;"
             isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--config-dir /Users/DerekClarkson/projects/simulcra/TestConfigs/Config1/scenario%201.yml"
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--help"
