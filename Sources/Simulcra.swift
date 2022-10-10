@@ -4,6 +4,7 @@
 
 import Foundation
 import Hummingbird
+import HummingbirdFoundation
 import HummingbirdMustache
 
 #if os(macOS) || os(iOS)
@@ -31,6 +32,7 @@ public class Simulcra {
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 templatePath: URL? = nil,
                 templateExtension: String = "json",
+                filePaths: [URL]? = nil,
                 verbose: Bool = false,
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
 
@@ -50,9 +52,15 @@ public class Simulcra {
                 // Add middleware. This must be done before starting the server or
                 // the middleware will execute after Hummingbird's ``TrieRouter``.
                 // This is due to the way hummingbird wires middleware and the router together.
-                server.middleware.add(HostCapture())
+                server.middleware.add(HostCapture()) // Captures the incoming 'Host' header for injecting into responses.
                 server.middleware.add(RequestLogger(verbose: verbose))
                 server.middleware.add(AdminConsole())
+                try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
+                    guard $0.fileSystemExists == .isDirectory else {
+                        throw SimulcraError.directoryNotExists($0.relativePath)
+                    }
+                    server.middleware.add(HBFileMiddleware($0.relativePath, application: server))
+                }
                 server.middleware.add(NoResponseFoundMiddleware())
 
                 // Setup an in-memory cache.

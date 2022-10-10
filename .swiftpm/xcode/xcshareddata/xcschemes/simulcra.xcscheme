@@ -74,20 +74,20 @@
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--config-dir /Users/DerekClarkson/projects/simulcra/TestConfigs/Config1"
+            argument = "--help"
             isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--config-dir &quot;/Users/DerekClarkson/projects/simulcra/TestConfigs/Config1/scenario 1.yml&quot;"
+            argument = "--config /Users/DerekClarkson/projects/simulcra/TestConfigs/Config1"
+            isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--file-dir /Users/DerekClarkson/projects/simulcra/Tests"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "--config-dir /Users/DerekClarkson/projects/simulcra/TestConfigs/Config1/scenario%201.yml"
-            isEnabled = "NO">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "--help"
-            isEnabled = "NO">
+            argument = "--config &quot;/Users/DerekClarkson/projects/simulcra/TestConfigs/Config1/scenario 1.yml&quot;"
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--verbose"

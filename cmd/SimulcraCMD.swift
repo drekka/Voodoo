@@ -8,6 +8,8 @@ import SimulcraCore
 
 /// allows us to set a URL as an option type.
 extension URL: ExpressibleByArgument {
+
+    /// Supports casting a command line argument to a URL.
     public init?(argument: String) {
         self.init(fileURLWithPath: argument)
     }
@@ -129,22 +131,15 @@ extension SimulcraCMD {
             let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
             let server = try Simulcra(portRange: portRange,
                                       templatePath: templatePath,
+                                      filePaths: filePaths,
                                       verbose: options.verbose) { endpoints }
-
-//            filePaths.map { URL(fileURLWithPath: $0) }.forEach { server.addFileDirectory($0) }
-
             server.wait()
         }
 
         mutating func validate() throws {
-
-            // Validate passed file directories
             try filePaths.forEach {
-                var isDirectory: ObjCBool = false
-                let fileSystemName = $0.relativePath
-                guard FileManager.default.fileExists(atPath: fileSystemName, isDirectory: &isDirectory),
-                      isDirectory.boolValue else {
-                    throw ValidationError("File directory invalid: \(fileSystemName)")
+                if $0.fileSystemExists == .notFound {
+                    throw ValidationError("File directory invalid: \($0.relativePath)")
                 }
             }
         }

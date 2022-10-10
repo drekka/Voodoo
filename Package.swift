@@ -27,6 +27,7 @@ let package = Package(
             name: "SimulcraCore",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
                 "JXKit",
                 "Yams",
@@ -54,6 +55,7 @@ let package = Package(
                 .copy("Test files/Invalid.json"),
                 .copy("Test files/Simple.html"),
                 .copy("Test files/Template.json"),
+                .copy("Test files/TestDir"),
             ]
         ),
     ]

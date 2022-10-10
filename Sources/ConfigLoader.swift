@@ -23,39 +23,35 @@ public struct ConfigLoader {
 
     public func load(from path: URL) throws -> [Endpoint] {
 
-        let fileManager = FileManager.default
-        var isDirectory: ObjCBool = false
-        let fileSystemName = path.relativePath
-        guard fileManager.fileExists(atPath: fileSystemName, isDirectory: &isDirectory) else {
-            print("👻 Config file/directory does not exist \(fileSystemName)")
-            throw SimulcraError.invalidConfigPath(fileSystemName)
-        }
+        switch path.fileSystemExists {
 
-        // If the reference is a file then load it.
-        if !isDirectory.boolValue {
+        case .isFile:
             return try readConfig(file: path)
+
+        case .isDirectory:
+            let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
+            guard let files = FileManager.default.enumerator(at: path,
+                                                             includingPropertiesForKeys: resourceKeys,
+                                                             options: .skipsHiddenFiles) else { return [] }
+            let resourceKeysSet = Set(resourceKeys)
+            return try files.lazy
+                .compactMap { $0 as? URL }
+                .filter {
+                    let properties = try? $0.resourceValues(forKeys: resourceKeysSet)
+                    return !(properties?.isDirectory ?? false) && $0.pathExtension.lowercased() == "yml"
+                }
+                .flatMap(readConfig)
+
+        default:
+            let fileSystemPath = path.relativePath
+            print("👻 Config file/directory does not exist \(fileSystemPath)")
+            throw SimulcraError.invalidConfigPath(fileSystemPath)
         }
-
-        // Otherwise find all the YAML files in the directory and load them.
-        let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
-        let files = fileManager.enumerator(at: path,
-                                           includingPropertiesForKeys: resourceKeys,
-                                           options: .skipsHiddenFiles) { _, _ in true }
-        guard let files else { return [] }
-
-        let resourceKeysSet = Set(resourceKeys)
-        return try files.lazy
-            .compactMap { $0 as? URL }
-            .filter {
-                let properties = try? $0.resourceValues(forKeys: resourceKeysSet)
-                return !(properties?.isDirectory ?? false) && $0.pathExtension.lowercased() == "yml"
-            }
-            .flatMap(readConfig)
     }
 
     private func readConfig(file: URL) throws -> [Endpoint] {
         if verbose {
-            print("👻 Reading config file \(file.relativePath)")
+            print("👻 Reading config in \(file.relativePath)")
         }
         let data = try Data(contentsOf: file)
         let directory = file.deletingLastPathComponent()
