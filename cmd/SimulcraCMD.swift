@@ -106,11 +106,14 @@ extension SimulcraCMD {
         @Option(
             name: [.short, .customLong("config-dir")],
             help: """
-            A directory path containing YAML files to configure the server. These files setup the APIs being mocked. \
-            see the readme doco for details on all the options that are available.
+            either a directory path containing YAML files or a reference to a particular file. \
+            If a directory is referenced then all YAML files in the directory will be loaded. \
+            If a specific file is referenced then the end points in that file and any files it references \
+            will be loaded. \
+            See the readme doco for details on all the options that are available.
             """
         )
-        var configPath: URL?
+        var config: URL
 
         @Option(name: [.short, .customLong("file-dir")],
                 help: """
@@ -126,21 +129,10 @@ extension SimulcraCMD {
 
         mutating func run() throws {
 
-            if let configPath{
-                let loader = ConfigLoader(directory: configPath)
-            }
-
+            var endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
             let server = try Simulcra(portRange: portRange,
                                       templatePath: templatePath,
-                                      verbose: options.verbose)
-
-            // Load the scenarios.
-//            try scenario.forEach { name in
-//                guard let scenario = MockAPI.Scenario(rawValue: name) else {
-//                    throw ValidationError("Unknown scenario \(name) requested")
-//                }
-//                server.addMockAPIs(scenario)
-//            }
+                                      verbose: options.verbose) { endpoints }
 
 //            filePaths.map { URL(fileURLWithPath: $0) }.forEach { server.addFileDirectory($0) }
 

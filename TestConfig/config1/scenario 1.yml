@@ -1,0 +1,9 @@
+- signature: get /abc
+  response:
+    statusCode: 200
+    headers: ~
+    body:
+      type: text
+      text: Hello world!
+      templateData: ~
+- get-empty.yml

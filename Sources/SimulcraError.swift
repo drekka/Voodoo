@@ -15,6 +15,7 @@ public enum SimulcraError: Error, HBHTTPResponseError {
     case noPortAvailable
     case unexpectedError(Error)
     case javascriptError(String)
+    case configLoadFailure(String)
 
     public var status: HTTPResponseStatus { .internalServerError }
 
@@ -22,7 +23,8 @@ public enum SimulcraError: Error, HBHTTPResponseError {
         switch self {
         case .conversionError(let message),
              .templateRenderingFailure(let message),
-             .javascriptError(let message):
+             .javascriptError(let message),
+             .configLoadFailure(let message):
             return [Self.headerKey: message]
 
         case .noPortAvailable:

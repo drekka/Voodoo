@@ -1,7 +1,8 @@
 signature: get /abc
 response:
-  statusCode: ok
+  statusCode: 200
   headers: ~
   body:
     type: text
+    text: hello world!
     templateData: ~

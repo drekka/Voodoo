@@ -7,7 +7,7 @@ let package = Package(
     name: "Simulcra",
     platforms: [
         .iOS(.v15),
-        .macOS(.v10_15),
+        .macOS(.v12),
     ],
     products: [
         .executable(name: "simulcra", targets: ["simulcra-cmd"]),
