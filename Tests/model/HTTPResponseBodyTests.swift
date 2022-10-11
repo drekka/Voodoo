@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Hummingbird
 import HummingbirdMustache
 import Nimble
 @testable import SimulcraCore
@@ -22,7 +23,8 @@ class HTTPResponseBodyTests: XCTestCase {
 
     func testEmpty() throws {
         let context = MockSimulcraContext()
-        let hbBody = try HTTPResponse.Body.empty.hbBody(serverContext: context)
+        let request = HBRequest.mock().asHTTPRequest
+        let hbBody = try HTTPResponse.Body.empty.hbBody(forRequest: request, serverContext: context)
         expect(hbBody.0) == .empty
         expect(hbBody.1) == nil
     }
@@ -80,7 +82,8 @@ class HTTPResponseBodyTests: XCTestCase {
     // MARK: - Support functions
 
     func assert(file: StaticString = #file, line: UInt = #line, _ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
-        let hbBody = try body.hbBody(serverContext: context)
+        let request = HBRequest.mock().asHTTPRequest
+        let hbBody = try body.hbBody(forRequest: request, serverContext: context)
         expect(file: file, line: line, hbBody.0) == expectedBody.hbResponseBody
         expect(file: file, line: line, hbBody.1) == expectedContentType
     }
@@ -116,8 +119,7 @@ class HTTPREsponseBodyDecodableTests: XCTestCase {
         do {
             _ = try JSONDecoder().decode(HTTPResponse.Body.self, from: data)
             fail("Error not thrown")
-        }
-        catch DecodingError.dataCorrupted(let context) {
+        } catch DecodingError.dataCorrupted(let context) {
             expect(context.codingPath.count) == 1
             expect(context.codingPath[0].stringValue) == "type"
             expect(context.debugDescription) == "Unknown value 'xxxx'"

@@ -6,27 +6,18 @@ import Foundation
 @testable import Hummingbird
 @testable import SimulcraCore
 
-enum MockRequest {
+extension HBRequest {
 
-    static func create(url: String,
-                       pathParameters: [String: String]? = nil,
-                       headers: [String: String]? = nil,
-                       contentType: String? = nil,
-                       body: String = "") -> HTTPRequest {
-        HBRequestWrapper(request: create(url: url,
-                                         pathParameters: pathParameters,
-                                         headers: headers,
-                                         contentType: contentType,
-                                         body: body)
-        )
-    }
+    static let mockHost = "127.0.0.1"
+    static let mockServer = "\(mockHost):8080"
+    static let mockServerRequestURL = "http://\(mockServer)/abc"
 
-    static func create(method: HTTPMethod = .GET,
-                       url: String,
-                       pathParameters: [String: String]? = nil,
-                       headers: [String: String]? = nil,
-                       contentType: String? = nil,
-                       body: String = "") -> HBRequest {
+    static func mock(_ method: HTTPMethod = .GET,
+                     url: String = mockServerRequestURL,
+                     pathParameters: [String: String]? = nil,
+                     headers: [String: String]? = ["host": mockServer],
+                     contentType: String? = nil,
+                     body: String = "") -> HBRequest {
 
         var hbHeaders = HTTPHeaders()
         headers?.forEach { hbHeaders.add(name: $0, value: $1) }

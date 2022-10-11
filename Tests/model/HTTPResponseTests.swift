@@ -79,7 +79,7 @@ class HTTPResponseTests: XCTestCase {
                 withHeaders expectedHeaders: [String: String]? = nil,
                 body expectedBody: String? = nil) async throws {
 
-        let request: HTTPRequest = MockRequest.create(url: "http://127.0.0.1")
+        let request = HBRequest.mock().asHTTPRequest
         let context = MockSimulcraContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 
@@ -144,11 +144,11 @@ class HTTPResponseDecodableTests: XCTestCase {
     }
 
     func testDecodeMovedPermanenty() throws {
-        try assert(#"{"status": 301,"url":"http://127.0.0.1"}"#, decodesTo: .movedPermanently("http://127.0.0.1"))
+        try assert(#"{"status": 301,"url":"\#(HBRequest.mockServer)"}"#, decodesTo: .movedPermanently(HBRequest.mockServer))
     }
 
     func testDecodeTemporaryRedirect() throws {
-        try assert(#"{"status": 307,"url":"http://127.0.0.1"}"#, decodesTo: .temporaryRedirect("http://127.0.0.1"))
+        try assert(#"{"status": 307,"url":"\#(HBRequest.mockServer)"}"#, decodesTo: .temporaryRedirect(HBRequest.mockServer))
     }
 
     func testDecodeNotFound() throws {

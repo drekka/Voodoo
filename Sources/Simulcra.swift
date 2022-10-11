@@ -27,7 +27,7 @@ public class Simulcra {
     private let server: HBApplication
     private let verbose: Bool
 
-    public var address: URL { server.address }
+    public var port: Int { server.port }
 
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 templatePath: URL? = nil,
@@ -37,53 +37,22 @@ public class Simulcra {
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
 
         self.verbose = verbose
+        let finalEndpoints = endpoints()
 
-        for port in portRange {
+        for nextPort in portRange {
 
             do {
-
-                let configuration = HBApplication.Configuration(
-                    address: .hostname("0.0.0.0", port: port), // Use the "everything" address so this server works in containers suck as docker.
-                    serverName: "Simulcra API simulator",
-                    logLevel: verbose ? .trace : .error
-                )
-                let server = HBApplication(configuration: configuration)
-
-                // Add middleware. This must be done before starting the server or
-                // the middleware will execute after Hummingbird's ``TrieRouter``.
-                // This is due to the way hummingbird wires middleware and the router together.
-                server.middleware.add(HostCapture()) // Captures the incoming 'Host' header for injecting into responses.
-                server.middleware.add(RequestLogger(verbose: verbose))
-                server.middleware.add(AdminConsole())
-                try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
-                    guard $0.fileSystemExists == .isDirectory else {
-                        throw SimulcraError.directoryNotExists($0.relativePath)
-                    }
-                    server.middleware.add(HBFileMiddleware($0.relativePath, application: server))
-                }
-                server.middleware.add(NoResponseFoundMiddleware())
-
-                // Setup an in-memory cache.
-                server.cache = InMemoryCache()
-
-                // Initiate the mustache template renderer if it's been set.
-                if let templatePath {
-                    server.mustacheRenderer = try HBMustacheLibrary(directory: templatePath.path, withExtension: templateExtension)
-                } else {
-                    server.mustacheRenderer = HBMustacheLibrary()
-                }
-
-                try server.start()
-                self.server = server
-
-                // Add any passed endpoints.
-                add(endpoints)
-
-                return
+                server = try HBApplication.start(on: nextPort,
+                                                 withTemplatePath: templatePath,
+                                                 templateExtension: templateExtension,
+                                                 filePaths: filePaths,
+                                                 verbose: verbose,
+                                                 endpoints: finalEndpoints)
+                return // Exit init.
 
             } catch {
                 if error.isPortTakenError {
-                    print("👻 Port \(port) busy, trying next port in range")
+                    print("👻 Port \(nextPort) busy, trying next port in range")
                     continue
                 }
 
@@ -97,10 +66,6 @@ public class Simulcra {
     }
 
     public func wait() {
-        var port = ""
-        if let actualPort = address.port {
-            port = "\(actualPort)"
-        }
         if verbose {
             print(#"👻 CTRL+C or "curl <server-address>:\#(port)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
             print(#"👻 Have a nice day 🙂"#)
@@ -141,5 +106,59 @@ public class Simulcra {
 
     public func stop() {
         server.stop()
+    }
+}
+
+extension HBApplication {
+
+    /// Configures and starts the server on the specified port or throws an error if that fails.
+    static func start(on port: Int,
+                      withTemplatePath templatePath: URL?,
+                      templateExtension: String,
+                      filePaths: [URL]?,
+                      verbose: Bool,
+                      endpoints: [Endpoint]) throws -> HBApplication {
+
+        let configuration = HBApplication.Configuration(
+            address: .hostname("0.0.0.0", port: port), // Use the "everything" address so this server works in containers suck as docker.
+            serverName: "Simulcra API simulator",
+            logLevel: verbose ? .trace : .error
+        )
+        let server = HBApplication(configuration: configuration)
+
+        // Add middleware. This must be done before starting the server or
+        // the middleware will execute after Hummingbird's ``TrieRouter``.
+        // This is due to the way hummingbird wires middleware and the router together.
+        server.middleware.add(RequestLogger(verbose: verbose))
+        server.middleware.add(AdminConsole())
+        try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
+            guard $0.fileSystemStatus == .isDirectory else {
+                throw SimulcraError.directoryNotExists($0.filePath)
+            }
+            server.middleware.add(HBFileMiddleware($0.filePath, application: server))
+        }
+        server.middleware.add(NoResponseFoundMiddleware())
+
+        // Setup an in-memory cache.
+        server.cache = InMemoryCache()
+
+        // Initiate the mustache template renderer if it's been set.
+        if let templatePath {
+            server.mustacheRenderer = try HBMustacheLibrary(directory: templatePath.path, withExtension: templateExtension)
+        } else {
+            server.mustacheRenderer = HBMustacheLibrary()
+        }
+
+        try server.start()
+
+        // Add any passed endpoints.
+        endpoints.forEach {
+            if verbose {
+                print(#"👻 Adding endpoint:\#($0.method) \#($0.path)"#)
+            }
+            server.router.add($0.method, $0.path, response: $0.response)
+        }
+
+        return server
     }
 }

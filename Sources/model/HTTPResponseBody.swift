@@ -136,33 +136,33 @@ extension HTTPResponse.Body: Decodable {
 /// Supports creating Hummingbird data.
 extension HTTPResponse.Body {
 
-    func hbBody(serverContext context: SimulcraContext) throws -> (HBResponseBody, String?) {
+    func hbBody(forRequest request: HTTPRequest, serverContext context: SimulcraContext) throws -> (HBResponseBody, String?) {
         switch self {
 
         case .empty:
             return (.empty, nil)
 
         case .text(let text, let templateData):
-            return (try text.render(withTemplateData: templateData, context: context), ContentType.textPlain)
+            return (try text.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.textPlain)
 
         case .data(let data, let contentType):
             return (data.hbResponseBody, contentType)
 
         case .jsonObject(let object, let templateData):
-            return (try JSONSerialization.data(withJSONObject: object).render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
+            return (try JSONSerialization.data(withJSONObject: object).render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
 
         case .jsonEncodable(let encodable, let templateData):
-            return (try JSONEncoder().encode(encodable).render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
+            return (try JSONEncoder().encode(encodable).render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
 
         case .json(let json, let templateData):
-            return (try json.render(withTemplateData: templateData, context: context), ContentType.applicationJSON)
+            return (try json.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
 
         case .file(let url, let contentType):
             let contents = try Data(contentsOf: url)
             return (contents.hbResponseBody, contentType)
 
         case .template(let templateName, let templateData, let contentType):
-            let finalTemplateData = context.requestTemplateData(adding: templateData)
+            let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
             guard let json = context.mustacheRenderer.render(finalTemplateData, withTemplate: templateName) else {
                 throw SimulcraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
@@ -177,13 +177,14 @@ extension Data {
     /// Renders this data as a response body.
     ///
     /// - parameters:
-    ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys..
+    ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys.
+    ///     - request: the request being fulfilled.
     ///     - context: The server context.
-    func render(withTemplateData templateData: TemplateData?, context: SimulcraContext) throws -> HBResponseBody {
+    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulcraContext) throws -> HBResponseBody {
         guard let string = String(data: self, encoding: .utf8) else {
             throw SimulcraError.conversionError("Unable to convert data to a String")
         }
-        return try string.render(withTemplateData: templateData, context: context)
+        return try string.render(withTemplateData: templateData, forRequest: request, context: context)
     }
 }
 
@@ -202,10 +203,11 @@ extension String {
     /// Renders this string as a response body.
     ///
     /// - parameters:
-    ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys..
+    ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys.
+    ///     - request: The request being fulfilled.
     ///     - context: The server context.
-    func render(withTemplateData templateData: TemplateData?, context: SimulcraContext) throws -> HBResponseBody {
-        let finalTemplateData = context.requestTemplateData(adding: templateData)
+    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulcraContext) throws -> HBResponseBody {
+        let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
         return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
     }
 }

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Hummingbird
 import Nimble
 import NIOHTTP1
 @testable import SimulcraCore
@@ -38,7 +39,7 @@ extension IntegrationTesting {
 
     @discardableResult
     func assert(_ method: HTTPMethod, _ path: String, returns expectedStatus: HTTPResponseStatus, file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
-        var request = URLRequest(url: server.address.appendingPathComponent(path))
+        var request = URLRequest(url: URL(string: "http://\(HBRequest.mockHost):\(server.port)")!.appendingPathComponent(path))
         request.httpMethod = method.rawValue
 
         let response: ServerResponse

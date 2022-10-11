@@ -2,6 +2,7 @@
 //  Created by Derek Clarkson on 11/10/21.
 //
 
+import Hummingbird
 import Nimble
 import NIOHTTP1
 import SimulcraCore
@@ -23,17 +24,13 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
     // MARK: - Init
 
-    func testInit() throws {
-        expect(self.server.address.absoluteString).to(match(#"0\.0\.0\.0:\d\d\d\d"#))
-    }
-
     func testInitWithMulitpleServers() throws {
         let s2 = try Simulcra()
-        expect(s2.address.port) != server.address.port
+        expect(s2.port) != server.port
     }
 
     func testInitRunsOutOfPorts() {
-        let currentPort = server.address.port!
+        let currentPort = server.port
         expect {
             try Simulcra(portRange: currentPort ... currentPort)
         }
@@ -156,7 +153,7 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
         let httpResponse = response.response
 
         expect(httpResponse?.allHeaderFields.count) == 5
-        expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(server.address.absoluteString)",\#n    "path": "/abc"\#n}\#n"#
+        expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(HBRequest.mockHost):\#(server.port)",\#n    "path": "/abc"\#n}\#n"#
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
     }
 

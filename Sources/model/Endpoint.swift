@@ -34,60 +34,72 @@ public struct Endpoint: Decodable {
     }
 
     public init(from decoder: Decoder) throws {
-
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let methodPath = try container.methodPath(userInfo: decoder.userInfo)
+        method = methodPath.0
+        path = methodPath.1
+        response = try container.inlineScriptResponse()
+            ?? (try container.fileScriptResponse(userInfo: decoder.userInfo))
+            ?? (try container.dataStructureResponse())
+            ?? (try container.missingResponseError())
+    }
+}
 
+/// Extensions that let us coalesce the code in the init.
+extension KeyedDecodingContainer where Key == Endpoint.CodingKeys {
+
+    func methodPath(userInfo: [CodingUserInfoKey: Any]) throws -> (HTTPMethod, String) {
         // Set the signature properties.
-        let signature = try container.decode(String.self, forKey: .signature)
-        if decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
-            print("👻 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found endpoint config: \(signature)")
+        let signature = try decode(String.self, forKey: .signature)
+        if userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
+            print("👻 \(userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found endpoint config: \(signature)")
         }
 
         let components = signature.split(separator: " ")
         if components.endIndex != 2 {
             throw DecodingError.dataCorruptedError(forKey: .signature,
-                                                   in: container,
+                                                   in: self,
                                                    debugDescription: "Incorrect signature. Expected <method> <path>")
         }
 
-        method = HTTPMethod(rawValue: components[0].uppercased())
-        path = String(components[1])
+        return (HTTPMethod(rawValue: components[0].uppercased()), String(components[1]))
+    }
 
-        // Now setup the response.
-
-        // First look for javascript.
-        if let script = try container.decodeIfPresent(String.self, forKey: .javascript) {
-            response = .javascript(script)
-            return
-        }
-
-        // Now a javascript file.
-        if let scriptFile = try container.decodeIfPresent(String.self, forKey: .javascriptFile) {
-
-            guard let directory = decoder.userInfo[ConfigLoader.userInfoDirectoryKey] as? URL else {
-                preconditionFailure("Directory missing from user info (developer error)")
-            }
-
-            let scriptURL = directory.appendingPathComponent(scriptFile)
-            guard scriptURL.fileSystemExists == .isFile else {
-                throw DecodingError.dataCorruptedError(forKey: .javascriptFile,
-                                                       in: container,
-                                                       debugDescription: "Unable to find referenced javascript file '\(scriptURL.relativePath)'")
-            }
-
-            response = .javascript(try String(contentsOf: scriptURL))
-            return
-        }
-
-        // Now test for a response data structure.
-        if let httpResponse = try container.decodeIfPresent(HTTPResponse.self, forKey: .response) {
-            response = httpResponse
-            return
-        }
-
+    func missingResponseError() throws -> HTTPResponse {
         // At this point it's an error.
-        let context = DecodingError.Context(codingPath: container.codingPath,
-                                            debugDescription: "Expected to find '\(CodingKeys.response.stringValue)', '\(CodingKeys.javascript.stringValue)' or '\(CodingKeys.javascriptFile.stringValue)'")
+        let context = DecodingError.Context(codingPath: codingPath,
+                                            debugDescription: "Expected to find '\(Key.response.stringValue)', '\(Key.javascript.stringValue)' or '\(Key.javascriptFile.stringValue)'")
         throw DecodingError.dataCorrupted(context)
+    }
+
+    func dataStructureResponse() throws -> HTTPResponse? {
+        try decodeIfPresent(HTTPResponse.self, forKey: .response)
+    }
+
+    func inlineScriptResponse() throws -> HTTPResponse? {
+        guard let script = try decodeIfPresent(String.self, forKey: .javascript) else {
+            return nil
+        }
+        return .javascript(script)
+    }
+
+    func fileScriptResponse(userInfo: [CodingUserInfoKey: Any]) throws -> HTTPResponse? {
+
+        guard let scriptFile = try decodeIfPresent(String.self, forKey: .javascriptFile) else {
+            return nil
+        }
+
+        guard let directory = userInfo[ConfigLoader.userInfoDirectoryKey] as? URL else {
+            preconditionFailure("Directory missing from user info (developer error)")
+        }
+
+        let scriptFileURL = directory.appendingPathComponent(scriptFile)
+        guard scriptFileURL.fileSystemStatus == .isFile else {
+            throw DecodingError.dataCorruptedError(forKey: .javascriptFile,
+                                                   in: self,
+                                                   debugDescription: "Unable to find referenced javascript file '\(scriptFileURL.filePath)'")
+        }
+
+        return .javascript(try String(contentsOf: scriptFileURL))
     }
 }

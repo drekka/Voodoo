@@ -15,6 +15,14 @@ extension String {
     }
 }
 
+extension HBRequest {
+
+    /// Convenience variable to obtain a wrapped request.
+    var asHTTPRequest: HTTPRequest {
+        HBRequestWrapper(request: self)
+    }
+}
+
 /// Thin wrapper around the core Hummingbird request that provides some additional processing.
 struct HBRequestWrapper: HTTPRequest {
 

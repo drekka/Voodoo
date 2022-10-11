@@ -10,13 +10,11 @@ import HummingbirdMustache
 
 extension HBApplication: SimulcraContext {
 
-    public var address: URL {
-        let address = configuration.address
-        var components = URLComponents()
-        components.scheme = "http"
-        components.host = address.host!
-        components.port = address.port!
-        return components.url!
+    public var port: Int {
+        guard let port = configuration.address.port else {
+            fatalError("💥💥💥 No port set on server 💥💥💥")
+        }
+        return port
     }
 
     /// Stores a mustache rendering engine for payload templates.
@@ -33,6 +31,7 @@ extension HBApplication: SimulcraContext {
 }
 
 extension HBApplication {
+
     /// Javascript execution support.
     var javascript: JavascriptExecutor {
         get { extensions.get(\.javascript) }
@@ -44,7 +43,7 @@ extension HBRouter {
 
     func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
         on(path, method: method) {
-            try await response.hbResponse(for: HBRequestWrapper(request: $0), inServerContext: $0.application)
+            try await response.hbResponse(for: $0.asHTTPRequest, inServerContext: $0.application)
         }
     }
 }

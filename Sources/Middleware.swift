@@ -5,15 +5,6 @@
 import Foundation
 import Hummingbird
 
-/// Captures the incoming requests "host" header for injecting as the mock server URL.
-struct HostCapture: HBMiddleware {
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        let host = request.headers.first(name: "host") ?? "127.0.0.1:\(request.application.address.port ?? 80)"
-        request.application.cache["mockServer"] = "http://" + host
-        return next.respond(to: request)
-    }
-}
-
 /// Logs all incoming requests.
 struct RequestLogger: HBMiddleware {
     let verbose: Bool

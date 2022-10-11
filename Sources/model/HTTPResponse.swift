@@ -134,7 +134,7 @@ extension HTTPResponse {
         // Captures the request and cache before generating the response.
         func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {
 
-            let body = try body.hbBody(serverContext: context)
+            let body = try body.hbBody(forRequest: request, serverContext: context)
 
             // Add additional headers returned with the body.
             var finalHeaders = headers ?? [:]

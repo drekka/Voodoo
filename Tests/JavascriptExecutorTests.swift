@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Hummingbird
 import Nimble
 import NIOHTTP1
 @testable import SimulcraCore
@@ -98,13 +99,13 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testResponseMovedPermanently() throws {
-        try expectResponse(#"return Response.movedPermanently("http://127.0.0.1/abc");"#,
-                           toReturn: .movedPermanently("http://127.0.0.1/abc"))
+        try expectResponse(#"return Response.movedPermanently("\#(HBRequest.mockServerRequestURL)");"#,
+                           toReturn: .movedPermanently(HBRequest.mockServerRequestURL))
     }
 
     func testResponseTemporaryRedirect() throws {
-        try expectResponse(#"return Response.temporaryRedirect("http://127.0.0.1/abc");"#,
-                           toReturn: .temporaryRedirect("http://127.0.0.1/abc"))
+        try expectResponse(#"return Response.temporaryRedirect("\#(HBRequest.mockServerRequestURL)");"#,
+                           toReturn: .temporaryRedirect(HBRequest.mockServerRequestURL))
     }
 
     func testResponseNotFound() throws {
@@ -324,7 +325,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     @discardableResult
     private func execute(_ script: String) throws -> HTTPResponse {
-        let request = MockRequest.create(url: "http://127.0.0.1:8080/abc")
+        let request = HBRequest.mock(url: HBRequest.mockServerRequestURL).asHTTPRequest
         return try executor.execute(script: script, for: request)
     }
 }

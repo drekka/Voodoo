@@ -23,7 +23,7 @@ public struct ConfigLoader {
 
     public func load(from path: URL) throws -> [Endpoint] {
 
-        switch path.fileSystemExists {
+        switch path.fileSystemStatus {
 
         case .isFile:
             return try readConfig(file: path)
@@ -43,7 +43,7 @@ public struct ConfigLoader {
                 .flatMap(readConfig)
 
         default:
-            let fileSystemPath = path.relativePath
+            let fileSystemPath = path.filePath
             print("👻 Config file/directory does not exist \(fileSystemPath)")
             throw SimulcraError.invalidConfigPath(fileSystemPath)
         }
@@ -51,7 +51,7 @@ public struct ConfigLoader {
 
     private func readConfig(file: URL) throws -> [Endpoint] {
         if verbose {
-            print("👻 Reading config in \(file.relativePath)")
+            print("👻 Reading config in \(file.filePath)")
         }
         let data = try Data(contentsOf: file)
         let directory = file.deletingLastPathComponent()

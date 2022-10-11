@@ -28,6 +28,22 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       codeCoverageEnabled = "YES">
+      <CodeCoverageTargets>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "simulcra"
+            BuildableName = "simulcra"
+            BlueprintName = "simulcra"
+            ReferencedContainer = "container:">
+         </BuildableReference>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "simulcra-core"
+            BuildableName = "simulcra-core"
+            BlueprintName = "simulcra-core"
+            ReferencedContainer = "container:">
+         </BuildableReference>
+      </CodeCoverageTargets>
       <Testables>
          <TestableReference
             skipped = "NO"

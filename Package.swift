@@ -56,6 +56,7 @@ let package = Package(
                 .copy("Test files/Simple.html"),
                 .copy("Test files/Template.json"),
                 .copy("Test files/TestDir"),
+                .copy("Test files/TestDir/ReturnOk.js"),
             ]
         ),
     ]
