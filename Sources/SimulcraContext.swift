@@ -29,9 +29,13 @@ extension SimulcraContext {
     ///
     /// - parameter requestData: Additional data unique to the current request.
     func requestTemplateData(forRequest request: HTTPRequest, adding requestData: TemplateData? = nil) -> TemplateData {
-        let host = request.headers["host"] ?? "127.0.0.1:\(port)"
-        return cache.dictionaryRepresentation()
-            .merging(["mockServer": host]) { $1 }
-            .merging(requestData ?? [:]) { $1 }
+        var overlay = TemplateData()
+        if let hostAddress = request.headers["host"] {
+            overlay["mockServer"] = hostAddress
+        }
+        if let requestData {
+            overlay.merge(requestData) { $1 }
+        }
+        return cache.dictionaryRepresentation().merging(overlay) { $1 }
     }
 }
