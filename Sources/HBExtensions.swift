@@ -30,15 +30,6 @@ extension HBApplication: SimulcraContext {
     }
 }
 
-extension HBApplication {
-
-    /// Javascript execution support.
-    var javascript: JavascriptExecutor {
-        get { extensions.get(\.javascript) }
-        set { extensions.set(\.javascript, value: newValue) }
-    }
-}
-
 extension HBRouter {
 
     func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
