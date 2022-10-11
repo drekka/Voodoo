@@ -51,12 +51,7 @@ let package = Package(
             ],
             path: "Tests",
             resources: [
-                .copy("Test files/Simple.json"),
-                .copy("Test files/Invalid.json"),
-                .copy("Test files/Simple.html"),
-                .copy("Test files/Template.json"),
-                .copy("Test files/TestDir"),
-                .copy("Test files/TestDir/ReturnOk.js"),
+                .copy("Test files"),
             ]
         ),
     ]

@@ -148,7 +148,7 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
     func testResponseWithFileTemplate() async {
 
-        server.add(.POST, "/abc", response: .accepted(body: .template("Template", templateData: ["path": "/abc"])))
+        server.add(.POST, "/abc", response: .accepted(body: .template("Test files/Template", templateData: ["path": "/abc"])))
         let response = await assert(.POST, "/abc", returns: .accepted)
         let httpResponse = response.response
 

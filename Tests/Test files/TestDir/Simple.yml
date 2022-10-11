@@ -1,0 +1,4 @@
+signature: get /abc
+response:
+  status: 200
+

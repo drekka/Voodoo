@@ -13,7 +13,7 @@ import XCTest
 class URLExtensionsTests: XCTestCase {
 
     func testFileExistsWithValidFile() {
-        let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "json")!
+        let url = Bundle.testBundle.url(forResource: "Test files/Simple", withExtension: "json")!
         expect(url.fileSystemStatus) == .isFile
     }
 
@@ -23,7 +23,7 @@ class URLExtensionsTests: XCTestCase {
     }
 
     func testFileExistsWithDirectory() {
-        let url = Bundle.testBundle.url(forResource: "TestDir", withExtension: nil)!
+        let url = Bundle.testBundle.url(forResource: "Test files", withExtension: nil)!
         expect(url.fileSystemStatus) == .isDirectory
     }
 

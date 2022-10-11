@@ -17,12 +17,12 @@ struct EndpointReference: Decodable, EndpointSource {
 
             let fileReference = try container.decode(String.self)
 
-            guard let directory = decoder.userInfo[ConfigLoader.userInfoDirectoryKey] as? URL,
-            let verbose = decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool else {
+            guard let directory = decoder.userInfo[ConfigLoader.userInfoDirectoryKey] as? URL else {
                 preconditionFailure("User info incomplete (developer error).")
             }
 
-            if decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
+            let verbose = decoder.userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false
+            if verbose {
                 print("👻 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found file reference: \(fileReference)")
             }
 

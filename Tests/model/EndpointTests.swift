@@ -72,7 +72,7 @@ class EndpointTests: XCTestCase {
     func testDecodeWithExternalJavascript() throws {
         try expectYML(#"""
                       signature: "post /abc"
-                      javascriptFile: TestDir/ReturnOk.js
+                      javascriptFile: Test files/TestDir/ReturnOk.js
                       """#,
                       toDecodeAs: .POST, "/abc",
                       response: .javascript("function response(request, cache) {\n    return Response.ok()\n}\n"))

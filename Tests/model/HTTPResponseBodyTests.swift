@@ -73,7 +73,7 @@ class HTTPResponseBodyTests: XCTestCase {
     }
 
     func testFile() throws {
-        let url = Bundle.testBundle.url(forResource: "Simple", withExtension: "html")!
+        let url = Bundle.testBundle.url(forResource: "Test files/Simple", withExtension: "html")!
         try assert(.file(url, contentType: ContentType.textHTML),
                    generates: #"<html><body></body></html>\#n"#,
                    contentType: ContentType.textHTML)
