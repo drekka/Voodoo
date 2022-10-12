@@ -5,13 +5,9 @@
 import Foundation
 import Hummingbird
 
-// Type definitions
-
-public typealias PathParameters = [String: String]
-public typealias FormParameters = [String: String]
-
 /// Provides access to header and query parameters.
 public protocol KeyedValues {
+    var uniqueKeys: [String] { get }
     subscript(_: String) -> String? { get }
     subscript(_: String) -> [String] { get }
 }
@@ -32,7 +28,7 @@ public protocol HTTPRequest {
     var pathComponents: [String] { get }
 
     /// A dictionary of parameters extracted from the path.
-    var pathParameters: PathParameters { get }
+    var pathParameters: [String: String] { get }
 
     // The URL query string.
     var query: String? { get }
@@ -51,5 +47,5 @@ public protocol HTTPRequest {
     var bodyJSON: Any? { get }
 
     /// If the request is a form submission then this contains the fields and their values from the form.
-    var formParameters: FormParameters { get }
+    var formParameters: [String: String] { get }
 }

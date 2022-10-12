@@ -9,7 +9,7 @@ import NIOFoundationCompat
 
 extension String {
 
-    /// The same effect as ``URL``s `pathComponents` property but assuming the string is a path.
+    /// The same effect as ``URL.pathComponents`` property but assuming the string is a path.
     var urlPathComponents: [String.SubSequence] {
         ["/"] + split(separator: "/")
     }
@@ -23,37 +23,48 @@ extension HBRequest {
     }
 }
 
+extension HTTPHeaders: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.name.hashValue).inserted ? $0.name : nil }
+    }
+
+    public subscript(key: String) -> String? { first(name: key) }
+}
+
+extension HBParameters: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
+    }
+
+
+    public subscript(key: String) -> [String] {
+        getAll(key)
+    }
+}
+
 /// Thin wrapper around the core Hummingbird request that provides some additional processing.
 struct HBRequestWrapper: HTTPRequest {
-
-    public struct HBQueryParameters: KeyedValues {
-        let parameters: HBParameters
-        public subscript(key: String) -> String? { parameters[key] }
-        public subscript(key: String) -> [String] { parameters.getAll(key) }
-    }
-
-    public struct HBHeaders: KeyedValues {
-        let headers: HTTPHeaders
-        public subscript(key: String) -> String? { headers.first(name: key) }
-        public subscript(key: String) -> [String] { headers[key] }
-    }
 
     /// The wrapped Hummingbird request.
     let request: HBRequest
 
     var method: HTTPMethod { request.method }
 
-    var headers: KeyedValues { HBHeaders(headers: request.headers) }
+    var headers: KeyedValues { request.headers }
 
     var path: String { request.uri.path }
 
     var pathComponents: [String] { request.uri.path.urlPathComponents.map { String($0) } }
 
-    var pathParameters: PathParameters { Dictionary(request.parameters.map { (String($0.key), String($0.value)) }) { $1 } }
+    var pathParameters: [String: String] { Dictionary(request.parameters.map { (String($0.key), String($0.value)) }) { $1 } }
 
     var query: String? { request.uri.query }
 
-    var queryParameters: KeyedValues { HBQueryParameters(parameters: request.uri.queryParameters) }
+    var queryParameters: KeyedValues { request.uri.queryParameters }
 
     var body: Data? { return request.body.buffer?.data }
 
@@ -63,7 +74,7 @@ struct HBRequestWrapper: HTTPRequest {
         return try? JSONSerialization.jsonObject(with: buffer)
     }
 
-    var formParameters: FormParameters {
+    var formParameters: [String: String] {
 
         guard request.headers[ContentType.key].first == ContentType.applicationFormData,
               let buffer = request.body.buffer else { return [:] }

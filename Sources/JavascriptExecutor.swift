@@ -27,7 +27,7 @@ struct JavascriptExecutor {
         try jsCtx.eval(JavascriptSource.responseType)
     }
 
-    func execute(script: String, for _: HTTPRequest) throws -> HTTPResponse {
+    func execute(script: String, for request: HTTPRequest) throws -> HTTPResponse {
 
         // Load the script into the context then retrieve the function.
         do {
@@ -46,8 +46,7 @@ struct JavascriptExecutor {
         let rawResponse: JXValue
         do {
             rawResponse = try responseFunction.call(withArguments: [
-                // try jsCtx.encode(request.javascriptObject),
-                jsCtx.object(),
+                request.asJavascriptObject(in: jsCtx),
                 serverCtx.cache.asJavascriptObject(in: jsCtx),
             ])
         } catch {
@@ -72,6 +71,50 @@ struct JavascriptExecutor {
             return context.undefined()
         }
         try jsCtx.global["console"].setProperty("log", myFunction)
+    }
+}
+
+extension HTTPRequest {
+    func asJavascriptObject(in jsCtx: JXContext) throws -> JXValue {
+
+        let request = jsCtx.object()
+
+        try request.defineProperty(jsCtx.string("method"), JXProperty { _ in jsCtx.string(method.rawValue) })
+
+        try defineKeyedValue(property: "headers", using: headers, parentContainer: request)
+
+        try request.defineProperty(jsCtx.string("path"), JXProperty { _ in jsCtx.string(path) })
+        try request.defineProperty(jsCtx.string("pathComponents"), JXProperty { _ in try jsCtx.array(pathComponents.map { jsCtx.string($0) }) })
+        let jsPathParameters = jsCtx.object()
+        try pathParameters.forEach { key, value in
+            try jsPathParameters.defineProperty(jsCtx.string(key), JXProperty { _ in jsCtx.string(value) })
+        }
+        try request.defineProperty(jsCtx.string("pathParameters"), JXProperty { _ in jsPathParameters })
+
+        try request.defineProperty(jsCtx.string("query"), JXProperty { _ in query == nil ? jsCtx.null() : jsCtx.string(query!) })
+        try defineKeyedValue(property: "queryParameters", using: queryParameters, parentContainer: request)
+
+        try request.defineProperty(jsCtx.string("body"), JXProperty { _ in body == nil ? jsCtx.null() : try jsCtx.data(body!) })
+
+        try request.defineProperty(jsCtx.string("bodyJSON"), JXProperty { _ in
+            bodyJSON == nil ? jsCtx.null() : try jsCtx.json(#"{"x":"y"}"#)
+        })
+
+        return request
+    }
+
+    // Builds a container with the keys in the passed keyed values posing as the property names. Each property will return
+    // either an array or value depending on whether there are multiple values with the same key.
+    private func defineKeyedValue(property: String, using keyedValues: KeyedValues, parentContainer: JXValue) throws {
+        let jsCtx = parentContainer.ctx
+        let jsContainer = jsCtx.object()
+        try keyedValues.uniqueKeys.forEach { key in
+            try jsContainer.defineProperty(jsCtx.string(key), JXProperty { _ in
+                let values = (keyedValues[key] as [String]).map { jsCtx.string($0) }
+                return values.endIndex == 1 ? values[0] : try jsCtx.array(values)
+            })
+        }
+        try parentContainer.defineProperty(jsCtx.string(property), JXProperty { _ in jsContainer })
     }
 }
 
@@ -116,7 +159,7 @@ extension Cache {
         switch args[1] {
 
         case let value where value.isNull:
-            self.remove(key)
+            remove(key)
 
         case let value where value.isBoolean:
             self[key] = value.booleanValue

@@ -17,12 +17,12 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testHeaders() {
-        let wrapper = HBRequest.mock(headers: ["def": "xyz"]).asHTTPRequest
+        let wrapper = HBRequest.mock(headers: [("def", "xyz")]).asHTTPRequest
         expect(wrapper.headers["def"]) == "xyz"
     }
 
     func testHeadersCaseInsensitivity() {
-        let wrapper = HBRequest.mock(headers: ["def": "xyz"]).asHTTPRequest
+        let wrapper = HBRequest.mock(headers: [("def", "xyz")]).asHTTPRequest
         expect(wrapper.headers["DeF"]) == "xyz"
     }
 
