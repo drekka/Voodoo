@@ -14,11 +14,8 @@ import NIOCore
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
-    let serverCtx: SimulcraContext
 
-    init(forContext serverCtx: SimulcraContext) throws {
-
-        self.serverCtx = serverCtx
+    init() throws {
 
         try redirectLogging()
 
@@ -27,7 +24,7 @@ struct JavascriptExecutor {
         try jsCtx.eval(JavascriptSource.responseType)
     }
 
-    func execute(script: String, for request: HTTPRequest) throws -> HTTPResponse {
+    func execute(script: String, for request: HTTPRequest, context serverCtx: SimulcraContext) throws -> HTTPResponse {
 
         // Load the script into the context then retrieve the function.
         do {
@@ -79,42 +76,72 @@ extension HTTPRequest {
 
         let request = jsCtx.object()
 
-        try request.defineProperty(jsCtx.string("method"), JXProperty { _ in jsCtx.string(method.rawValue) })
+        try request.defineProperty("method") { property in property.ctx.string(method.rawValue) }
 
-        try defineKeyedValue(property: "headers", using: headers, parentContainer: request)
+        try request.defineProperty("headers", populatedWith: headers)
 
-        try request.defineProperty(jsCtx.string("path"), JXProperty { _ in jsCtx.string(path) })
-        try request.defineProperty(jsCtx.string("pathComponents"), JXProperty { _ in try jsCtx.array(pathComponents.map { jsCtx.string($0) }) })
-        let jsPathParameters = jsCtx.object()
-        try pathParameters.forEach { key, value in
-            try jsPathParameters.defineProperty(jsCtx.string(key), JXProperty { _ in jsCtx.string(value) })
+        try request.defineProperty("path") { property in property.ctx.string(path) }
+        try request.defineProperty("pathComponents") { property in try property.ctx.array(pathComponents.map { property.ctx.string($0) }) }
+        try request.defineProperty("pathParameters", populatedWith: pathParameters)
+
+        try request.defineProperty("query") { property in query == nil ? property.ctx.null() : property.ctx.string(query!) }
+        try request.defineProperty("queryParameters", populatedWith: queryParameters)
+
+        try request.defineProperty("body") { property in body == nil ? property.ctx.null() : try property.ctx.data(body!) }
+
+        try request.defineProperty("bodyJSON") { property in
+            // .json(...) converts a JSON string into an object so bypass bodyJSON
+            // because we'd be converting from JSON to objects and back to JSON which is pointless.
+            if let body, let json = String(data: body, encoding: .utf8) {
+                return try property.ctx.json(json)
+            }
+            return property.ctx.null()
         }
-        try request.defineProperty(jsCtx.string("pathParameters"), JXProperty { _ in jsPathParameters })
 
-        try request.defineProperty(jsCtx.string("query"), JXProperty { _ in query == nil ? jsCtx.null() : jsCtx.string(query!) })
-        try defineKeyedValue(property: "queryParameters", using: queryParameters, parentContainer: request)
-
-        try request.defineProperty(jsCtx.string("body"), JXProperty { _ in body == nil ? jsCtx.null() : try jsCtx.data(body!) })
-
-        try request.defineProperty(jsCtx.string("bodyJSON"), JXProperty { _ in
-            bodyJSON == nil ? jsCtx.null() : try jsCtx.json(#"{"x":"y"}"#)
-        })
+        try request.defineProperty("formParameters", populatedWith: formParameters)
 
         return request
     }
+}
 
-    // Builds a container with the keys in the passed keyed values posing as the property names. Each property will return
-    // either an array or value depending on whether there are multiple values with the same key.
-    private func defineKeyedValue(property: String, using keyedValues: KeyedValues, parentContainer: JXValue) throws {
-        let jsCtx = parentContainer.ctx
-        let jsContainer = jsCtx.object()
-        try keyedValues.uniqueKeys.forEach { key in
-            try jsContainer.defineProperty(jsCtx.string(key), JXProperty { _ in
-                let values = (keyedValues[key] as [String]).map { jsCtx.string($0) }
-                return values.endIndex == 1 ? values[0] : try jsCtx.array(values)
-            })
+extension JXValue {
+
+    /// Wraps up some boiler plate for JXKit.
+    public func defineProperty(_ property: String, getter: @escaping (JXValue) throws -> JXValue) throws {
+        try defineProperty(ctx.string(property), JXProperty(getter: getter, enumerable: true))
+    }
+
+    /// Builds a container with the keys in the passed keyed values posing as the property names. Each property will return
+    /// either an array or value depending on whether there are multiple values with the same key.
+    func defineProperty(_ property: String, populatedWith keyedValues: KeyedValues) throws {
+        try defineObjectProperty(property) { obj in
+            try keyedValues.uniqueKeys.forEach { key in
+                try obj.defineProperty(key) { property in
+                    let values = (keyedValues[key] as [String]).map { property.ctx.string($0) }
+                    return values.endIndex == 1 ? values[0] : try property.ctx.array(values)
+                }
+            }
         }
-        try parentContainer.defineProperty(jsCtx.string(property), JXProperty { _ in jsContainer })
+    }
+
+    /// Builds a container with the keys in the passed dictionary posing as the property names.
+    func defineProperty(_ property: String, populatedWith dictionary: [String: String]) throws {
+        try defineObjectProperty(property) { obj in
+            try dictionary.forEach { key, value in
+                try obj.defineProperty(key) { property in
+                    property.ctx.string(value)
+                }
+            }
+        }
+    }
+
+    /// Boilerplate to define an object property using a closure.
+    func defineObjectProperty(_ property: String, using setup: @escaping (JXValue) throws -> Void) throws {
+        try defineProperty(property) { parentObj in
+            let obj = parentObj.ctx.object()
+            try setup(obj)
+            return obj
+        }
     }
 }
 

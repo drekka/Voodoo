@@ -1,0 +1,8 @@
+signature: get /abc
+response:
+  status: 200
+  headers: ~
+  body:
+    type: text
+    text: Hello world!
+    templateData: ~

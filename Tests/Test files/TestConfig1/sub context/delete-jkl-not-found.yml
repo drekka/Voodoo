@@ -1,0 +1,4 @@
+signature: delete /jkl
+response:
+  status: 404
+  headers: ~

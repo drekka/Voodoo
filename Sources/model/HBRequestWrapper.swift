@@ -40,7 +40,6 @@ extension HBParameters: KeyedValues {
         return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
     }
 
-
     public subscript(key: String) -> [String] {
         getAll(key)
     }
@@ -60,7 +59,11 @@ struct HBRequestWrapper: HTTPRequest {
 
     var pathComponents: [String] { request.uri.path.urlPathComponents.map { String($0) } }
 
-    var pathParameters: [String: String] { Dictionary(request.parameters.map { (String($0.key), String($0.value)) }) { $1 } }
+    var pathParameters: [String: String] {
+        // humming bird will fatal if there are no parameters and we try to access them.
+        guard request.extensions.exists(\.parameters) else { return [:] }
+        return Dictionary(request.parameters.map { (String($0.key), String($0.value)) }) { $1 }
+    }
 
     var query: String? { request.uri.query }
 

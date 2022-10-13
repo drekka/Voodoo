@@ -63,7 +63,7 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testJSONContent() {
-        let wrapper = HBRequest.mock(contentType: "application/json",
+        let wrapper = HBRequest.mock(contentType: ContentType.applicationJSON,
                                      body: #"{"abc":"def"}"#).asHTTPRequest
         let json = wrapper.bodyJSON as! [String: Any]
         expect(json["abc"] as? String) == "def"

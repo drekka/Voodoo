@@ -1,4 +1,4 @@
-signature: get /abc
+signature: get /def
 response:
   status: 200
 

@@ -30,13 +30,13 @@ class EndPointReferenceTests: XCTestCase {
     func testDecodeFileReference() throws {
         let decoder = YAMLDecoder()
         let yml = #"""
-        Test files/TestDir/Simple.yml
+        Test files/TestConfig1/get-def-ok.yml
         """#
 
         let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
         expect(endpoint.apis.count) == 1
         expect(endpoint.apis[0].method) == .GET
-        expect(endpoint.apis[0].path) == "/abc"
+        expect(endpoint.apis[0].path) == "/def"
         expect(endpoint.apis[0].response) == .ok()
     }
 }
@@ -83,7 +83,7 @@ class ConfigFileTests: XCTestCase {
         - signature: get /xyz
           response:
             status: 201
-        - Test files/TestDir/Simple.yml
+        - Test files/TestConfig1/get-def-ok.yml
         - signature: post /ghi
           response:
             status: 202
@@ -94,7 +94,7 @@ class ConfigFileTests: XCTestCase {
         expect(config.apis[0].path) == "/xyz"
         expect(config.apis[0].response) == .created()
         expect(config.apis[1].method) == .GET
-        expect(config.apis[1].path) == "/abc"
+        expect(config.apis[1].path) == "/def"
         expect(config.apis[1].response) == .ok()
         expect(config.apis[2].method) == .POST
         expect(config.apis[2].path) == "/ghi"

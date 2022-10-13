@@ -156,8 +156,7 @@ extension HTTPResponse {
             return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
 
         case .javascript(let script):
-            let executor = try JavascriptExecutor(forContext: context)
-            let response = try executor.execute(script: script, for: request)
+            let response = try JavascriptExecutor().execute(script: script, for: request, context: context)
             return try await response.hbResponse(for: request, inServerContext: context)
 
             // Convenience
