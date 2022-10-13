@@ -1,4 +1,4 @@
-- signature: post /def/xyz
+- signature: post /created/text
   response:
     status: 201
     headers: ~
@@ -7,14 +7,14 @@
       text: Hello world!
       templateData: ~
 
-- get-empty.yml
+- TestConfig1/get-200.ok.yml
 
-- signature: get /javascript/inline
+- signature: get /javascript/inline/ok
   javascript: |
     function response(request, cache) {
       return Response.ok()
     }
 
 - signature: get /javascript/file
-  javascriptFile: scenario 1.js 
+  javascriptFile: TestConfig1/get-200-ok.js 
 

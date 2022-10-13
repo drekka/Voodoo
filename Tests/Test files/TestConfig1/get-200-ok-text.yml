@@ -1,8 +1,8 @@
-signature: get /abc
+signature: get /ok/200/text
 response:
   status: 200
   headers: ~
   body:
     type: text
-    text: hello world!
+    text: Hello world!
     templateData: ~

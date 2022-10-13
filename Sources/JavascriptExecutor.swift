@@ -20,8 +20,8 @@ struct JavascriptExecutor {
         try redirectLogging()
 
         // Inject javascript types.
-        try jsCtx.eval(JavascriptSource.responseBodyType)
-        try jsCtx.eval(JavascriptSource.responseType)
+        try jsCtx.eval(JavascriptModels.responseBodyType)
+        try jsCtx.eval(JavascriptModels.responseType)
     }
 
     func execute(script: String, for request: HTTPRequest, context serverCtx: SimulcraContext) throws -> HTTPResponse {

@@ -1,4 +1,4 @@
-signature: delete /jkl
+signature: delete /not-found
 response:
   status: 404
   headers: ~

@@ -1,4 +1,4 @@
-signature: get /def
+signature: get /ok/200
 response:
   status: 200
 

@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum JavascriptSource {
+enum JavascriptModels {
     static let responseType = #"""
         class Response {
 
