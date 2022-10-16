@@ -255,7 +255,7 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
         server.add(.GET, "/abc", response: .javascript(#"""
         function response(request, cache) {
-            var abc = cache.get("abc");
+            var abc = cache.abc;
             return Response.ok(Body.text(abc));
         }
         """#))

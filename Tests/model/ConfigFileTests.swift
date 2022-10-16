@@ -30,13 +30,13 @@ class EndPointReferenceTests: XCTestCase {
     func testDecodeFileReference() throws {
         let decoder = YAMLDecoder()
         let yml = #"""
-        Test files/TestConfig1/get-def-ok.yml
+        Test files/TestConfig1/get-config.yml
         """#
 
         let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
         expect(endpoint.apis.count) == 1
         expect(endpoint.apis[0].method) == .GET
-        expect(endpoint.apis[0].path) == "/def"
+        expect(endpoint.apis[0].path) == "/config"
         expect(endpoint.apis[0].response) == .ok()
     }
 }
@@ -80,24 +80,24 @@ class ConfigFileTests: XCTestCase {
     func testDecodeMixed() throws {
         let decoder = YAMLDecoder()
         let yml = #"""
-        - signature: get /xyz
+        - signature: put /config
           response:
             status: 201
-        - Test files/TestConfig1/get-def-ok.yml
-        - signature: post /ghi
+        - Test files/TestConfig1/get-config.yml
+        - signature: delete /config
           response:
-            status: 202
+            status: 200
         """#
         let config = try decoder.decode(ConfigFile.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
         expect(config.apis.count) == 3
         expect(config.apis[0].method) == .GET
-        expect(config.apis[0].path) == "/xyz"
+        expect(config.apis[0].path) == "/config"
         expect(config.apis[0].response) == .created()
         expect(config.apis[1].method) == .GET
-        expect(config.apis[1].path) == "/def"
+        expect(config.apis[1].path) == "/config"
         expect(config.apis[1].response) == .ok()
         expect(config.apis[2].method) == .POST
-        expect(config.apis[2].path) == "/ghi"
+        expect(config.apis[2].path) == "/config"
         expect(config.apis[2].response) == .accepted()
     }
 }

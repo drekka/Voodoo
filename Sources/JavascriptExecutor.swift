@@ -14,17 +14,41 @@ import NIOCore
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
+    let serverCtx: SimulcraContext
 
-    init() throws {
+    init(serverContext: SimulcraContext) throws {
+
+        serverCtx = serverContext
 
         try redirectLogging()
 
         // Inject javascript types.
         try jsCtx.eval(JavascriptModels.responseBodyType)
         try jsCtx.eval(JavascriptModels.responseType)
+
+        // We need to do this in javascript because (I think) if I try and create a proxy in code
+        // it's not passed back and forwards correctly.
+        let cacheObj = try serverCtx.cache.asJavascriptObject(in: jsCtx)
+        try jsCtx.global.setProperty("_cache", cacheObj)
+        try jsCtx.eval(#"""
+            const _handler = {
+                get(target, property) {
+                    return _cache.get(property);
+                },
+                set(object, property, value) {
+                    _cache.set(property, value);
+                }
+            };
+            var _cacheProxy = new Proxy(_cache, _handler);
+
+            function _generateResponse(responseFunction, request) {
+                return responseFunction(request, _cacheProxy);
+            }
+            """#
+        )
     }
 
-    func execute(script: String, for request: HTTPRequest, context serverCtx: SimulcraContext) throws -> HTTPResponse {
+    func execute(script: String, for request: HTTPRequest) throws -> HTTPResponse {
 
         // Load the script into the context then retrieve the function.
         do {
@@ -42,9 +66,11 @@ struct JavascriptExecutor {
         // Call it.
         let rawResponse: JXValue
         do {
-            rawResponse = try responseFunction.call(withArguments: [
+            // Execute the wrapper function which is passed the cache proxy.
+            let generateResponse = try jsCtx.global["_generateResponse"]
+            rawResponse = try generateResponse.call(withArguments: [
+                responseFunction,
                 request.asJavascriptObject(in: jsCtx),
-                serverCtx.cache.asJavascriptObject(in: jsCtx),
             ])
         } catch {
             throw SimulcraError.javascriptError("Javascript execution failed. Error: \(error)")
@@ -63,11 +89,11 @@ struct JavascriptExecutor {
 
     private func redirectLogging() throws {
         // Update the log function to print log messages.
-        let myFunction = JXValue(newFunctionIn: jsCtx) { context, _, messages in
+        let redirect = JXValue(newFunctionIn: jsCtx) { context, _, messages in
             messages.forEach { print("Javascript: \($0)") }
             return context.undefined()
         }
-        try jsCtx.global["console"].setProperty("log", myFunction)
+        try jsCtx.global["console"].setProperty("log", redirect)
     }
 }
 

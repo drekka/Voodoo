@@ -60,6 +60,14 @@ extension SimulcraCMD {
         @OptionGroup var options: SimulcraCMD.Options
 
         @Option(
+            name: [.long],
+            help: """
+            Activates trace mode in the Hummingbird server for tracking errors.
+            """
+        )
+        var hummingbirdVerbose: Bool = false
+
+        @Option(
             name: .shortAndLong,
             help: """
             The port range to start the server on. \

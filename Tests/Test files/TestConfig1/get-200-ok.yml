@@ -1,4 +1,0 @@
-signature: get /ok/200
-response:
-  status: 200
-

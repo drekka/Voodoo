@@ -12,13 +12,9 @@ import NIOHTTP1
 @testable import SimulcraCore
 import XCTest
 
+import JXKit
+
 class JavascriptExecutorTests: XCTestCase {
-
-    private var executor: JavascriptExecutor!
-
-    override func setUpWithError() throws {
-        executor = try JavascriptExecutor()
-    }
 
     // MARK: - Request details
 
@@ -31,6 +27,7 @@ class JavascriptExecutorTests: XCTestCase {
                                          headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
                                          body: "Hello world!")
                 .asHTTPRequest
+            let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
             return try executor.execute(script: #"""
                                         function response(request, cache) {
                                             var data = {
@@ -46,7 +43,7 @@ class JavascriptExecutorTests: XCTestCase {
                                             return Response.ok(Body.json(data));
                                         }
                                         """#,
-                                        for: request, context: MockSimulcraContext())
+                                        for: request)
         }
             toReturn: { results in
                 expect(results["method"] as? String) == "GET"
@@ -74,6 +71,7 @@ class JavascriptExecutorTests: XCTestCase {
                 body: #"formField1=Hello%20world!"#
             )
             .asHTTPRequest
+            let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
             return try executor.execute(script: #"""
                                         function response(request, cache) {
                                             var data = {
@@ -83,7 +81,7 @@ class JavascriptExecutorTests: XCTestCase {
                                             return Response.ok(Body.json(data));
                                         }
                                         """#,
-                                        for: request, context: MockSimulcraContext())
+                                        for: request)
         }
             toReturn: { results in
                 let formData = results["formParameters"] as? [String: Any]
@@ -101,6 +99,7 @@ class JavascriptExecutorTests: XCTestCase {
                 body: #"{"abc":"def"}"#
             )
             .asHTTPRequest
+            let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
             return try executor.execute(script: #"""
                                         function response(request, cache) {
                                             var data = {
@@ -109,7 +108,7 @@ class JavascriptExecutorTests: XCTestCase {
                                             return Response.ok(Body.json(data));
                                         }
                                         """#,
-                                        for: request, context: MockSimulcraContext())
+                                        for: request)
         }
             toReturn: { results in
                 expect((results["body"] as? [String: Any])?["abc"] as? String) == "def"
@@ -321,7 +320,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testCacheMiss() throws {
         try expectResponse(#"""
-                           return Response.ok(Body.text("Hello " + cache.get("abc")));
+                           return Response.ok(Body.text("Hello " + cache.abc));
                            """#,
                            toReturn: .ok(body: .text("Hello null")))
     }
@@ -329,13 +328,13 @@ class JavascriptExecutorTests: XCTestCase {
     func testCacheString() throws {
         let mockContext = MockSimulcraContext()
         try expectResponse(#"""
-                           cache.set("abc", "Hello world!");
+                           cache.abc = "Hello world!";
                            return Response.ok();
                            """#,
                            inContext: mockContext,
                            toReturn: .ok())
         try expectResponse(#"""
-                           return Response.ok(Body.text(cache.get("abc")));
+                           return Response.ok(Body.text(cache.abc));
                            """#,
                            inContext: mockContext,
                            toReturn: .ok(body: .text("Hello world!")))
@@ -344,13 +343,13 @@ class JavascriptExecutorTests: XCTestCase {
     func testCacheInt() throws {
         let mockContext = MockSimulcraContext()
         try expectResponse(#"""
-                           cache.set("abc", 123);
+                           cache.abc = 123;
                            return Response.ok();
                            """#,
                            inContext: mockContext,
                            toReturn: .ok())
         try expectResponse(#"""
-                           return Response.ok(Body.text(cache.get("abc").toString()));
+                           return Response.ok(Body.text(cache.abc.toString()));
                            """#,
                            inContext: mockContext,
                            toReturn: .ok(body: .text("123")))
@@ -359,15 +358,15 @@ class JavascriptExecutorTests: XCTestCase {
     func testCacheJSObject() throws {
         let mockContext = MockSimulcraContext()
         try expectResponse(#"""
-                           cache.set("abc", {
+                           cache.abc = {
                                def: "Hello world!"
-                           });
+                           };
                            return Response.ok();
                            """#,
                            inContext: mockContext,
                            toReturn: .ok())
         try expectResponse(#"""
-                           var abc = cache.get("abc");
+                           var abc = cache.abc;
                            return Response.ok(Body.text(abc.def));
                            """#,
                            inContext: mockContext,
@@ -377,27 +376,26 @@ class JavascriptExecutorTests: XCTestCase {
     func testCacheJSArray() throws {
         let mockContext = MockSimulcraContext()
         try expectResponse(#"""
-                           cache.set("abc", [
+                           cache.abc = [
                            {
                                def: "Hello world!"
                            },
                            {
                                def: "Goodbye world!"
                            }
-                           ]
-                           );
+                           ];
                            return Response.ok();
                            """#,
                            inContext: mockContext,
                            toReturn: .ok())
         try expectResponse(#"""
-                           var array = cache.get("abc");
+                           var array = cache.abc;
                            return Response.ok(Body.text(array[0].def));
                            """#,
                            inContext: mockContext,
                            toReturn: .ok(body: .text("Hello world!")))
         try expectResponse(#"""
-                           var array = cache.get("abc");
+                           var array = cache.abc;
                            return Response.ok(Body.text(array[1].def));
                            """#,
                            inContext: mockContext,
@@ -409,11 +407,12 @@ class JavascriptExecutorTests: XCTestCase {
     private func expectResponse(_ response: String,
                                 inContext: SimulcraContext = MockSimulcraContext(),
                                 toReturn expectedResponse: HTTPResponse) throws {
+        let executor = try JavascriptExecutor(serverContext: inContext)
         let result = try executor.execute(script: #"""
             function response(request, cache) {
                 \#(response)
             }
-        """#, for: HBRequest.mock().asHTTPRequest, context: inContext)
+        """#, for: HBRequest.mock().asHTTPRequest)
         expect(result) == expectedResponse
     }
 
@@ -431,7 +430,8 @@ class JavascriptExecutorTests: XCTestCase {
                               inContext context: SimulcraContext = MockSimulcraContext(),
                               toThrowError expectedMessage: String) {
         do {
-            _ = try executor.execute(script: script, for: HBRequest.mock().asHTTPRequest, context: context)
+            let executor = try JavascriptExecutor(serverContext: context)
+            _ = try executor.execute(script: script, for: HBRequest.mock().asHTTPRequest)
             fail("Expected exception not thrown executing script")
         } catch {
             if case SimulcraError.javascriptError(let message) = error {

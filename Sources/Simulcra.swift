@@ -34,6 +34,7 @@ public class Simulcra {
                 templateExtension: String = "json",
                 filePaths: [URL]? = nil,
                 verbose: Bool = false,
+                hummingbirdVerbose: Bool = false,
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
 
         self.verbose = verbose
@@ -47,6 +48,7 @@ public class Simulcra {
                                                  templateExtension: templateExtension,
                                                  filePaths: filePaths,
                                                  verbose: verbose,
+                                                 hummingbirdVerbose: hummingbirdVerbose,
                                                  endpoints: finalEndpoints)
                 return // Exit init.
 
@@ -117,12 +119,13 @@ extension HBApplication {
                       templateExtension: String,
                       filePaths: [URL]?,
                       verbose: Bool,
+                      hummingbirdVerbose: Bool,
                       endpoints: [Endpoint]) throws -> HBApplication {
 
         let configuration = HBApplication.Configuration(
             address: .hostname("0.0.0.0", port: port), // Use the "everything" address so this server works in containers suck as docker.
             serverName: "Simulcra API simulator",
-            logLevel: verbose ? .trace : .error
+            logLevel: hummingbirdVerbose ? .trace : .error
         )
         let server = HBApplication(configuration: configuration)
 

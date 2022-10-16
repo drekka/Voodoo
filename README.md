@@ -25,25 +25,69 @@ It primary features are:
 
 # Quick guides
 
-Because there are two main environments that you might want to use Simulcra in, I've created two seperate guides to keep things simple.
+Because there are several main environments that you might want to use Simulcra in, I've created two seperate guides to keep things simple.
 
-* [Xcode UI unit testing](Xcode.md)
+* [Xcode UI testing](Xcode.md)
 * [Android/Linux](Linux.md)
+* Embedded
+
+# Installation
+
+## iOS/OSX
+
+Simulcra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets.
+
+## Linux, Windows, Docker, etc
+
+If you don't already have a Swift compile on your system there is an extensive installation guide to downloading and installing Swift on the [Swift org download page.](https://www.swift.org/download/)
+
+Once installed, you can clone this repository:
+
+```bash
+git clone https://github.com/drekka/Simulcra.git
+```
+
+and build it:
+
+```bash
+cd Simulcra
+swift build -c release
+```
+
+This will download all dependencies and build the command line program. On my 10 core M1Pro it takes around a minute to do the build.
+
+The finished executable will be
+
+```bash
+.build/release/simulcra
+```
+
+Which you can move anywhere you like as it's a fully self contained command line program.
 
 # FAQ
+
+## When do I need a mock server?
+
+Whether you need a mock server or not very much comes down to the app you are testing, the networking code you have written and your individual testing philosophies. When you have networking code that's easy to inject into and aren't too worried about the networking code working or perhaps have a 3rd party API there, it may be simpler just to inject mocks which can pretend to talk to a server and avoid any issues with around networking at all. But sometime's the code's old and written by someone who hasn't considered testing, or you want the assurity that it works right out to the server.
+
+Another scenario where a mock server becomes useful is when UI and integration testing. many people start out writing tests against development, QA and even production servers. But there are problems doing that such as reliabilily, repeatability, limited scope to create data scenarios and other people and code interfering. All these make a stand alone mock server an attractive proposition.
+
+## How do I ensure my mock server is the same as my production server?
+
+You can't. Any mock server is only going to be as good as the setup you do and will only change when you change it. Some mock servers can import things like postman files but you still have to set up the responses.
 
 ## There's a bazillion mock servers out there, why do we need another?
 
 For years I'd been looking for a mock server that addressed a variety of criteria:
 
-* Runs locally so there's no dependencies on internet access or the risk of other processes and people interfering with it.
-* Fast to start so it can be freshly started for each test to ensure a consistent state for each test.
+* Local so there's no dependencies on internet access or the risk of other processes and people interfering with it.
+* Ability to dynamically set a port so multiple parallel instances can be run. 
+* Fast to start so there can be a new instance for each test to ensure a consistent state to start with.
 * Easy to configure using simple configuration files and languages that most people know.
-* Ability to start on a range of ports so I can run multiple servers in parallel for larger test suites.
-* Ability to dynamically create responses using a commonly known language.
-* Templating support for mixing and matching hard codes response payloads with dynamic data.
+* Both fixed and dynamic responses.
+* Templating so hard codes response payloads can dynamically inject data.
 
-So after basically building servers with some of these features and a bunch of project specific ones, decided to sit down and write a more generic version that includes all of of the features I wanted, and could be used in any project.
+All the servers I found failed to match this list and given I've built a number of custom mock servers over the years I decided to sit down and write a more generic version that includes all of of the features I wanted, and could be used in any project.
 
 ## What dependencies does Simulcra have?
 
@@ -57,5 +101,4 @@ To build this project I used a number of 3rd party projects.
 
   
 [hummingbird]: https://github.com/hummingbird-project/hummingbird
-[swift-nio]: https://github.com/apple/swift-nio 
   

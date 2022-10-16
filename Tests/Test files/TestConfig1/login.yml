@@ -1,0 +1,3 @@
+signature: post /login
+javascript: login.js
+
