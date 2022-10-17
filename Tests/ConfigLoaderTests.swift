@@ -13,13 +13,13 @@ import XCTest
 class ConfigLoaderTests: XCTestCase {
 
     func testLoadFile() throws {
-        let loader = ConfigLoader(verbose: false)
+        let loader = ConfigLoader(verbose: true)
 
-        let ymlFile = Bundle.testBundle.resourceURL!.appendingPathComponent("Test files/TestConfig1/get-def-ok.yml")
+        let ymlFile = Bundle.testBundle.resourceURL!.appendingPathComponent("Test files/TestConfig1/get-config.yml")
         let endpoints = try loader.load(from: ymlFile)
 
         expect(endpoints.count) == 1
-        expectEndpoint(endpoints[0], mapsTo: .GET, "/def", returning: .ok())
+        expectEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .structured(["version": 1.0])))
     }
 
     func testLoadDirectory() throws {
@@ -28,11 +28,10 @@ class ConfigLoaderTests: XCTestCase {
         let ymlDir = Bundle.testBundle.resourceURL!.appendingPathComponent("Test files/TestConfig1")
         let endpoints = try loader.load(from: ymlDir)
 
-        expect(endpoints.count) == 4
-        expectEndpoint(endpoints[0], mapsTo: .GET, "/abc", returning: .ok(body: .text("Hello world!")))
-        expectEndpoint(endpoints[1], mapsTo: .GET, "/def", returning: .ok())
-        expectEndpoint(endpoints[2], mapsTo: .POST, "/ghi", returning: .javascript("ok.js"))
-        expectEndpoint(endpoints[3], mapsTo: .DELETE, "/jkl", returning: .notFound)
+        expect(endpoints.count) == 3
+        expectEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .structured(["version": 1.0])))
+        // expectEndpoint(endpoints[1], mapsTo: .GET, "/def", returning: .ok())
+        // expectEndpoint(endpoints[2], mapsTo: .POST, "/ghi", returning: .javascript("ok.js"))
     }
 
     func testLoadFromInvalidURL() throws {
@@ -44,9 +43,9 @@ class ConfigLoaderTests: XCTestCase {
 
     // MARK: - Support
 
-    private func expectEndpoint(_ endpoint: Endpoint, mapsTo method: HTTPMethod, _ path: String, returning response: HTTPResponse) {
-        expect(endpoint.method) == method
-        expect(endpoint.path) == path
-        expect(endpoint.response) == response
+    private func expectEndpoint(file: StaticString = #file, line: UInt = #line, _ endpoint: Endpoint, mapsTo method: HTTPMethod, _ path: String, returning response: HTTPResponse) {
+        expect(file: file, line: line, endpoint.method) == method
+        expect(file: file, line: line, endpoint.path) == path
+        expect(file: file, line: line, endpoint.response) == response
     }
 }

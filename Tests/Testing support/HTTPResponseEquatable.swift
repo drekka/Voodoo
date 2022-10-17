@@ -5,6 +5,7 @@
 //  Created by Derek Clarkson on 5/10/2022.
 //
 
+import Foundation
 import Hummingbird
 @testable import SimulcraCore
 
@@ -83,8 +84,10 @@ extension HTTPResponse.Body: Equatable {
         case (.text(let lhsText, let lhsTemplateData), .text(let rhsText, let rhsTemplateData)):
             return lhsText == rhsText && lhsTemplateData == rhsTemplateData
 
-        case (.json(let lhsJSON, let lhsTemplateData), .json(let rhsJSON, let rhsTemplateData)):
-            return lhsJSON == rhsJSON && lhsTemplateData == rhsTemplateData
+        case (.structured(let lhsData, let lhsOutput, let lhsTemplateData), .structured(let rhsData, let rhsOutput, let rhsTemplateData)):
+            return lhsData == rhsData
+                && lhsOutput == rhsOutput
+                && lhsTemplateData == rhsTemplateData
 
         case (.data(let lhsData, let lhsContentType), .data(let rhsData, let rhsContentType)):
             return lhsData == rhsData && lhsContentType == rhsContentType
@@ -98,7 +101,9 @@ extension HTTPResponse.Body: Equatable {
     }
 }
 
-public extension Optional where Wrapped == [String: Any] {
+// Template data comparisons.
+
+extension Optional where Wrapped == [String: Any] {
     static func == (_: Self, rhs: Self) -> Bool {
         switch (rhs, rhs) {
         case (.none, .none):
@@ -111,7 +116,7 @@ public extension Optional where Wrapped == [String: Any] {
     }
 }
 
-public extension Dictionary {
+extension Dictionary {
 
     static func == (lhs: Self, rhs: Self) -> Bool where Key == String, Value == Any {
         guard lhs.count == rhs.count else { return false }
@@ -121,5 +126,70 @@ public extension Dictionary {
             }
         }
         return true
+    }
+}
+
+extension StructuredData: Equatable {
+    public static func == (lhs: SimulcraCore.StructuredData, rhs: SimulcraCore.StructuredData) -> Bool {
+        switch (lhs, rhs) {
+        case (.nil, .nil):
+            return true
+        case (.string(let lhs), .string(let rhs)):
+            return lhs == rhs
+        case (.boolean(let lhs), .boolean(let rhs)):
+            return lhs == rhs
+        case (.integer(let lhs), .integer(let rhs)):
+            return lhs == rhs
+        case (.double(let lhs), .double(let rhs)):
+            return lhs == rhs
+        case (.date(let lhs), .date(let rhs)):
+            return lhs == rhs
+        case (.array(let lhs), .array(let rhs)):
+            return lhs == rhs
+        case (.dictionary(let lhs), .dictionary(let rhs)):
+            return lhs == rhs
+        case (.encodable(let lhs), .encodable(let rhs)):
+            return type(of: lhs) == type(of: rhs)
+        default:
+            return false
+        }
+    }
+}
+
+extension StructuredData {
+
+    subscript(index: Int) -> StructuredData? {
+        if case .array(let arr) = self, arr.indices.contains(index) {
+            return arr[index]
+        }
+        return nil
+    }
+
+    subscript(key: String) -> StructuredData? {
+        if case .dictionary(let dictionary) = self {
+            return dictionary[key]
+        }
+        return nil
+    }
+
+    var asString: String? {
+        if case .string(let value) = self {
+            return value
+        }
+        return nil
+    }
+
+    var asArray: [StructuredData]? {
+        if case .array(let array) = self {
+            return array
+        }
+        return nil
+    }
+
+    var asDictionary: [String: StructuredData]? {
+        if case .dictionary(let dictionary) = self {
+            return dictionary
+        }
+        return nil
     }
 }

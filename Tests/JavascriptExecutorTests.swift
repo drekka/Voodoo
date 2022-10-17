@@ -30,6 +30,7 @@ class JavascriptExecutorTests: XCTestCase {
             let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
             return try executor.execute(script: #"""
                                         function response(request, cache) {
+                                        console.log("Path components " + request.pathComponents);
                                             var data = {
                                                 method: request.method,
                                                 headers: request.headers,
@@ -40,26 +41,26 @@ class JavascriptExecutorTests: XCTestCase {
                                                 queryParameters: request.queryParameters,
                                                 body: String.fromCharCode.apply(null, new Uint8Array(request.body))
                                             };
-                                            return Response.ok(Body.json(data));
+                                            return Response.ok(Body.structured(data, "json"));
                                         }
                                         """#,
                                         for: request)
         }
             toReturn: { results in
-                expect(results["method"] as? String) == "GET"
-                expect(results["path"] as? String) == "/abc/def"
-                expect(results["pathComponents"] as? [String]) == ["/", "abc", "def"]
-                let headers = results["headers"] as! [String: Any]
-                expect(headers["h1"] as? String) == "xyz"
-                expect(headers["h2"] as? [String]) == ["123", "456"]
-                let pathParameters = results["pathParameters"] as! [String: Any]
-                expect(pathParameters["pp1"] as? String) == "123"
-                expect(pathParameters["pp2"] as? String) == "456"
-                expect(results["query"] as? String) == "q1=123&q2=123&q1=456"
-                let queryParameters = results["queryParameters"] as! [String: Any]
-                expect(queryParameters["q1"] as? [String]) == ["123", "456"]
-                expect(queryParameters["q2"] as? String) == "123"
-                expect(results["body"] as? String) == "Hello world!"
+                expect(results["method"]?.asString) == "GET"
+                expect(results["path"]?.asString) == "/abc/def"
+                expect(results["pathComponents"]?.asArray?.map { $0.asString }) == ["/", "abc", "def"]
+                let headers = results["headers"]!
+                expect(headers["h1"]?.asString) == "xyz"
+                expect(headers["h2"]?.asArray?.map { $0.asString }) == ["123", "456"]
+                let pathParameters = results["pathParameters"]!
+                expect(pathParameters["pp1"]?.asString) == "123"
+                expect(pathParameters["pp2"]?.asString) == "456"
+                expect(results["query"]?.asString) == "q1=123&q2=123&q1=456"
+                let queryParameters = results["queryParameters"]!
+                expect(queryParameters["q1"]?.asArray?.map { $0 }) == ["123", "456"]
+                expect(queryParameters["q2"]?.asString) == "123"
+                expect(results["body"]?.asString) == "Hello world!"
             }
     }
 
@@ -78,16 +79,16 @@ class JavascriptExecutorTests: XCTestCase {
                                                 formParameters: request.formParameters,
                                                 formField1: request.formParameters.formField1
                                             };
-                                            return Response.ok(Body.json(data));
+                                            return Response.ok(Body.structured(data, "json"));
                                         }
                                         """#,
                                         for: request)
         }
             toReturn: { results in
-                let formData = results["formParameters"] as? [String: Any]
-                expect(formData?.count) == 1
-                expect(formData?["formField1"] as? String) == "Hello world!"
-                expect(results["formField1"] as? String) == "Hello world!"
+                let formData = results["formParameters"]?.asDictionary
+                expect(formData?.count ?? 0) == 1
+                expect(formData?["formField1"]?.asString) == "Hello world!"
+                expect(results["formField1"]?.asString) == "Hello world!"
             }
     }
 
@@ -105,25 +106,24 @@ class JavascriptExecutorTests: XCTestCase {
                                             var data = {
                                                 body: request.bodyJSON
                                             };
-                                            return Response.ok(Body.json(data));
+                                            return Response.ok(Body.structured(data));
                                         }
                                         """#,
                                         for: request)
         }
             toReturn: { results in
-                expect((results["body"] as? [String: Any])?["abc"] as? String) == "def"
+                expect(results["body"]?["abc"]?.asString) == "def"
             }
     }
 
-    private func expectRequest(_ executeRequest: () throws -> HTTPResponse, toReturn validate: ([String: Any]) -> Void) throws {
+    private func expectRequest(_ executeRequest: () throws -> HTTPResponse, toReturn validate: (StructuredData) -> Void) throws {
         let response = try executeRequest()
         guard case HTTPResponse.ok(_, let body) = response,
-              case HTTPResponse.Body.json(let json, _) = body else {
+              case HTTPResponse.Body.structured(let data, _, _) = body else {
             fail("Got unexpected response \(response)")
             return
         }
-        let results = try JSONSerialization.jsonObject(with: json.data(using: .utf8)!) as! [String: Any]
-        validate(results)
+        validate(data)
     }
 
     // MARK: - Raw Response
@@ -141,24 +141,14 @@ class JavascriptExecutorTests: XCTestCase {
                            toReturn: .created(headers: ["abc": "123"], body: .text("Hello")))
     }
 
-    func testResponseRawWithStatusJSONStringBody() throws {
-        try expectResponse(#"""
-                           var obj = {
-                                abc:"Hello world!"
-                           }
-                           return Response.raw(201, Body.json(JSON.stringify(obj)));
-                           """#,
-                           toReturn: .created(body: .json(#"{"abc":"Hello world!"}"#)))
-    }
-
     func testResponseRawWithStatusJSONObjectBody() throws {
         try expectResponse(#"""
                            var obj = {
                                 abc:"Hello world!"
                            }
-                           return Response.raw(201, Body.json(obj));
+                           return Response.raw(201, Body.structured(obj));
                            """#,
-                           toReturn: .created(body: .json(#"{"abc":"Hello world!"}"#)))
+                           toReturn: .created(body: .structured(["abc": "Hello world!"])))
     }
 
     // MARK: - Other responses
@@ -255,24 +245,16 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testResponseBodyJSON() throws {
         try expectResponse(#"""
-                           return Response.ok(Body.json({
-                                abc: "Hello"
-                           }));
+                           return Response.ok(Body.structured({ abc: "Hello" }));
                            """#,
-                           toReturn: .ok(body: .json(#"{"abc":"Hello"}"#)))
+                           toReturn: .ok(body: .structured(["abc": "Hello"])))
     }
 
     func testResponseBodyJSONWithTemplateData() throws {
         try expectResponse(#"""
-                           return Response.ok(Body.json(
-                           {
-                                abc: "{{abc}}"
-                           },{
-                                abc: "Hello"
-                           }
-                           ));
+                           return Response.ok(Body.structured( { abc: "{{abc}}" }, "json", { abc: "Hello" } ));
                            """#,
-                           toReturn: .ok(body: .json(#"{"abc":"{{abc}}"}"#, templateData: ["abc": "Hello"])))
+                           toReturn: .ok(body: .structured(["abc": "{{abc}}"], templateData: ["abc": "Hello"])))
     }
 
     func testResponseBodyFile() throws {

@@ -41,29 +41,6 @@ class HTTPResponseBodyTests: XCTestCase {
                    contentType: ContentType.textPlain)
     }
 
-    func testJSONEncodable() throws {
-
-        struct JSONTest: Codable {
-            let abc: String
-        }
-
-        try assert(.jsonEncodable(JSONTest(abc: #"def {{xyz}}"#), templateData: ["xyz": 123]),
-                   generates: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
-    }
-
-    func testJSONObject() throws {
-        try assert(.jsonObject(["abc": "def {{xyz}}"], templateData: ["xyz": 123]),
-                   generates: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
-    }
-
-    func testJSON() throws {
-        try assert(.json(#"{"abc":"def {{xyz}}"}"#, templateData: ["xyz": 123]),
-                   generates: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
-    }
-
     func testTemplate() throws {
         let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
         context.mustacheRenderer.register(template, named: "fred")
@@ -79,9 +56,45 @@ class HTTPResponseBodyTests: XCTestCase {
                    contentType: ContentType.textHTML)
     }
 
+    // MARK: - JSON types
+
+    func testStructuredWithDictionary() throws {
+        try assert(.structured([
+                       "abc": "def {{xyz}}",
+                   ],
+                   templateData: ["xyz": 123]),
+                   generates: #"{"abc":"def 123"}"#,
+                   contentType: ContentType.applicationJSON)
+    }
+
+    func testStructuredWithEncodable() throws {
+
+        struct StructuredTest: Codable {
+            let abc: String
+        }
+
+        let encodable = StructuredTest(abc: #"def {{xyz}}"#)
+        try assert(.structured(encodable.structuredData, templateData: ["xyz": 123]),
+                   generates: #"{"abc":"def 123"}"#,
+                   contentType: ContentType.applicationJSON)
+    }
+
+    func testStructuredWithDictionaryToYAML() throws {
+        try assert(.structured([
+                       "abc": "def {{xyz}}",
+                   ],
+                   output: .yaml,
+                   templateData: ["xyz": 123]),
+                   generates: "abc: def 123\n",
+                   contentType: ContentType.applicationYAML)
+    }
+
     // MARK: - Support functions
 
-    func assert(file: StaticString = #file, line: UInt = #line, _ body: HTTPResponse.Body, generates expectedBody: String, contentType expectedContentType: String?) throws {
+    func assert(file: StaticString = #file, line: UInt = #line,
+                _ body: HTTPResponse.Body,
+                generates expectedBody: String,
+                contentType expectedContentType: String?) throws {
         let request = HBRequest.mock().asHTTPRequest
         let hbBody = try body.hbBody(forRequest: request, serverContext: context)
         expect(file: file, line: line, hbBody.0) == expectedBody.hbResponseBody
@@ -109,9 +122,9 @@ class HTTPREsponseBodyDecodableTests: XCTestCase {
         try assert(#"""
         {
             "type":"json",
-            "json":"{\"abc\":\"xyz\"}"
+            "data":"{\"abc\":\"xyz\"}"
         }
-        """#, decodesTo: .json(#"{"abc":"xyz"}"#))
+        """#, decodesTo: .structured(#"{"abc":"xyz"}"#))
     }
 
     func testUnknownError() throws {

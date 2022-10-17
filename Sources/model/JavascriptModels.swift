@@ -64,9 +64,8 @@ enum JavascriptModels {
                 return { type: "text", text: text, templateData: templateData };
             }
 
-            static json(json, templateData) {
-                var jsonString = typeof json === 'object' && json !== null ? JSON.stringify(json) : json
-                return { type: "json", json: jsonString, templateData: templateData };
+            static structured(data, output, templateData) {
+                return { type: output ?? "json", data: data, templateData: templateData };
             }
 
             static file(url, contentType) {

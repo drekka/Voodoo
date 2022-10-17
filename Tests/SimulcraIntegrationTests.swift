@@ -246,7 +246,7 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
         server.add(.POST, "/abc", response: .javascript(#"""
         function response(request, cache) {
-            cache.set("abc", "Hello world!");
+            cache.abc = "Hello world!";
             return Response.ok();
         }
         """#))

@@ -4,6 +4,6 @@ response:
   headers: ~
   body:
     type: json
-    json: {
+    data: {
       version: 1.0
     }

@@ -25,27 +25,7 @@ struct JavascriptExecutor {
         // Inject javascript types.
         try jsCtx.eval(JavascriptModels.responseBodyType)
         try jsCtx.eval(JavascriptModels.responseType)
-
-        // We need to do this in javascript because (I think) if I try and create a proxy in code
-        // it's not passed back and forwards correctly.
-        let cacheObj = try serverCtx.cache.asJavascriptObject(in: jsCtx)
-        try jsCtx.global.setProperty("_cache", cacheObj)
-        try jsCtx.eval(#"""
-            const _handler = {
-                get(target, property) {
-                    return _cache.get(property);
-                },
-                set(object, property, value) {
-                    _cache.set(property, value);
-                }
-            };
-            var _cacheProxy = new Proxy(_cache, _handler);
-
-            function _generateResponse(responseFunction, request) {
-                return responseFunction(request, _cacheProxy);
-            }
-            """#
-        )
+        try serverContext.cache.inject(into: jsCtx)
     }
 
     func execute(script: String, for request: HTTPRequest) throws -> HTTPResponse {
@@ -66,11 +46,9 @@ struct JavascriptExecutor {
         // Call it.
         let rawResponse: JXValue
         do {
-            // Execute the wrapper function which is passed the cache proxy.
-            let generateResponse = try jsCtx.global["_generateResponse"]
-            rawResponse = try generateResponse.call(withArguments: [
-                responseFunction,
+            rawResponse = try responseFunction.call(withArguments: [
                 request.asJavascriptObject(in: jsCtx),
+                jsCtx.global["cache"],
             ])
         } catch {
             throw SimulcraError.javascriptError("Javascript execution failed. Error: \(error)")
@@ -173,17 +151,20 @@ extension JXValue {
 
 extension Cache {
 
-    /// Wraps this cache in a javascript object.
-    func asJavascriptObject(in jsCtx: JXContext) throws -> JXValue {
-        let cache = jsCtx.object()
-        try cache.set("get", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheGet))
-        try cache.set("set", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheSet))
-        return cache
+    func inject(into jsCtx: JXContext) throws {
+        let proxyHandler = jsCtx.object()
+        try proxyHandler.set("get", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheGet))
+        try proxyHandler.set("set", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheSet))
+        try jsCtx.global.setProperty("_cacheProxyHandler", proxyHandler)
+        try jsCtx.global.setProperty("_cache", jsCtx.object())
+        try jsCtx.eval(#"""
+        var cache = new Proxy(_cache, _cacheProxyHandler);
+        """#)
     }
 
     private func cacheGet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
-        let key = try args[0].stringValue
+        let key = try args[1].stringValue
 
         let value: Any? = self[key]
         guard let value else {
@@ -207,9 +188,9 @@ extension Cache {
 
     private func cacheSet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
-        let key = try args[0].stringValue
+        let key = try args[1].stringValue
 
-        switch args[1] {
+        switch args[2] {
 
         case let value where value.isNull:
             remove(key)

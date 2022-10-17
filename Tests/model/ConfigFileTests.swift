@@ -1,15 +1,15 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Derek Clarkson on 11/10/2022.
 //
 
+import Foundation
+import Nimble
+@testable import SimulcraCore
 import XCTest
 import Yams
-@testable import SimulcraCore
-import Nimble
-import Foundation
 
 class EndPointReferenceTests: XCTestCase {
 
@@ -37,7 +37,7 @@ class EndPointReferenceTests: XCTestCase {
         expect(endpoint.apis.count) == 1
         expect(endpoint.apis[0].method) == .GET
         expect(endpoint.apis[0].path) == "/config"
-        expect(endpoint.apis[0].response) == .ok()
+        expect(endpoint.apis[0].response) == .ok(body: .structured(["version": 1.0]))
     }
 }
 
@@ -90,14 +90,14 @@ class ConfigFileTests: XCTestCase {
         """#
         let config = try decoder.decode(ConfigFile.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
         expect(config.apis.count) == 3
-        expect(config.apis[0].method) == .GET
+        expect(config.apis[0].method) == .PUT
         expect(config.apis[0].path) == "/config"
         expect(config.apis[0].response) == .created()
         expect(config.apis[1].method) == .GET
         expect(config.apis[1].path) == "/config"
-        expect(config.apis[1].response) == .ok()
-        expect(config.apis[2].method) == .POST
+        expect(config.apis[1].response) == .ok(body: .structured(["version": 1.0]))
+        expect(config.apis[2].method) == .DELETE
         expect(config.apis[2].path) == "/config"
-        expect(config.apis[2].response) == .accepted()
+        expect(config.apis[2].response) == .ok()
     }
 }

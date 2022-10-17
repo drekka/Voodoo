@@ -8,8 +8,15 @@
 import Foundation
 import Hummingbird
 import HummingbirdMustache
+import Yams
 
 public extension HTTPResponse {
+
+    /// Used to define what sort of output is expected when encoding the data.
+    enum Output {
+        case json
+        case yaml
+    }
 
     /// Defines the body of a response where a response can have one.
     enum Body {
@@ -25,33 +32,16 @@ public extension HTTPResponse {
         ///   - contentType: The `content-type` to be returned in the HTTP response. This should match the content-type of the template.
         case template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)
 
-        /// Serialises an `Encodable` object into JSON.
+        /// generates structured data form the passed payload.
         ///
-        /// This is the preferred way to generate a body from an object if the object conforms to `Encodable`. If it doesn't, then ``jsonObject(_:templateData:)`` can
-        /// be used instead.
-        ///
-        /// - parameters:
-        ///   - encodable: The object to be converted to JSON.
-        ///   - templateData: Values that can be injected into the generated JSON.
-        case jsonEncodable(_ encodable: Encodable, templateData: TemplateData? = nil)
-
-        /// Serialises the passed object into JSON.
-        ///
-        /// This is used for things like dictionaries and arrays with the `Any` data types that are not ``Encodable``.
-        ///
-        /// - parameters:
-        ///   - object: The object to be converted to JSON.
-        ///   - templateData: Values that can be injected into the generated JSON.
-        case jsonObject(_ object: Any, templateData: TemplateData? = nil)
-
-        /// Returns the passed text as a JSON body.
-        ///
+        /// By default this produces JSON, but other formats can be added in the future.
         /// Before returning the text will be passed to the Mustache template engine with the template data.
         ///
         /// - parameters:
-        ///   - json: The json to be used as the body of the response.
-        ///   - templateData: Additional values that can be injected into the text.
-        case json(_ json: String, templateData: TemplateData? = nil)
+        ///   - payload: The payload to generate the data from.
+        ///   - output: The output format to use for the data.
+        ///   - templateData: Additional values that can be injected into the structured text.
+        case structured(_ payload: StructuredData, output: Output = .json, templateData: TemplateData? = nil)
 
         /// Returns the passed text as the body.
         ///
@@ -85,7 +75,6 @@ extension HTTPResponse.Body: Decodable {
         case text
         case url
         case data
-        case json
         case name
         case contentType
         case templateData
@@ -103,7 +92,7 @@ extension HTTPResponse.Body: Decodable {
 
         case "text":
             let text = try container.decode(String.self, forKey: .text)
-            let templateData = try container.decodeIfPresent([String: String].self, forKey: .templateData)
+            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
             self = .text(text, templateData: templateData)
 
         case "data":
@@ -112,9 +101,14 @@ extension HTTPResponse.Body: Decodable {
             self = .data(data, contentType: contentType)
 
         case "json":
-            let json = try container.decode(String.self, forKey: .json)
-            let templateData = try container.decodeIfPresent([String: String].self, forKey: .templateData)
-            self = .json(json, templateData: templateData)
+            let json = try container.decode(StructuredData.self, forKey: .data)
+            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
+            self = .structured(json, output: .json, templateData: templateData)
+
+        case "yaml":
+            let yaml = try container.decode(StructuredData.self, forKey: .data)
+            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
+            self = .structured(yaml, output: .yaml, templateData: templateData)
 
         case "file":
             let fileURL = try container.decode(URL.self, forKey: .url)
@@ -123,7 +117,7 @@ extension HTTPResponse.Body: Decodable {
 
         case "template":
             let name = try container.decode(String.self, forKey: .name)
-            let templateData = try container.decodeIfPresent([String: String].self, forKey: .templateData)
+            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
             let contentType = try container.decode(String.self, forKey: .contentType)
             self = .template(name, templateData: templateData, contentType: contentType)
 
@@ -148,18 +142,18 @@ extension HTTPResponse.Body {
         case .data(let data, let contentType):
             return (data.hbResponseBody, contentType)
 
-        case .jsonObject(let object, let templateData):
-            return (try JSONSerialization.data(withJSONObject: object).render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
-
-        case .jsonEncodable(let encodable, let templateData):
-            return (try JSONEncoder().encode(encodable).render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
-
-        case .json(let json, let templateData):
-            return (try json.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+        case .structured(let payload, let output, let templateData):
+            switch output {
+            case .json:
+                return (try JSONEncoder().encode(payload)
+                    .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+            case .yaml:
+                return (try YAMLEncoder().encode(payload)
+                    .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
+            }
 
         case .file(let url, let contentType):
-            let contents = try Data(contentsOf: url)
-            return (contents.hbResponseBody, contentType)
+            return (try Data(contentsOf: url).hbResponseBody, contentType)
 
         case .template(let templateName, let templateData, let contentType):
             let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
