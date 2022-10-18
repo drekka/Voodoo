@@ -6,7 +6,7 @@ The initial development of Simulcra was to support Swift UI testing through a lo
 ## How does it work?
 
 1. In the `setUp()` of your UI test suite you start and configure an instance of Simulcra.
-2. From the running instance, get the port it's running on and create a `http://127.0.0.1:<port>` URL.
+2. From the running instance, get the port it's running on and create a `http://<host-ip>:<port>` URL.
 3. Using a launch argument, pass this URL to your app. 
 4. Finally in `teardown()` clear the Simulcra instance otherwise Simulcra and the port will stay allocated until the end of the test run. 
 

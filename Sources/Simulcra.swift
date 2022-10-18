@@ -28,6 +28,7 @@ public class Simulcra {
     private let verbose: Bool
 
     public var port: Int { server.port }
+    public var port: Int { server.hostIP }
 
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 useAnyAddr: Bool = false,
@@ -74,7 +75,7 @@ public class Simulcra {
             print(#"👻 CTRL+C or "curl <server-address>:\#(port)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
             print(#"👻 Have a nice day 🙂"#)
         } else {
-            print("port:\(port)")
+            print("host:\(server.hostIP),port:\(port)")
         }
         server.wait()
     }

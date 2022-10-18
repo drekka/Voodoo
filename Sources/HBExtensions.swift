@@ -17,6 +17,13 @@ extension HBApplication: SimulcraContext {
         return port
     }
 
+    public var hostIP: String {
+        guard let host = configuration.address.host else {
+            fatalError("💥💥💥 No host set on server 💥💥💥")
+        }
+        return host
+    }
+
     /// Stores a mustache rendering engine for payload templates.
     public var mustacheRenderer: HBMustacheLibrary {
         get { extensions.get(\.mustacheRenderer) }
