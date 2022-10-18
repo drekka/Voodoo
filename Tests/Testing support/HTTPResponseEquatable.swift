@@ -84,9 +84,9 @@ extension HTTPResponse.Body: Equatable {
         case (.text(let lhsText, let lhsTemplateData), .text(let rhsText, let rhsTemplateData)):
             return lhsText == rhsText && lhsTemplateData == rhsTemplateData
 
-        case (.structured(let lhsData, let lhsOutput, let lhsTemplateData), .structured(let rhsData, let rhsOutput, let rhsTemplateData)):
+        case (.json(let lhsData, let lhsTemplateData), .json(let rhsData, let rhsTemplateData)),
+            (.yaml(let lhsData, let lhsTemplateData), .yaml(let rhsData, let rhsTemplateData)):
             return lhsData == rhsData
-                && lhsOutput == rhsOutput
                 && lhsTemplateData == rhsTemplateData
 
         case (.data(let lhsData, let lhsContentType), .data(let rhsData, let rhsContentType)):

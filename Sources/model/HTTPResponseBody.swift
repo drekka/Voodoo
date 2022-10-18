@@ -12,12 +12,6 @@ import Yams
 
 public extension HTTPResponse {
 
-    /// Used to define what sort of output is expected when encoding the data.
-    enum Output {
-        case json
-        case yaml
-    }
-
     /// Defines the body of a response where a response can have one.
     enum Body {
 
@@ -32,16 +26,23 @@ public extension HTTPResponse {
         ///   - contentType: The `content-type` to be returned in the HTTP response. This should match the content-type of the template.
         case template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)
 
-        /// generates structured data form the passed payload.
+        /// generates a JSON payload.
         ///
-        /// By default this produces JSON, but other formats can be added in the future.
         /// Before returning the text will be passed to the Mustache template engine with the template data.
         ///
         /// - parameters:
         ///   - payload: The payload to generate the data from.
-        ///   - output: The output format to use for the data.
-        ///   - templateData: Additional values that can be injected into the structured text.
-        case structured(_ payload: StructuredData, output: Output = .json, templateData: TemplateData? = nil)
+        ///   - templateData: Additional values that can be injected into the text.
+        case json(_ payload: StructuredData, templateData: TemplateData? = nil)
+
+        /// generates a YAML payload.
+        ///
+        /// Before returning the text will be passed to the Mustache template engine with the template data.
+        ///
+        /// - parameters:
+        ///   - payload: The payload to generate the data from.
+        ///   - templateData: Additional values that can be injected into the text.
+        case yaml(_ payload: StructuredData, templateData: TemplateData? = nil)
 
         /// Returns the passed text as the body.
         ///
@@ -103,12 +104,12 @@ extension HTTPResponse.Body: Decodable {
         case "json":
             let json = try container.decode(StructuredData.self, forKey: .data)
             let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
-            self = .structured(json, output: .json, templateData: templateData)
+            self = .json(json, templateData: templateData)
 
         case "yaml":
             let yaml = try container.decode(StructuredData.self, forKey: .data)
             let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
-            self = .structured(yaml, output: .yaml, templateData: templateData)
+            self = .yaml(yaml, templateData: templateData)
 
         case "file":
             let fileURL = try container.decode(URL.self, forKey: .url)
@@ -142,15 +143,13 @@ extension HTTPResponse.Body {
         case .data(let data, let contentType):
             return (data.hbResponseBody, contentType)
 
-        case .structured(let payload, let output, let templateData):
-            switch output {
-            case .json:
-                return (try JSONEncoder().encode(payload)
-                    .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
-            case .yaml:
-                return (try YAMLEncoder().encode(payload)
-                    .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
-            }
+        case .json(let payload, let templateData):
+            return (try JSONEncoder().encode(payload)
+                .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+
+        case .yaml(let payload, let templateData):
+            return (try YAMLEncoder().encode(payload)
+                .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
 
         case .file(let url, let contentType):
             return (try Data(contentsOf: url).hbResponseBody, contentType)

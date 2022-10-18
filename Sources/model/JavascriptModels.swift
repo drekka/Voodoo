@@ -64,8 +64,12 @@ enum JavascriptModels {
                 return { type: "text", text: text, templateData: templateData };
             }
 
-            static structured(data, output, templateData) {
-                return { type: output ?? "json", data: data, templateData: templateData };
+            static json(data, templateData) {
+                return { type: "json", data: data, templateData: templateData };
+            }
+
+            static yaml(data, templateData) {
+                return { type: "yaml", data: data, templateData: templateData };
             }
 
             static file(url, contentType) {

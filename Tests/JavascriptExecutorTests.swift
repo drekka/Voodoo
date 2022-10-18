@@ -41,7 +41,7 @@ class JavascriptExecutorTests: XCTestCase {
                                                 queryParameters: request.queryParameters,
                                                 body: String.fromCharCode.apply(null, new Uint8Array(request.body))
                                             };
-                                            return Response.ok(Body.structured(data, "json"));
+                                            return Response.ok(Body.json(data));
                                         }
                                         """#,
                                         for: request)
@@ -79,7 +79,7 @@ class JavascriptExecutorTests: XCTestCase {
                                                 formParameters: request.formParameters,
                                                 formField1: request.formParameters.formField1
                                             };
-                                            return Response.ok(Body.structured(data, "json"));
+                                            return Response.ok(Body.json(data));
                                         }
                                         """#,
                                         for: request)
@@ -106,7 +106,7 @@ class JavascriptExecutorTests: XCTestCase {
                                             var data = {
                                                 body: request.bodyJSON
                                             };
-                                            return Response.ok(Body.structured(data));
+                                            return Response.ok(Body.json(data));
                                         }
                                         """#,
                                         for: request)
@@ -119,7 +119,7 @@ class JavascriptExecutorTests: XCTestCase {
     private func expectRequest(_ executeRequest: () throws -> HTTPResponse, toReturn validate: (StructuredData) -> Void) throws {
         let response = try executeRequest()
         guard case HTTPResponse.ok(_, let body) = response,
-              case HTTPResponse.Body.structured(let data, _, _) = body else {
+              case HTTPResponse.Body.json(let data, _) = body else {
             fail("Got unexpected response \(response)")
             return
         }
@@ -146,9 +146,9 @@ class JavascriptExecutorTests: XCTestCase {
                            var obj = {
                                 abc:"Hello world!"
                            }
-                           return Response.raw(201, Body.structured(obj));
+                           return Response.raw(201, Body.json(obj));
                            """#,
-                           toReturn: .created(body: .structured(["abc": "Hello world!"])))
+                           toReturn: .created(body: .json(["abc": "Hello world!"])))
     }
 
     // MARK: - Other responses
@@ -245,16 +245,16 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testResponseBodyJSON() throws {
         try expectResponse(#"""
-                           return Response.ok(Body.structured({ abc: "Hello" }));
+                           return Response.ok(Body.json({ abc: "Hello" }));
                            """#,
-                           toReturn: .ok(body: .structured(["abc": "Hello"])))
+                           toReturn: .ok(body: .json(["abc": "Hello"])))
     }
 
     func testResponseBodyJSONWithTemplateData() throws {
         try expectResponse(#"""
-                           return Response.ok(Body.structured( { abc: "{{abc}}" }, "json", { abc: "Hello" } ));
+                           return Response.ok(Body.json( { abc: "{{abc}}" }, { abc: "Hello" } ));
                            """#,
-                           toReturn: .ok(body: .structured(["abc": "{{abc}}"], templateData: ["abc": "Hello"])))
+                           toReturn: .ok(body: .json(["abc": "{{abc}}"], templateData: ["abc": "Hello"])))
     }
 
     func testResponseBodyFile() throws {

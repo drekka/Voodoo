@@ -19,7 +19,7 @@ class ConfigLoaderTests: XCTestCase {
         let endpoints = try loader.load(from: ymlFile)
 
         expect(endpoints.count) == 1
-        expectEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .structured(["version": 1.0])))
+        expectEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .json(["version": 1.0])))
     }
 
     func testLoadDirectory() throws {
@@ -29,7 +29,7 @@ class ConfigLoaderTests: XCTestCase {
         let endpoints = try loader.load(from: ymlDir)
 
         expect(endpoints.count) == 3
-        expectEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .structured(["version": 1.0])))
+        expectEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .json(["version": 1.0])))
         // expectEndpoint(endpoints[1], mapsTo: .GET, "/def", returning: .ok())
         // expectEndpoint(endpoints[2], mapsTo: .POST, "/ghi", returning: .javascript("ok.js"))
     }

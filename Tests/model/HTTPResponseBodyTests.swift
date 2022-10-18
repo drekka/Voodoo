@@ -58,8 +58,8 @@ class HTTPResponseBodyTests: XCTestCase {
 
     // MARK: - JSON types
 
-    func testStructuredWithDictionary() throws {
-        try assert(.structured([
+    func testJSONWithDictionary() throws {
+        try assert(.json([
                        "abc": "def {{xyz}}",
                    ],
                    templateData: ["xyz": 123]),
@@ -67,26 +67,16 @@ class HTTPResponseBodyTests: XCTestCase {
                    contentType: ContentType.applicationJSON)
     }
 
-    func testStructuredWithEncodable() throws {
+    func testJSONWithEncodable() throws {
 
-        struct StructuredTest: Codable {
+        struct JSONTest: Codable {
             let abc: String
         }
 
-        let encodable = StructuredTest(abc: #"def {{xyz}}"#)
-        try assert(.structured(encodable.structuredData, templateData: ["xyz": 123]),
+        let encodable = JSONTest(abc: #"def {{xyz}}"#)
+        try assert(.json(encodable.structuredData, templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
                    contentType: ContentType.applicationJSON)
-    }
-
-    func testStructuredWithDictionaryToYAML() throws {
-        try assert(.structured([
-                       "abc": "def {{xyz}}",
-                   ],
-                   output: .yaml,
-                   templateData: ["xyz": 123]),
-                   generates: "abc: def 123\n",
-                   contentType: ContentType.applicationYAML)
     }
 
     // MARK: - Support functions
@@ -122,9 +112,11 @@ class HTTPREsponseBodyDecodableTests: XCTestCase {
         try assert(#"""
         {
             "type":"json",
-            "data":"{\"abc\":\"xyz\"}"
+            "data":{
+                "abc":"xyz"
+            }
         }
-        """#, decodesTo: .structured(#"{"abc":"xyz"}"#))
+        """#, decodesTo: .json(["abc":"xyz"]))
     }
 
     func testUnknownError() throws {

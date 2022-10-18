@@ -37,7 +37,7 @@ class EndPointReferenceTests: XCTestCase {
         expect(endpoint.apis.count) == 1
         expect(endpoint.apis[0].method) == .GET
         expect(endpoint.apis[0].path) == "/config"
-        expect(endpoint.apis[0].response) == .ok(body: .structured(["version": 1.0]))
+        expect(endpoint.apis[0].response) == .ok(body: .json(["version": 1.0]))
     }
 }
 
@@ -95,7 +95,7 @@ class ConfigFileTests: XCTestCase {
         expect(config.apis[0].response) == .created()
         expect(config.apis[1].method) == .GET
         expect(config.apis[1].path) == "/config"
-        expect(config.apis[1].response) == .ok(body: .structured(["version": 1.0]))
+        expect(config.apis[1].response) == .ok(body: .json(["version": 1.0]))
         expect(config.apis[2].method) == .DELETE
         expect(config.apis[2].path) == "/config"
         expect(config.apis[2].response) == .ok()
