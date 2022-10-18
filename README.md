@@ -13,7 +13,7 @@ It primary features are:
     * Via YAML and Javascript (JS) files for other (Android) test suites.
 * A variety of programmable responses to cover most situations:
     * Raw text and data.
-    * JSON generated from Encodable and other types.
+    * JSON/YAML generated from Encodable and other types.
     * Dynamic responses from Swift and JS.
 * Can also serve files for non-API like resources.
 * A fast in-memory cache for sharing data between requests. 
@@ -93,12 +93,18 @@ All the servers I found failed to match this list and given I've built a number 
 
 To build this project I used a number of 3rd party projects.
 
-* [Hummingbird][hummingbird] - A very fast Swift NIO based server - This is the core that Simulcra is built around.
-* [Yams][yams] - Yams provides the ability to read the YAML configuration files.
-* [JXKit][jxkit] - Provides a facade to Swift's JavascriptCore and it's Linux equivalent so that Simulcra can run on both platforms. 
+* [Hummingbird][hummingbird] - A very fast and well written Swift NIO based server - This is the core that Simulcra is built around.
+* [Yams][yams] - An API to read YAML configuration files.
+* [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Simulcra can run on both platforms. 
 * [Nimble][nimble] - Simply the best assertion framework for unit testing.
-* [Swift Argument Parser][swift-argument-parser] - Provides the API for the command line program.  
-* [AnyCodable][any-codable] - Allows decoding of values from JSON, javascript and YAML without knowing what we are getting.  
+* [Swift Argument Parser][swift-argument-parser] - The API that the command line program is built on.  
+* [AnyCodable][any-codable] - Allows `Any` to be `Codable`.  
   
 [hummingbird]: https://github.com/hummingbird-project/hummingbird
+[yams]: https://github.com/jpsim/Yams
+[jxkit]: https://github.com/jectivex/JXKit
+[nimble]: https://github.com/Quick/Nimble
+[swift-argument-parser]: https://github.com/apple/swift-argument-parser
+[any-codable]: https://github.com/Flight-School/AnyCodable
+
   

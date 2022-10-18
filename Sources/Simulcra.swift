@@ -30,6 +30,7 @@ public class Simulcra {
     public var port: Int { server.port }
 
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
+                useAnyAddr: Bool = false,
                 templatePath: URL? = nil,
                 templateExtension: String = "json",
                 filePaths: [URL]? = nil,
@@ -44,6 +45,7 @@ public class Simulcra {
 
             do {
                 server = try HBApplication.start(on: nextPort,
+                                                 useAnyAddr: useAnyAddr,
                                                  withTemplatePath: templatePath,
                                                  templateExtension: templateExtension,
                                                  filePaths: filePaths,
@@ -115,6 +117,7 @@ extension HBApplication {
 
     /// Configures and starts the server on the specified port or throws an error if that fails.
     static func start(on port: Int,
+                      useAnyAddr: Bool,
                       withTemplatePath templatePath: URL?,
                       templateExtension: String,
                       filePaths: [URL]?,
@@ -123,7 +126,7 @@ extension HBApplication {
                       endpoints: [Endpoint]) throws -> HBApplication {
 
         let configuration = HBApplication.Configuration(
-            address: .hostname("0.0.0.0", port: port), // Use the "everything" address so this server works in containers suck as docker.
+            address: .hostname(useAnyAddr ? "0.0.0.0" : "127.0.0.1", port: port),
             serverName: "Simulcra API simulator",
             logLevel: hummingbirdVerbose ? .trace : .error
         )

@@ -1,7 +1,7 @@
 
 # Xcode integration guide
 
-The initial development of Simulcra was to support Swift UI testing by providing a fast server for your app to use instead of a development or QA server.
+The initial development of Simulcra was to support Swift UI testing through a local server instead of an unreliable development or QA server.
 
 ## How does it work?
 

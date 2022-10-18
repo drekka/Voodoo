@@ -91,7 +91,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--help"
-            isEnabled = "NO">
+            isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--config /Users/DerekClarkson/projects/simulcra/TestConfigs/Config1"
@@ -99,11 +99,11 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--file-dir /Users/DerekClarkson/projects/simulcra/Tests"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--config &quot;/Users/DerekClarkson/projects/simulcra/TestConfigs/Config1/scenario 1.yml&quot;"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--verbose"

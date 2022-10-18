@@ -59,13 +59,22 @@ extension SimulcraCMD {
         // Global options.
         @OptionGroup var options: SimulcraCMD.Options
 
-        @Option(
+        @Flag(
             name: [.long],
             help: """
             Activates trace mode in the Hummingbird server for tracking errors.
             """
         )
         var hummingbirdVerbose: Bool = false
+
+        @Flag(
+            name: .customLong("use-any-addr"),
+            help: """
+            By default the server uses 127.0.0.1 as it's IP address. However that will not work in containers suck as Docker where 0.0.0.0 is need. Enabling this \
+            flag sets the server's IP to the any address (0.0.0.0). However be aware that this may cause firewalls and other security software to flag the server.
+            """
+        )
+        var useAnyAddr: Bool = false
 
         @Option(
             name: .shortAndLong,
@@ -138,6 +147,7 @@ extension SimulcraCMD {
 
             let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
             let server = try Simulcra(portRange: portRange,
+                                      useAnyAddr: useAnyAddr,
                                       templatePath: templatePath,
                                       filePaths: filePaths,
                                       verbose: options.verbose) { endpoints }
