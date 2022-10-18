@@ -17,7 +17,7 @@ extension HBApplication: SimulcraContext {
         return port
     }
 
-    public var hostIP: String {
+    public var host: String {
         guard let host = configuration.address.host else {
             fatalError("💥💥💥 No host set on server 💥💥💥")
         }
