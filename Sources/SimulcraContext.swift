@@ -28,8 +28,8 @@ extension SimulcraContext {
     /// detected in the merges then the new value will be used, overriding any prior data.
     ///
     /// - parameter requestData: Additional data unique to the current request.
-    func requestTemplateData(forRequest request: HTTPRequest, adding requestData: TemplateData? = nil) -> TemplateData {
-        var overlay = TemplateData()
+    func requestTemplateData(forRequest request: HTTPRequest, adding requestData: TemplateData? = nil) -> [String: Any] {
+        var overlay: [String: Any] = [:]
         if let hostAddress = request.headers["host"] {
             overlay["mockServer"] = hostAddress
         }

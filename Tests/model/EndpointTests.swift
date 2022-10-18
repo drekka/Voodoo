@@ -41,7 +41,7 @@ class EndpointTests: XCTestCase {
                           type: "text"
                           text: "Hey everyone - {{def}}"
                           templateData:
-                            def: "hello world!"
+                            def: "Hello world!"
                       """#,
                       toDecodeAs: .POST, "/abc",
                       response: .ok(headers: ["abc": "123"],

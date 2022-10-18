@@ -25,7 +25,6 @@ struct JavascriptExecutor {
         // Inject javascript types.
         try jsCtx.eval(JavascriptModels.responseBodyType)
         try jsCtx.eval(JavascriptModels.responseType)
-        try serverContext.cache.inject(into: jsCtx)
     }
 
     func execute(script: String, for request: HTTPRequest) throws -> HTTPResponse {
@@ -43,12 +42,16 @@ struct JavascriptExecutor {
             throw SimulcraError.javascriptError("The executed javascript does not contain a function with the signature 'response(request, cache)'.")
         }
 
+        // Proxy the javascript cache to the server cache so it handles dynamic lookup style property access.
+        let cache = jsCtx.object()
+        let proxy = try cache.proxy(get: serverCtx.cache.cacheGet, set: serverCtx.cache.cacheSet)
+
         // Call it.
         let rawResponse: JXValue
         do {
             rawResponse = try responseFunction.call(withArguments: [
                 request.asJavascriptObject(in: jsCtx),
-                jsCtx.global["cache"],
+                proxy,
             ])
         } catch {
             throw SimulcraError.javascriptError("Javascript execution failed. Error: \(error)")
@@ -80,26 +83,26 @@ extension HTTPRequest {
 
         let request = jsCtx.object()
 
-        try request.defineProperty("method") { property in property.ctx.string(method.rawValue) }
+        try request.defineProperty("method") { property in property.context.string(method.rawValue) }
 
         try request.defineProperty("headers", populatedWith: headers)
 
-        try request.defineProperty("path") { property in property.ctx.string(path) }
-        try request.defineProperty("pathComponents") { property in try property.ctx.array(pathComponents.map { property.ctx.string($0) }) }
+        try request.defineProperty("path") { property in property.context.string(path) }
+        try request.defineProperty("pathComponents") { property in try property.context.array(pathComponents.map { property.context.string($0) }) }
         try request.defineProperty("pathParameters", populatedWith: pathParameters)
 
-        try request.defineProperty("query") { property in query == nil ? property.ctx.null() : property.ctx.string(query!) }
+        try request.defineProperty("query") { property in query == nil ? property.context.null() : property.context.string(query!) }
         try request.defineProperty("queryParameters", populatedWith: queryParameters)
 
-        try request.defineProperty("body") { property in body == nil ? property.ctx.null() : try property.ctx.data(body!) }
+        try request.defineProperty("body") { property in body == nil ? property.context.null() : try property.context.data(body!) }
 
         try request.defineProperty("bodyJSON") { property in
             // .json(...) converts a JSON string into an object so bypass bodyJSON
             // because we'd be converting from JSON to objects and back to JSON which is pointless.
             if let body, let json = String(data: body, encoding: .utf8) {
-                return try property.ctx.json(json)
+                return try property.context.json(json)
             }
-            return property.ctx.null()
+            return property.context.null()
         }
 
         try request.defineProperty("formParameters", populatedWith: formParameters)
@@ -112,7 +115,7 @@ extension JXValue {
 
     /// Wraps up some boiler plate for JXKit.
     public func defineProperty(_ property: String, getter: @escaping (JXValue) throws -> JXValue) throws {
-        try defineProperty(ctx.string(property), JXProperty(getter: getter, enumerable: true))
+        try defineProperty(context.string(property), JXProperty(getter: getter, enumerable: true))
     }
 
     /// Builds a container with the keys in the passed keyed values posing as the property names. Each property will return
@@ -121,8 +124,8 @@ extension JXValue {
         try defineObjectProperty(property) { obj in
             try keyedValues.uniqueKeys.forEach { key in
                 try obj.defineProperty(key) { property in
-                    let values = (keyedValues[key] as [String]).map { property.ctx.string($0) }
-                    return values.endIndex == 1 ? values[0] : try property.ctx.array(values)
+                    let values = (keyedValues[key] as [String]).map { property.context.string($0) }
+                    return values.endIndex == 1 ? values[0] : try property.context.array(values)
                 }
             }
         }
@@ -133,7 +136,7 @@ extension JXValue {
         try defineObjectProperty(property) { obj in
             try dictionary.forEach { key, value in
                 try obj.defineProperty(key) { property in
-                    property.ctx.string(value)
+                    property.context.string(value)
                 }
             }
         }
@@ -142,7 +145,7 @@ extension JXValue {
     /// Boilerplate to define an object property using a closure.
     func defineObjectProperty(_ property: String, using setup: @escaping (JXValue) throws -> Void) throws {
         try defineProperty(property) { parentObj in
-            let obj = parentObj.ctx.object()
+            let obj = parentObj.context.object()
             try setup(obj)
             return obj
         }
@@ -151,20 +154,9 @@ extension JXValue {
 
 extension Cache {
 
-    func inject(into jsCtx: JXContext) throws {
-        let proxyHandler = jsCtx.object()
-        try proxyHandler.set("get", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheGet))
-        try proxyHandler.set("set", convertible: JXValue(newFunctionIn: jsCtx, callback: cacheSet))
-        try jsCtx.global.setProperty("_cacheProxyHandler", proxyHandler)
-        try jsCtx.global.setProperty("_cache", jsCtx.object())
-        try jsCtx.eval(#"""
-        var cache = new Proxy(_cache, _cacheProxyHandler);
-        """#)
-    }
+    func cacheGet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
-    private func cacheGet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
-
-        let key = try args[1].stringValue
+        let key = try args[1].string
 
         let value: Any? = self[key]
         guard let value else {
@@ -186,9 +178,9 @@ extension Cache {
         return context.null()
     }
 
-    private func cacheSet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
+    func cacheSet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
-        let key = try args[1].stringValue
+        let key = try args[1].string
 
         switch args[2] {
 
@@ -196,15 +188,13 @@ extension Cache {
             remove(key)
 
         case let value where value.isBoolean:
-            self[key] = value.booleanValue
+            self[key] = value.bool
 
         case let value where value.isNumber:
-            self[key] = try value.numberValue
+            self[key] = try value.double
 
         case let value where try value.isDate:
-            if let date = try value.dateValue {
-                self[key] = date
-            }
+            self[key] = try value.date
 
         case let value where value.isObject:
             let json = try value.toJSON()
@@ -213,7 +203,7 @@ extension Cache {
             }
 
         case let value where value.isString:
-            self[key] = try value.stringValue
+            self[key] = try value.string
 
         default:
             break

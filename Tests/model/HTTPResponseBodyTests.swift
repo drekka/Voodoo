@@ -74,7 +74,7 @@ class HTTPResponseBodyTests: XCTestCase {
         }
 
         let encodable = JSONTest(abc: #"def {{xyz}}"#)
-        try assert(.json(encodable.structuredData, templateData: ["xyz": 123]),
+        try assert(.json(encodable, templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
                    contentType: ContentType.applicationJSON)
     }

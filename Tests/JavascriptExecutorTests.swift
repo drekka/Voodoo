@@ -5,6 +5,7 @@
 //  Created by Derek Clarkson on 30/9/2022.
 //
 
+import AnyCodable
 import Foundation
 import Hummingbird
 import Nimble
@@ -20,110 +21,101 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestDetails() throws {
 
-        try expectRequest {
-            let url = HBRequest.mockServerRequestURL + "/def?q1=123&q2=123&q1=456"
-            let request = HBRequest.mock(url: url,
-                                         pathParameters: ["pp1": "123", "pp2": "456"],
-                                         headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
-                                         body: "Hello world!")
-                .asHTTPRequest
-            let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
-            return try executor.execute(script: #"""
-                                        function response(request, cache) {
-                                        console.log("Path components " + request.pathComponents);
-                                            var data = {
-                                                method: request.method,
-                                                headers: request.headers,
-                                                path: request.path,
-                                                pathComponents: request.pathComponents,
-                                                pathParameters: request.pathParameters,
-                                                query: request.query,
-                                                queryParameters: request.queryParameters,
-                                                body: String.fromCharCode.apply(null, new Uint8Array(request.body))
-                                            };
-                                            return Response.ok(Body.json(data));
-                                        }
-                                        """#,
-                                        for: request)
+        let url = HBRequest.mockServerRequestURL + "/def?q1=123&q2=123&q1=456"
+        let request = HBRequest.mock(url: url,
+                                     pathParameters: ["pp1": "123", "pp2": "456"],
+                                     headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
+                                     body: "Hello world!")
+        try expectRequest(request, javascript: #"""
+            console.log("Path components " + request.pathComponents);
+            var data = {
+                method: request.method,
+                headers: request.headers,
+                path: request.path,
+                pathComponents: request.pathComponents,
+                pathParameters: request.pathParameters,
+                query: request.query,
+                queryParameters: request.queryParameters,
+                body: String.fromCharCode.apply(null, new Uint8Array(request.body))
+            };
+            return Response.ok(Body.json(data));
+        """#) { results in
+
+            expect(results["method"] as? String) == "GET"
+            expect(results["path"] as? String) == "/abc/def"
+            expect(results["pathComponents"] as? [String]) == ["/", "abc", "def"]
+
+            let headers = results["headers"] as! [String: Any]
+            expect(headers["h1"] as? String) == "xyz"
+            expect(headers["h2"] as? [String]) == ["123", "456"]
+
+            let pathParameters = results["pathParameters"] as! [String: Any]
+            expect(pathParameters["pp1"] as? String) == "123"
+            expect(pathParameters["pp2"] as? String) == "456"
+            expect(results["query"] as? String) == "q1=123&q2=123&q1=456"
+
+            let queryParameters = results["queryParameters"] as! [String: Any]
+            expect(queryParameters["q1"] as? [String]) == ["123", "456"]
+            expect(queryParameters["q2"] as? String) == "123"
+            expect(results["body"] as? String) == "Hello world!"
         }
-            toReturn: { results in
-                expect(results["method"]?.asString) == "GET"
-                expect(results["path"]?.asString) == "/abc/def"
-                expect(results["pathComponents"]?.asArray?.map { $0.asString }) == ["/", "abc", "def"]
-                let headers = results["headers"]!
-                expect(headers["h1"]?.asString) == "xyz"
-                expect(headers["h2"]?.asArray?.map { $0.asString }) == ["123", "456"]
-                let pathParameters = results["pathParameters"]!
-                expect(pathParameters["pp1"]?.asString) == "123"
-                expect(pathParameters["pp2"]?.asString) == "456"
-                expect(results["query"]?.asString) == "q1=123&q2=123&q1=456"
-                let queryParameters = results["queryParameters"]!
-                expect(queryParameters["q1"]?.asArray?.map { $0 }) == ["123", "456"]
-                expect(queryParameters["q2"]?.asString) == "123"
-                expect(results["body"]?.asString) == "Hello world!"
-            }
     }
 
     func testRequestFormParameters() throws {
 
-        try expectRequest {
-            let request = HBRequest.mock(
-                contentType: ContentType.applicationFormData,
-                body: #"formField1=Hello%20world!"#
-            )
-            .asHTTPRequest
-            let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
-            return try executor.execute(script: #"""
-                                        function response(request, cache) {
-                                            var data = {
-                                                formParameters: request.formParameters,
-                                                formField1: request.formParameters.formField1
-                                            };
-                                            return Response.ok(Body.json(data));
-                                        }
-                                        """#,
-                                        for: request)
+        let request = HBRequest.mock(
+            contentType: ContentType.applicationFormData,
+            body: #"formField1=Hello%20world!"#
+        )
+        try expectRequest(request, javascript: #"""
+            var data = {
+                formParameters: request.formParameters,
+                formField1: request.formParameters.formField1
+            };
+            return Response.ok(Body.json(data));
+        """#) { results in
+            let formData = results["formParameters"] as! [String: Any]
+            expect(formData.count) == 1
+            expect(formData["formField1"] as? String) == "Hello world!"
+            expect(results["formField1"] as? String) == "Hello world!"
         }
-            toReturn: { results in
-                let formData = results["formParameters"]?.asDictionary
-                expect(formData?.count ?? 0) == 1
-                expect(formData?["formField1"]?.asString) == "Hello world!"
-                expect(results["formField1"]?.asString) == "Hello world!"
-            }
     }
 
     func testRequestBodyJSON() throws {
 
-        try expectRequest {
-            let request = HBRequest.mock(
-                contentType: ContentType.applicationJSON,
-                body: #"{"abc":"def"}"#
-            )
-            .asHTTPRequest
-            let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
-            return try executor.execute(script: #"""
-                                        function response(request, cache) {
-                                            var data = {
-                                                body: request.bodyJSON
-                                            };
-                                            return Response.ok(Body.json(data));
-                                        }
-                                        """#,
-                                        for: request)
+        let request = HBRequest.mock(
+            contentType: ContentType.applicationJSON,
+            body: #"{"abc":"def"}"#
+        )
+        try expectRequest(request, javascript: #"""
+            var data = {
+                body: request.bodyJSON
+            };
+            return Response.ok(Body.json(data));
+        """#) { results in
+            let body = results["body"] as! [String: Any]
+            expect(body["abc"] as? String) == "def"
         }
-            toReturn: { results in
-                expect(results["body"]?["abc"]?.asString) == "def"
-            }
     }
 
-    private func expectRequest(_ executeRequest: () throws -> HTTPResponse, toReturn validate: (StructuredData) -> Void) throws {
-        let response = try executeRequest()
+    private func expectRequest(_ request: HBRequest,
+                               javascript: String,
+                               toReturn validate: ([String: Any]) -> Void) throws {
+        let httpRequest = request.asHTTPRequest
+        let executor = try JavascriptExecutor(serverContext: MockSimulcraContext())
+        let response = try executor.execute(script: #"""
+                                                    function response(request, cache) {
+                                                        \#(javascript)
+                                                    }
+                                            """#,
+                                            for: httpRequest)
         guard case HTTPResponse.ok(_, let body) = response,
               case HTTPResponse.Body.json(let data, _) = body else {
             fail("Got unexpected response \(response)")
             return
         }
-        validate(data)
+
+        validate(data as! [String: Any])
     }
 
     // MARK: - Raw Response

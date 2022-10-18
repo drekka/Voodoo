@@ -2,6 +2,15 @@
   "object": {
     "pins": [
       {
+        "package": "AnyCodable",
+        "repositoryURL": "https://github.com/drekka/AnyCodable",
+        "state": {
+          "branch": "develop/dc-missing-string-interpolation",
+          "revision": "a6242816afc292c1daececcf46ae8b5b98123805",
+          "version": null
+        }
+      },
+      {
         "package": "CwlCatchException",
         "repositoryURL": "https://github.com/mattgallagher/CwlCatchException.git",
         "state": {
@@ -51,7 +60,7 @@
         "repositoryURL": "https://github.com/drekka/JXKit.git",
         "state": {
           "branch": "feature/decoding-urls",
-          "revision": "66d276d7933437a93267004f6aa50c580169a434",
+          "revision": "af2e4c951204581ae5cae537f66dd043327b4cd5",
           "version": null
         }
       },
@@ -123,8 +132,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "cdeffe8c5bb88288ee624bb81fefe0508abe5a29",
-          "version": "2.43.0"
+          "revision": "bc4c55b9f9584f09eb971d67d956e28d08caa9d0",
+          "version": "2.43.1"
         }
       },
       {

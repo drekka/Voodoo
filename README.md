@@ -98,7 +98,7 @@ To build this project I used a number of 3rd party projects.
 * [JXKit][jxkit] - Provides a facade to Swift's JavascriptCore and it's Linux equivalent so that Simulcra can run on both platforms. 
 * [Nimble][nimble] - Simply the best assertion framework for unit testing.
 * [Swift Argument Parser][swift-argument-parser] - Provides the API for the command line program.  
-
+* [AnyCodable][any-codable] - Allows decoding of values from JSON, javascript and YAML without knowing what we are getting.  
   
 [hummingbird]: https://github.com/hummingbird-project/hummingbird
   

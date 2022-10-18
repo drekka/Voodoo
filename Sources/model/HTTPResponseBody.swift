@@ -5,6 +5,7 @@
 //  Created by Derek Clarkson on 6/10/2022.
 //
 
+import AnyCodable
 import Foundation
 import Hummingbird
 import HummingbirdMustache
@@ -33,7 +34,7 @@ public extension HTTPResponse {
         /// - parameters:
         ///   - payload: The payload to generate the data from.
         ///   - templateData: Additional values that can be injected into the text.
-        case json(_ payload: StructuredData, templateData: TemplateData? = nil)
+        case json(_ payload: Any, templateData: TemplateData? = nil)
 
         /// generates a YAML payload.
         ///
@@ -42,7 +43,7 @@ public extension HTTPResponse {
         /// - parameters:
         ///   - payload: The payload to generate the data from.
         ///   - templateData: Additional values that can be injected into the text.
-        case yaml(_ payload: StructuredData, templateData: TemplateData? = nil)
+        case yaml(_ payload: Any, templateData: TemplateData? = nil)
 
         /// Returns the passed text as the body.
         ///
@@ -93,8 +94,7 @@ extension HTTPResponse.Body: Decodable {
 
         case "text":
             let text = try container.decode(String.self, forKey: .text)
-            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
-            self = .text(text, templateData: templateData)
+            self = .text(text, templateData: try container.templateData)
 
         case "data":
             let data = try container.decode(Data.self, forKey: .data)
@@ -102,14 +102,11 @@ extension HTTPResponse.Body: Decodable {
             self = .data(data, contentType: contentType)
 
         case "json":
-            let json = try container.decode(StructuredData.self, forKey: .data)
-            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
-            self = .json(json, templateData: templateData)
+            self = .json(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
 
         case "yaml":
-            let yaml = try container.decode(StructuredData.self, forKey: .data)
-            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
-            self = .yaml(yaml, templateData: templateData)
+            let yaml = try container.decode([String: AnyCodable].self, forKey: .data)
+            self = .yaml(yaml, templateData: try container.templateData)
 
         case "file":
             let fileURL = try container.decode(URL.self, forKey: .url)
@@ -118,9 +115,8 @@ extension HTTPResponse.Body: Decodable {
 
         case "template":
             let name = try container.decode(String.self, forKey: .name)
-            let templateData = try container.decodeIfPresent([String: StructuredData].self, forKey: .templateData)
             let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .template(name, templateData: templateData, contentType: contentType)
+            self = .template(name, templateData: try container.templateData, contentType: contentType)
 
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown value '\(type)'")
@@ -128,7 +124,16 @@ extension HTTPResponse.Body: Decodable {
     }
 }
 
-/// Supports creating Hummingbird data.
+extension KeyedDecodingContainer where Key == HTTPResponse.Body.CodingKeys {
+    var templateData: [String: Any]? {
+        get throws {
+            return try decodeIfPresent(AnyCodable.self, forKey: .templateData)?.value as? [String: Any]
+        }
+    }
+}
+
+// MARK: - Getting Hummingbird responses
+
 extension HTTPResponse.Body {
 
     func hbBody(forRequest request: HTTPRequest, serverContext context: SimulcraContext) throws -> (HBResponseBody, String?) {
@@ -144,12 +149,12 @@ extension HTTPResponse.Body {
             return (data.hbResponseBody, contentType)
 
         case .json(let payload, let templateData):
-            return (try JSONEncoder().encode(payload)
-                .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+            let template = try generateTemplate(from: payload, using: { try JSONEncoder().encode($0).string() })
+            return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
 
         case .yaml(let payload, let templateData):
-            return (try YAMLEncoder().encode(payload)
-                .render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
+            let template = try generateTemplate(from: payload, using: { try YAMLEncoder().encode($0) })
+            return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
 
         case .file(let url, let contentType):
             return (try Data(contentsOf: url).hbResponseBody, contentType)
@@ -162,11 +167,38 @@ extension HTTPResponse.Body {
             return (json.hbResponseBody, contentType)
         }
     }
+
+    // Handles encoding the JSON and YAML values into strings for template processing.
+    private func generateTemplate(from source: Any, using encoder: (Encodable) throws -> String) throws -> String {
+        switch source {
+
+        case let payload as String:
+            return payload
+
+        case let payload as Encodable:
+            return try encoder(payload)
+
+        default:
+            throw SimulcraError.conversionError("Unable to convert '\(source)' to a type we can render as a response")
+        }
+    }
 }
 
 // MARK: - Supporting extensions
 
 extension Data {
+
+    var hbResponseBody: HBResponseBody {
+        .byteBuffer(ByteBuffer(data: self))
+    }
+
+    func string() throws -> String {
+        guard let string = String(data: self, encoding: .utf8) else {
+            throw SimulcraError.conversionError("Unable to convert data to a String")
+        }
+        return string
+    }
+
     /// Renders this data as a response body.
     ///
     /// - parameters:
@@ -174,10 +206,7 @@ extension Data {
     ///     - request: the request being fulfilled.
     ///     - context: The server context.
     func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulcraContext) throws -> HBResponseBody {
-        guard let string = String(data: self, encoding: .utf8) else {
-            throw SimulcraError.conversionError("Unable to convert data to a String")
-        }
-        return try string.render(withTemplateData: templateData, forRequest: request, context: context)
+        return try string().render(withTemplateData: templateData, forRequest: request, context: context)
     }
 }
 
@@ -202,12 +231,5 @@ extension String {
     func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulcraContext) throws -> HBResponseBody {
         let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
         return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
-    }
-}
-
-extension Data {
-
-    var hbResponseBody: HBResponseBody {
-        .byteBuffer(ByteBuffer(data: self))
     }
 }

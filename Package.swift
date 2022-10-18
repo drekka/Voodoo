@@ -21,6 +21,8 @@ let package = Package(
 //        .package(url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "3.0.0")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
         .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
+//        .package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.0"),
+        .package(url: "https://github.com/drekka/AnyCodable", branch: "develop/dc-missing-string-interpolation"),
     ],
     targets: [
         .target(
@@ -31,6 +33,7 @@ let package = Package(
                 .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
                 "JXKit",
                 "Yams",
+                "AnyCodable",
             ],
             path: "Sources"
         ),
