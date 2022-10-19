@@ -17,12 +17,13 @@ import JXKit
 
 class JavascriptExecutorTests: XCTestCase {
 
+    private let mockServer = "http://127.0.0.1:8080"
+
     // MARK: - Request details
 
     func testRequestDetails() throws {
 
-        let url = HBRequest.mockServerRequestURL + "/def?q1=123&q2=123&q1=456"
-        let request = HBRequest.mock(url: url,
+        let request = HBRequest.mock(path: "/abc/def?q1=123&q2=123&q1=456",
                                      pathParameters: ["pp1": "123", "pp2": "456"],
                                      headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
                                      body: "Hello world!")
@@ -185,13 +186,13 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testResponseMovedPermanently() throws {
-        try expectResponse(#"return Response.movedPermanently("\#(HBRequest.mockServerRequestURL)");"#,
-                           toReturn: .movedPermanently(HBRequest.mockServerRequestURL))
+        try expectResponse(#"return Response.movedPermanently("\#(mockServer)");"#,
+                           toReturn: .movedPermanently(mockServer))
     }
 
     func testResponseTemporaryRedirect() throws {
-        try expectResponse(#"return Response.temporaryRedirect("\#(HBRequest.mockServerRequestURL)");"#,
-                           toReturn: .temporaryRedirect(HBRequest.mockServerRequestURL))
+        try expectResponse(#"return Response.temporaryRedirect("\#(mockServer)");"#,
+                           toReturn: .temporaryRedirect(mockServer))
     }
 
     func testResponseNotFound() throws {

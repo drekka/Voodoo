@@ -104,6 +104,8 @@ class HTTPResponseTests: XCTestCase {
 
 class HTTPResponseDecodableTests: XCTestCase {
 
+    private let mockServer = "http://127.0.0.1:8080"
+
     func testStatusAndJavascriptIsInvalid() throws {
         try assert(#"""
                    {
@@ -144,11 +146,11 @@ class HTTPResponseDecodableTests: XCTestCase {
     }
 
     func testDecodeMovedPermanenty() throws {
-        try assert(#"{"status": 301,"url":"\#(HBRequest.mockServer)"}"#, decodesTo: .movedPermanently(HBRequest.mockServer))
+        try assert(#"{"status": 301,"url":"\#(mockServer)"}"#, decodesTo: .movedPermanently(mockServer))
     }
 
     func testDecodeTemporaryRedirect() throws {
-        try assert(#"{"status": 307,"url":"\#(HBRequest.mockServer)"}"#, decodesTo: .temporaryRedirect(HBRequest.mockServer))
+        try assert(#"{"status": 307,"url":"\#(mockServer)"}"#, decodesTo: .temporaryRedirect(mockServer))
     }
 
     func testDecodeNotFound() throws {

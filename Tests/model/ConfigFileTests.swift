@@ -30,7 +30,7 @@ class EndPointReferenceTests: XCTestCase {
     func testDecodeFileReference() throws {
         let decoder = YAMLDecoder()
         let yml = #"""
-        Test files/TestConfig1/get-config.yml
+        files/TestConfig1/get-config.yml
         """#
 
         let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
@@ -83,7 +83,7 @@ class ConfigFileTests: XCTestCase {
         - signature: put /config
           response:
             status: 201
-        - Test files/TestConfig1/get-config.yml
+        - files/TestConfig1/get-config.yml
         - signature: delete /config
           response:
             status: 200

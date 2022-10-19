@@ -11,7 +11,7 @@ import XCTest
 class HBRequestWrapperTests: XCTestCase {
 
     func testBaseProperties() {
-        let wrapper = HBRequest.mock(url: "https://\(HBRequest.mockServer)/xyz").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz").asHTTPRequest
         expect(wrapper.method) == .GET
         expect(wrapper.path) == "/xyz"
     }
@@ -27,10 +27,10 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testPathComponents() {
-        expect(HBRequest.mock(url: "https://\(HBRequest.mockServer)").asHTTPRequest.pathComponents) == ["/"]
-        expect(HBRequest.mock(url: "https://\(HBRequest.mockServer)/").asHTTPRequest.pathComponents) == ["/"]
-        expect(HBRequest.mock(url: "https://\(HBRequest.mockServer)/abc/def").asHTTPRequest.pathComponents) == ["/", "abc", "def"]
-        expect(HBRequest.mock(url: "https://\(HBRequest.mockServer)/abc//def/").asHTTPRequest.pathComponents) == ["/", "abc", "def"]
+        expect(HBRequest.mock(path: "").asHTTPRequest.pathComponents) == ["/"]
+        expect(HBRequest.mock(path: "/").asHTTPRequest.pathComponents) == ["/"]
+        expect(HBRequest.mock(path: "/abc/def").asHTTPRequest.pathComponents) == ["/", "abc", "def"]
+        expect(HBRequest.mock(path: "/abc//def/").asHTTPRequest.pathComponents) == ["/", "abc", "def"]
     }
 
     func testPathParameters() {
@@ -39,26 +39,26 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testQueryParameters() {
-        let wrapper = HBRequest.mock(url: "https://\(HBRequest.mockServer)/xyz?xxx=5&yyy=6").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz?xxx=5&yyy=6").asHTTPRequest
         expect(wrapper.query) == "xxx=5&yyy=6"
         expect(wrapper.queryParameters["xxx"]) == "5"
         expect(wrapper.queryParameters["yyy"]) == "6"
     }
 
     func testQueryParametersPercentEncoding() {
-        let wrapper = HBRequest.mock(url: "https://\(HBRequest.mockServer)/xyz?xxx=Hello%20world").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz?xxx=Hello%20world").asHTTPRequest
         expect(wrapper.query) == "xxx=Hello%20world"
         expect(wrapper.queryParameters["xxx"]) == "Hello world"
     }
 
     func testQueryParametersPlusEncoding() {
-        let wrapper = HBRequest.mock(url: "https://\(HBRequest.mockServer)/xyz?xxx=Hello+world").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz?xxx=Hello+world").asHTTPRequest
         expect(wrapper.query) == "xxx=Hello+world"
         expect(wrapper.queryParameters["xxx"]) == "Hello+world"
     }
 
     func testQueryParametersMultiples() {
-        let wrapper = HBRequest.mock(url: "https://\(HBRequest.mockServer)/xyz?xxx=5&xxx=6&xxx=7").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz?xxx=5&xxx=6&xxx=7").asHTTPRequest
         expect(wrapper.queryParameters["xxx"]) == ["5", "6", "7"]
     }
 

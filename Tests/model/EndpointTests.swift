@@ -72,7 +72,7 @@ class EndpointTests: XCTestCase {
     func testDecodeWithExternalJavascript() throws {
         try expectYML(#"""
                       signature: "post /abc"
-                      javascriptFile: Test files/TestConfig1/login.js
+                      javascriptFile: files/TestConfig1/login.js
                       """#,
                       toDecodeAs: .POST, "/abc",
                       response: .javascript("function response(request, cache) {\n    return Response.ok()\n}\n"))
@@ -81,14 +81,14 @@ class EndpointTests: XCTestCase {
     func testDecodeWithMissingExternalJavascript() throws {
         try expectYML(#"""
                       signature: "get post/abc"
-                      javascriptFile: Test files/TestConfig1/xxx.js
+                      javascriptFile: files/TestConfig1/xxx.js
                       """#) { error in
             guard case DecodingError.dataCorrupted(let context) = error else {
                 fail("Incorrect exception")
                 return
             }
             expect((context).debugDescription).to(beginWith("Unable to find referenced javascript file"))
-            expect((context).debugDescription).to(endWith("Test files/TestConfig1/xxx.js'"))
+            expect((context).debugDescription).to(endWith("files/TestConfig1/xxx.js'"))
         }
     }
 

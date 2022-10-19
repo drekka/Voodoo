@@ -26,11 +26,12 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
     func testInitWithMulitpleServers() throws {
         let s2 = try Simulcra()
-        expect(s2.port) != server.port
+        expect(s2.url.host) == server.url.host
+        expect(s2.url.port) != server.url.port
     }
 
     func testInitRunsOutOfPorts() {
-        let currentPort = server.port
+        let currentPort = server.url.port!
         expect {
             try Simulcra(portRange: currentPort ... currentPort)
         }
@@ -148,12 +149,12 @@ class SimulcraIntegrationTests: XCTestCase, IntegrationTesting {
 
     func testResponseWithFileTemplate() async {
 
-        server.add(.POST, "/abc", response: .accepted(body: .template("Test files/Template", templateData: ["path": "/abc"])))
+        server.add(.POST, "/abc", response: .accepted(body: .template("files/Template", templateData: ["path": "/abc"])))
         let response = await assert(.POST, "/abc", returns: .accepted)
         let httpResponse = response.response
 
         expect(httpResponse?.allHeaderFields.count) == 5
-        expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(HBRequest.mockHost):\#(server.port)",\#n    "path": "/abc"\#n}\#n"#
+        expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(server.url.host!):\#(server.url.port!)",\#n    "path": "/abc"\#n}\#n"#
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
     }
 

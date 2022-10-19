@@ -32,14 +32,14 @@ class AdminConsoleTests: XCTestCase {
     }
 
     func testShutdownRequest() async {
-        let mockRequest = HBRequest.mock(.POST, url: "http://\(HBRequest.mockServer)/_admin/shutdown")
+        let mockRequest = HBRequest.mock(.POST, path: "/_admin/shutdown")
         let response = console.apply(to: mockRequest, next: mockResponder)
         expect(self.mockResponder.gotRequest) == false
         await assert(response: response, hasStatus: .ok)
     }
 
     func testUnknownAdminRequest() async {
-        let mockRequest = HBRequest.mock(url: "http://\(HBRequest.mockServer)/_admin/xxx")
+        let mockRequest = HBRequest.mock(path: "/_admin/xxx")
         let response = console.apply(to: mockRequest, next: mockResponder)
         expect(self.mockResponder.gotRequest) == false
         await assert(response: response, hasStatus: .notFound)

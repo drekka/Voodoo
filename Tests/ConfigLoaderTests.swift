@@ -15,7 +15,7 @@ class ConfigLoaderTests: XCTestCase {
     func testLoadFile() throws {
         let loader = ConfigLoader(verbose: true)
 
-        let ymlFile = Bundle.testBundle.resourceURL!.appendingPathComponent("Test files/TestConfig1/get-config.yml")
+        let ymlFile = Bundle.testBundle.resourceURL!.appendingPathComponent("files/TestConfig1/get-config.yml")
         let endpoints = try loader.load(from: ymlFile)
 
         expect(endpoints.count) == 1
@@ -25,7 +25,7 @@ class ConfigLoaderTests: XCTestCase {
     func testLoadDirectory() throws {
         let loader = ConfigLoader(verbose: false)
 
-        let ymlDir = Bundle.testBundle.resourceURL!.appendingPathComponent("Test files/TestConfig1")
+        let ymlDir = Bundle.testBundle.resourceURL!.appendingPathComponent("files/TestConfig1")
         let endpoints = try loader.load(from: ymlDir)
 
         expect(endpoints.count) == 3
@@ -37,7 +37,7 @@ class ConfigLoaderTests: XCTestCase {
     func testLoadFromInvalidURL() throws {
         let loader = ConfigLoader(verbose: false)
 
-        let ymlFile = Bundle.testBundle.resourceURL!.appendingPathComponent("Test files/XXXX.yml")
+        let ymlFile = Bundle.testBundle.resourceURL!.appendingPathComponent("files/XXXX.yml")
         expect { try loader.load(from: ymlFile) }.to(throwError(SimulcraError.invalidConfigPath("")))
     }
 

@@ -39,7 +39,7 @@ extension IntegrationTesting {
 
     @discardableResult
     func assert(_ method: HTTPMethod, _ path: String, returns expectedStatus: HTTPResponseStatus, file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
-        var request = URLRequest(url: URL(string: "http://\(HBRequest.mockHost):\(server.port)")!.appendingPathComponent(path))
+        var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
 
         let response: ServerResponse

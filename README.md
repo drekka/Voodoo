@@ -33,9 +33,9 @@ Because there are several main environments that you might want to use Simulcra 
 
 # Installation
 
-## iOS/OSX
+## iOS/OSX SPM package
 
-Simulcra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets.
+Simulcra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Simulcra.git` as a package to your test targets.
 
 ## Linux, Windows, Docker, etc
 
@@ -63,6 +63,35 @@ The finished executable will be
 ```
 
 Which you can move anywhere you like as it's a fully self contained command line program.
+
+### Executing from the command line
+
+The `simulcra` command line program has a number of options, but here is a minimal example:
+
+```bash
+.build/release/simulcra run --config Tests/Test\ files/TestConfig1 
+```
+
+### Docker additional configuration
+
+When launching Simulcra from within a [Docker container][docker] you will need to forwards Simulcra's ports if you app is not also running within the container.
+
+Firstly you will have to tell Docker to publish the ports Simulcra will be listening on to the outside world. Usually by using something like `docker run -p 8080-8090`. The only issue with this is that Docker appears to automatically reserve the ports you specify even though Simulcra might not being listening on them. I don't know if it's possible to tell Docker to only open a port when something inside the container wants it to. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
+
+In addition Simulcra's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Simulcra with the **_`--use-any-addr`_** flag which tells Simulcra to listen on `0.0.0.0` instead of `127.0.0.1`.
+
+# Configuration
+
+The thing about Simulcra is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
+
+### Programmatically configuring the server.
+
+This really only applies when using 
+
+### YAML/Javascript
+
+Generally when using Simulcra in an XCode test suite you would programmatically define the endpoints. However there is nothing to stop you from using a shared YAML/Javacript setup (for example when there is an Android team and you want to share the setup with them).
+
 
 # FAQ
 
@@ -106,5 +135,5 @@ To build this project I used a number of 3rd party projects.
 [nimble]: https://github.com/Quick/Nimble
 [swift-argument-parser]: https://github.com/apple/swift-argument-parser
 [any-codable]: https://github.com/Flight-School/AnyCodable
-
+[docker]: https://www.docker.com
   

@@ -54,7 +54,7 @@ let package = Package(
             ],
             path: "Tests",
             resources: [
-                .copy("Test files"),
+                .copy("files"),
             ]
         ),
     ]

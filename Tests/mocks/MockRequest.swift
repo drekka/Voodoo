@@ -8,24 +8,21 @@ import Foundation
 
 extension HBRequest {
 
-    static let mockHost = "127.0.0.1"
-    static let mockServer = "\(mockHost):8080"
-    static let mockServerRequestURL = "http://\(mockServer)/abc"
-
     static func mock(_ method: HTTPMethod = .GET,
-                     url: String = mockServerRequestURL,
+                     path: String = "/abc",
                      pathParameters: [String: String]? = nil,
                      headers: [(String, String)]? = [],
                      contentType: String? = nil,
                      body: String = "") -> HBRequest {
 
-        var hbHeaders = HTTPHeaders(dictionaryLiteral: ("host", mockServer))
+        let url = URL(string: "http://127.0.0.1:8080" + path)!
+        var hbHeaders = HTTPHeaders(dictionaryLiteral: ("host", "127.0.0.1:8080"))
         headers?.forEach { hbHeaders.add(name: $0.0, value: $0.1) }
         if let contentType {
             hbHeaders.add(name: "Content-Type", value: contentType)
         }
 
-        let head = HTTPRequestHead(version: .http1_1, method: method, uri: url, headers: hbHeaders)
+        let head = HTTPRequestHead(version: .http1_1, method: method, uri: url.absoluteString, headers: hbHeaders)
 
         let application = HBApplication()
         let context = MockHBRequestContext()
