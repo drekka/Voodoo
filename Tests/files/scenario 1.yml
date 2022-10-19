@@ -12,9 +12,13 @@
 - signature: get /javascript/inline/ok
   javascript: |
     function response(request, cache) {
-      return Response.ok()
+        if request.parthParameter.accountId == "1234" {
+            return Response.ok()
+        } else {
+            return Response.notFound
+        }
     }
-
+      
 - signature: get /javascript/file
   javascriptFile: TestConfig1/get-200-ok.js 
 
