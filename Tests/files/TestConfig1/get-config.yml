@@ -1,7 +1,6 @@
 signature: get /config
 response:
   status: 200
-  headers: ~
   body:
     type: json
     data: {

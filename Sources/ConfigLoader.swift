@@ -44,7 +44,7 @@ public struct ConfigLoader {
 
         default:
             let fileSystemPath = path.filePath
-            print("👻 Config file/directory does not exist \(fileSystemPath)")
+            print("👻 Config file or directory does not exist '\(fileSystemPath)'")
             throw SimulcraError.invalidConfigPath(fileSystemPath)
         }
     }

@@ -7,9 +7,9 @@
       text: Hello world!
       templateData: ~
 
-- TestConfig1/get-200.ok.yml
+- TestConfig1/get-config.yml
 
-- signature: get /javascript/inline/ok
+- signature: get /javascript/inline
   javascript: |
     function response(request, cache) {
         if request.parthParameter.accountId == "1234" {
@@ -18,7 +18,7 @@
             return Response.notFound
         }
     }
-      
+     
 - signature: get /javascript/file
-  javascriptFile: TestConfig1/get-200-ok.js 
+  javascriptFile: TestConfig1/login.js 
 
