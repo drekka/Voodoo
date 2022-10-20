@@ -8,7 +8,7 @@
 import Foundation
 import Nimble
 import NIOHTTP1
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 import Yams
 

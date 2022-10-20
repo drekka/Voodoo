@@ -131,7 +131,7 @@ extension HTTPResponse: Decodable {
 /// This extension creates Hummingbird responses.
 extension HTTPResponse {
 
-    func hbResponse(for request: HTTPRequest, inServerContext context: SimulcraContext) async throws -> HBResponse {
+    func hbResponse(for request: HTTPRequest, inServerContext context: SimulacraContext) async throws -> HBResponse {
 
         // Captures the request and cache before generating the response.
         func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {

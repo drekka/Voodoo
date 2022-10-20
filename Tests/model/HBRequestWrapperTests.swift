@@ -5,7 +5,7 @@
 import Foundation
 import Hummingbird
 import Nimble
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 
 class HBRequestWrapperTests: XCTestCase {

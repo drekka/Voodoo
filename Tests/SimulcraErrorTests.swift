@@ -6,19 +6,19 @@
 //
 
 import Nimble
-import SimulcraCore
+import SimulacraCore
 import XCTest
 
-class SimulcraErrorTests: XCTestCase {
+class SimulacraErrorTests: XCTestCase {
 
     func testMessages() {
-        expect(SimulcraError.directoryNotExists("/abc").headers.first(name: SimulcraError.headerKey)) == "Missing or URL was not a directory: /abc"
-        expect(SimulcraError.templateRenderingFailure("xxx").headers.first(name: SimulcraError.headerKey)) == "xxx"
-        expect(SimulcraError.noPortAvailable.headers.first(name: SimulcraError.headerKey)) == "All ports taken."
-        expect(SimulcraError.unexpectedError(SimulcraError.noPortAvailable).headers.first(name: SimulcraError.headerKey)) == "The operation couldn’t be completed. (SimulcraCore.SimulcraError error 7.)"
-        expect(SimulcraError.javascriptError("error").headers.first(name: SimulcraError.headerKey)) == "error"
-        expect(SimulcraError.configLoadFailure("failed").headers.first(name: SimulcraError.headerKey)) == "failed"
-        expect(SimulcraError.invalidConfigPath("/abc").headers.first(name: SimulcraError.headerKey)) == "Invalid config path /abc"
-        expect(SimulcraError.directoryNotExists("/abc").headers.first(name: SimulcraError.headerKey)) == "Missing or URL was not a directory: /abc"
+        expect(SimulacraError.directoryNotExists("/abc").headers.first(name: SimulacraError.headerKey)) == "Missing or URL was not a directory: /abc"
+        expect(SimulacraError.templateRenderingFailure("xxx").headers.first(name: SimulacraError.headerKey)) == "xxx"
+        expect(SimulacraError.noPortAvailable.headers.first(name: SimulacraError.headerKey)) == "All ports taken."
+        expect(SimulacraError.unexpectedError(SimulacraError.noPortAvailable).headers.first(name: SimulacraError.headerKey)) == "The operation couldn’t be completed. (SimulacraCore.SimulacraError error 7.)"
+        expect(SimulacraError.javascriptError("error").headers.first(name: SimulacraError.headerKey)) == "error"
+        expect(SimulacraError.configLoadFailure("failed").headers.first(name: SimulacraError.headerKey)) == "failed"
+        expect(SimulacraError.invalidConfigPath("/abc").headers.first(name: SimulacraError.headerKey)) == "Invalid config path /abc"
+        expect(SimulacraError.directoryNotExists("/abc").headers.first(name: SimulacraError.headerKey)) == "Missing or URL was not a directory: /abc"
     }
 }

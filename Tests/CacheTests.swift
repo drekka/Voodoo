@@ -4,7 +4,7 @@
 
 import Foundation
 import Nimble
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 
 class CacheTests: XCTestCase {

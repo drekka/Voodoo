@@ -5,12 +5,12 @@
 import Hummingbird
 import Nimble
 import NIOHTTP1
-import SimulcraCore
+import SimulacraCore
 import XCTest
 
 class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
 
-    var server: Simulcra!
+    var server: Simulacra!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -30,7 +30,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        let response = await assert(.GET, "/abc", returns: .ok)
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode:  200)
         expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"
         expect(response.response?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
     }
@@ -43,7 +43,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        let response = await assert(.GET, "/abc", returns: .ok)
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         expect(response.data) == Data()
         expect(response.response?.value(forHTTPHeaderField: ContentType.key)).to(beNil())
     }
@@ -53,8 +53,8 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         server.add(.GET, "/abc", response: .javascript(#"""
         """#))
 
-        let response = await assert(.GET, "/abc", returns: .internalServerError)
-        expect(response.response?.value(forHTTPHeaderField: SimulcraError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 500)
+        expect(response.response?.value(forHTTPHeaderField: SimulacraError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
     }
 
     func testJavascriptIncorrectSignatureArgumentsTooFew() async {
@@ -65,7 +65,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        await assert(.GET, "/abc", returns: .ok)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
     func testJavascriptIncorrectSignatureArgumentsTooMany() async {
@@ -76,7 +76,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        await assert(.GET, "/abc", returns: .ok)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
     func testJavascriptInvalidResponse() async {
@@ -87,8 +87,8 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        let response = await assert(.GET, "/abc", returns: .internalServerError)
-        expect(response.response?.value(forHTTPHeaderField: SimulcraError.headerKey)) == "The javascript function failed to return a response."
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 500)
+        expect(response.response?.value(forHTTPHeaderField: SimulacraError.headerKey)) == "The javascript function failed to return a response."
     }
 
     func testJavascriptResponseSetAndGetFromCache() async {
@@ -100,7 +100,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        await assert(.POST, "/abc", returns: .ok)
+        await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
 
         server.add(.GET, "/abc", response: .javascript(#"""
         function response(request, cache) {
@@ -109,7 +109,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        let response = await assert(.GET, "/abc", returns: .ok)
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         let httpResponse = response.response
 
         expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"

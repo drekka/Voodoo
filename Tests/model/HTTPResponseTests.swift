@@ -9,7 +9,7 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 
 class HTTPResponseTests: XCTestCase {
@@ -38,14 +38,6 @@ class HTTPResponseTests: XCTestCase {
     }
 
     func testDynamic() async throws {
-        server = try Simulcra {
-            Endpoint(.POST, "/login", response: .dynamic { request, cache in
-                cache.userid = request.formParameters.userid
-                return .json([
-                    "token": UUID().uuidString,
-                ])
-            })
-        }
         let response = HTTPResponse.dynamic { _, _ in
             .ok()
         }
@@ -88,7 +80,7 @@ class HTTPResponseTests: XCTestCase {
                 body expectedBody: String? = nil) async throws {
 
         let request = HBRequest.mock().asHTTPRequest
-        let context = MockSimulcraContext()
+        let context = MockSimulacraContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 
         expect(hbResponse.status) == expectedStatus

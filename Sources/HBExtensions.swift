@@ -6,9 +6,9 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 
-// Simulcra extensions to Hummingbird
+// Simulacra extensions to Hummingbird
 
-extension HBApplication: SimulcraContext {
+extension HBApplication: SimulacraContext {
 
     public var port: Int {
         guard let port = configuration.address.port else {

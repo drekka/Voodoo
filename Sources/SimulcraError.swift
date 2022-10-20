@@ -6,9 +6,9 @@ import Foundation
 import Hummingbird
 import NIOCore
 
-public enum SimulcraError: Error, HBHTTPResponseError {
+public enum SimulacraError: Error, HBHTTPResponseError {
 
-    public static let headerKey = "Simulcra-Error"
+    public static let headerKey = "Simulacra-Error"
 
     case conversionError(String)
     case templateRenderingFailure(String)

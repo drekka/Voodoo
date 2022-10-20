@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "Simulcra",
+    name: "Simulacra",
     platforms: [
         .iOS(.v15),
         .macOS(.v12),
     ],
     products: [
-        .executable(name: "simulcra", targets: ["simulcra-cmd"]),
-        .library(name: "simulcra-core", targets: ["SimulcraCore"]),
+        .executable(name: "simulacra", targets: ["Simulacra-cmd"]),
+        .library(name: "Simulacra-core", targets: ["SimulacraCore"]),
     ],
     dependencies: [
         .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "10.0.0")),
@@ -26,7 +26,7 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "SimulcraCore",
+            name: "SimulacraCore",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdFoundation", package: "hummingbird"),
@@ -38,17 +38,17 @@ let package = Package(
             path: "Sources"
         ),
         .executableTarget(
-            name: "simulcra-cmd",
+            name: "Simulacra-cmd",
             dependencies: [
-                "SimulcraCore",
+                "SimulacraCore",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "cmd"
         ),
         .testTarget(
-            name: "SimulcraTests",
+            name: "SimulacraTests",
             dependencies: [
-                "SimulcraCore",
+                "SimulacraCore",
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "Nimble", package: "nimble"),
             ],

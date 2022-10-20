@@ -4,7 +4,7 @@
 
 import Foundation
 @testable import Hummingbird
-@testable import SimulcraCore
+@testable import SimulacraCore
 
 extension HBRequest {
 

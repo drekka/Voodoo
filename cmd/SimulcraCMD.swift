@@ -4,7 +4,7 @@
 
 import ArgumentParser
 import Foundation
-import SimulcraCore
+import SimulacraCore
 
 /// allows us to set a URL as an option type.
 extension URL: ExpressibleByArgument {
@@ -17,7 +17,7 @@ extension URL: ExpressibleByArgument {
 
 /// Provides a command line wrapper around the server.
 @main
-struct SimulcraCMD: ParsableCommand {
+struct SimulacraCMD: ParsableCommand {
 
     struct Options: ParsableArguments {
 
@@ -28,7 +28,7 @@ struct SimulcraCMD: ParsableCommand {
     static var configuration: CommandConfiguration {
 
         return CommandConfiguration(
-            commandName: "simulcra",
+            commandName: "Simulacra",
             abstract: "A simple server designed for testing purposes",
             discussion: """
             This starts and manages a mock server that can be used for testing or development purposes.
@@ -40,7 +40,7 @@ struct SimulcraCMD: ParsableCommand {
     }
 }
 
-extension SimulcraCMD {
+extension SimulacraCMD {
 
     /// The main `run` subcommand.
     struct Run: ParsableCommand {
@@ -57,7 +57,7 @@ extension SimulcraCMD {
         }
 
         // Global options.
-        @OptionGroup var options: SimulcraCMD.Options
+        @OptionGroup var options: SimulacraCMD.Options
 
         @Flag(
             name: [.long],
@@ -146,7 +146,7 @@ extension SimulcraCMD {
         mutating func run() throws {
 
             let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
-            let server = try Simulcra(portRange: portRange,
+            let server = try Simulacra(portRange: portRange,
                                       useAnyAddr: useAnyAddr,
                                       templatePath: templatePath,
                                       filePaths: filePaths,

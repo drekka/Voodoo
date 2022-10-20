@@ -14,9 +14,9 @@ import NIOCore
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
-    let serverCtx: SimulcraContext
+    let serverCtx: SimulacraContext
 
-    init(serverContext: SimulcraContext) throws {
+    init(serverContext: SimulacraContext) throws {
 
         serverCtx = serverContext
 
@@ -33,13 +33,13 @@ struct JavascriptExecutor {
         do {
             try jsCtx.eval(script)
         } catch {
-            throw SimulcraError.javascriptError("Error evaluating javascript: \(error)")
+            throw SimulacraError.javascriptError("Error evaluating javascript: \(error)")
         }
 
         // Extract the function.
         let responseFunction = try jsCtx.global["response"]
         guard responseFunction.isFunction else {
-            throw SimulcraError.javascriptError("The executed javascript does not contain a function with the signature 'response(request, cache)'.")
+            throw SimulacraError.javascriptError("The executed javascript does not contain a function with the signature 'response(request, cache)'.")
         }
 
         // Proxy the javascript cache to the server cache so it handles dynamic lookup style property access.
@@ -54,17 +54,17 @@ struct JavascriptExecutor {
                 proxy,
             ])
         } catch {
-            throw SimulcraError.javascriptError("Javascript execution failed. Error: \(error)")
+            throw SimulacraError.javascriptError("Javascript execution failed. Error: \(error)")
         }
 
         if rawResponse.isUndefined {
-            throw SimulcraError.javascriptError("The javascript function failed to return a response.")
+            throw SimulacraError.javascriptError("The javascript function failed to return a response.")
         }
 
         do {
             return try rawResponse.toDecodable(ofType: HTTPResponse.self) as HTTPResponse
         } catch {
-            throw SimulcraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
+            throw SimulacraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
         }
     }
 

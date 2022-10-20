@@ -9,28 +9,28 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOHTTP1
-@testable import SimulcraCore
+@testable import SimulacraCore
 
 /// Add this protocol to gain access to integration testing functions.
 protocol IntegrationTesting: AnyObject {
 
     typealias ServerResponse = (data: Data?, response: HTTPURLResponse?, error: Error?)
 
-    var server: Simulcra! { get set }
+    var server: Simulacra! { get set }
 
     func setUpServer() throws
 
     func tearDownServer()
 
     @discardableResult
-    func assert(_ method: HTTPMethod, _ path: String, returns expectedStatus: HTTPResponseStatus, file: StaticString, line: UInt) async -> ServerResponse
+    func executeAPICall(_ method: HTTPMethod, _ path: String, andExpectStatusCode expectedStatusCode: Int, file: StaticString, line: UInt) async -> ServerResponse
 }
 
 extension IntegrationTesting {
 
     func setUpServer() throws {
         let templatePath = Bundle.testBundle.resourceURL!
-        server = try Simulcra(templatePath: templatePath, verbose: true)
+        server = try Simulacra(templatePath: templatePath, verbose: true)
     }
 
     func tearDownServer() {
@@ -38,7 +38,7 @@ extension IntegrationTesting {
     }
 
     @discardableResult
-    func assert(_ method: HTTPMethod, _ path: String, returns expectedStatus: HTTPResponseStatus, file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
+    func executeAPICall(_ method: HTTPMethod, _ path: String, andExpectStatusCode expectedStatusCode: Int, file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
 
@@ -50,7 +50,7 @@ extension IntegrationTesting {
             response = ServerResponse(data: nil, response: nil, error: error)
         }
 
-        expect(file: file, line: line, response.response!.statusCode) == Int(expectedStatus.code)
+        expect(file: file, line: line, response.response!.statusCode) == expectedStatusCode
         expect(file: file, line: line, response.error).to(beNil())
 
         return response

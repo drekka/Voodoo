@@ -21,8 +21,8 @@ extension Error {
     }
 }
 
-/// The main Simulcra server.
-public class Simulcra {
+/// The main Simulacra server.
+public class Simulacra {
 
     private let server: HBApplication
     private let verbose: Bool
@@ -63,12 +63,12 @@ public class Simulcra {
                 }
 
                 print("👻 Unexpected error: \(error.localizedDescription)")
-                throw SimulcraError.unexpectedError(error)
+                throw SimulacraError.unexpectedError(error)
             }
         }
 
         print("👻 Exhausted all ports in range \(portRange)")
-        throw SimulcraError.noPortAvailable
+        throw SimulacraError.noPortAvailable
     }
 
     public func wait() {
@@ -129,7 +129,7 @@ extension HBApplication {
 
         let configuration = HBApplication.Configuration(
             address: .hostname(useAnyAddr ? "0.0.0.0" : "127.0.0.1", port: port),
-            serverName: "Simulcra API simulator",
+            serverName: "Simulacra API simulator",
             logLevel: hummingbirdVerbose ? .trace : .error
         )
         let server = HBApplication(configuration: configuration)
@@ -141,7 +141,7 @@ extension HBApplication {
         server.middleware.add(AdminConsole())
         try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
             guard $0.fileSystemStatus == .isDirectory else {
-                throw SimulcraError.directoryNotExists($0.filePath)
+                throw SimulacraError.directoryNotExists($0.filePath)
             }
             server.middleware.add(HBFileMiddleware($0.filePath, application: server))
         }

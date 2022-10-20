@@ -1,6 +1,6 @@
-# Simulcra
+# Simulacra
 
-Simulcra is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
+Simulacra is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
 
 It primary features are:
 
@@ -57,7 +57,7 @@ It primary features are:
   - [When do I need a mock server?](#when-do-i-need-a-mock-server)
   - [How do I ensure my mock server is the same as my production server?](#how-do-i-ensure-my-mock-server-is-the-same-as-my-production-server)
   - [There's a bazillion mock servers out there, why do we need another?](#there-s-a-bazillion-mock-servers-out-there-why-do-we-need-another)
-  - [What dependencies does Simulcra have?](#what-dependencies-does-simulcra-have)
+  - [What dependencies does Simulacra have?](#what-dependencies-does-Simulacra-have)
 - [Samples](#samples)
   - [XCTest suite class:](#xctest-suite-class)
   - [XCTest simple tests with shared server](#xctest-simple-tests-with-shared-server)
@@ -70,10 +70,10 @@ It primary features are:
 
 ## iOS/OSX SPM package
 
-Simulcra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Simulcra.git` as a package to your test targets and
+Simulacra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Simulacra.git` as a package to your test targets and
 
 ```swift
-import SimulcraCore
+import SimulacraCore
 ```
 
 ## Linux, Windows, Docker, etc
@@ -83,13 +83,13 @@ If you don't already have a Swift compiler on your system there is an extensive 
 Once installed, you can clone this repository:
 
 ```bash
-git clone https://github.com/drekka/Simulcra.git
+git clone https://github.com/drekka/Simulacra.git
 ```
 
 and build it:
 
 ```bash
-cd Simulcra
+cd Simulacra
 swift build -c release
 ```
 
@@ -98,7 +98,7 @@ This will download all dependencies and build the command line program. On my 10
 The finished executable will be
 
 ```bash
-.build/release/simulcra
+.build/release/Simulacra
 ```
 
 Which you can move anywhere you like as it's fully self contained.
@@ -108,7 +108,7 @@ Which you can move anywhere you like as it's fully self contained.
 The command line program has a number of options, but here is a minimal example:
 
 ```bash
-.build/release/simulcra run --config Tests/files/TestConfig1 
+.build/release/Simulacra run --config Tests/files/TestConfig1 
 ```
 
 Seeing as the command line is designed for a non-programmatic situation, at a minimum you need to give it a path to a directory or file where it can load end points from.
@@ -116,36 +116,36 @@ Seeing as the command line is designed for a non-programmatic situation, at a mi
 However a more practical example might look like this:
 
 ```bash
-.build/release/simulcra run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
+.build/release/Simulacra run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
 Which adds a directory of response templates and another containing general files such as images and javascript source for web pages. 
 
 ### Docker additional configuration
 
-When launching Simulcra from within a [Docker container][docker] you will need to forwards Simulcra's ports if you app is not also running within the container.
+When launching Simulacra from within a [Docker container][docker] you will need to forwards Simulacra's ports if you app is not also running within the container.
 
-Firstly you will have to tell Docker to publish the ports Simulcra will be listening on to the outside world. Usually by using something like 
+Firstly you will have to tell Docker to publish the ports Simulacra will be listening on to the outside world. Usually by using something like 
 
 ```bash
 docker run -p 8080-8090
 ```
 
-The only issue with this is that Docker appears to automatically reserve the ports you specify even though Simulcra might not being listening on them. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
+The only issue with this is that Docker appears to automatically reserve the ports you specify even though Simulacra might not being listening on them. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
 
-Finally Simulcra's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Simulcra with the **_`--use-any-addr`_** flag which tells Simulcra to listen on `0.0.0.0` instead of `127.0.0.1`.
+Finally Simulacra's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Simulacra with the **_`--use-any-addr`_** flag which tells Simulacra to listen on `0.0.0.0` instead of `127.0.0.1`.
 
 # Configuration
 
-The thing about Simulcra is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
+The thing about Simulacra is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
 
 ### Templates
 
-Simulcra has the ability to read templates of responses stored in a directory. This is most useful when you are mocking out a server that generates a lot of response in JSON or some other textural form. By specifying a template directory when initialising the server these templates can be automatically made available as response payloads for incoming requests. Here's an example from a Swift UI test setup:
+Simulacra has the ability to read templates of responses stored in a directory. This is most useful when you are mocking out a server that generates a lot of response in JSON or some other textural form. By specifying a template directory when initialising the server these templates can be automatically made available as response payloads for incoming requests. Here's an example from a Swift UI test setup:
 
 ```swift
 let templatePath = Bundle.testBundle.resourceURL!
-server = try Simulcra(templatePath: templatePath) {
+server = try Simulacra(templatePath: templatePath) {
     // Endpoints configured here.
 }
 ```
@@ -154,13 +154,13 @@ Templates are managed by [The mustache engine](#the-mustache-engine) and keyed b
 
 ### File sources
 
-In addition to serving responses from defined API endpoints Simulcra can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
+In addition to serving responses from defined API endpoints Simulacra can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
 
 To do this you can add the initialiser argument `filePaths: URL(string: "Tests/files")` or add the command line argument `--file-dir Tests/files`. This can be done multiple times if you have multiple directories you want to search for files.
 
 ## Endpoints
 
-In order to response to API requests Simulcra needs to be configured with *Endpoints*. An endpoint is basically a definition that Simulcra uses to define what requests response to and how. To do that it need 3 things:
+In order to response to API requests Simulacra needs to be configured with *Endpoints*. An endpoint is basically a definition that Simulacra uses to define what requests response to and how. To do that it need 3 things:
 
 * The HTTP method of the incoming request. ie. `GET`, `POST`, etc.
 * The path of the incoming request. ie. `/login`, `/accounts/list`, etc.  
@@ -168,7 +168,7 @@ In order to response to API requests Simulcra needs to be configured with *Endpo
 
 ### Endpoint path parameters
 
-Apart from watching for fixed paths such as `/login` and `/accounts`, Simulcra can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Simulcra will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
+Apart from watching for fixed paths such as `/login` and `/accounts`, Simulacra can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Simulacra will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
 
 ### Endpoint responses
 
@@ -182,7 +182,7 @@ There are some basic responses common to both the YAML/javascript and Swift conf
 
 ### Dynamic responses
 
-Dynamic responses are one of the more useful features of Simulcra. Essentially they give you the ability to run code (Swift or Javascript) in response to an incoming request and for that code to decide how to respond.
+Dynamic responses are one of the more useful features of Simulacra. Essentially they give you the ability to run code (Swift or Javascript) in response to an incoming request and for that code to decide how to respond.
 In Swift a closure is called with this signature
 
 ```swift
@@ -243,7 +243,7 @@ Using this cache allows all sorts of hard to manufacture responses to become muc
  
 ### Response bodies
 
-The response body defines the content (if any) that will be returned in the body of a response. Simulcra has a number of options available:
+The response body defines the content (if any) that will be returned in the body of a response. Simulacra has a number of options available:
 
 * An empty body.
 
@@ -263,9 +263,9 @@ Textural, JSON, YAML and template generated response also have the added feature
 
 With response bodies that effective return text (JSON, YAML, text) the results are passed to a [mustache engine](https://hummingbird-project.github.io/hummingbird/current/hummingbird-mustache/mustache-syntax.html) before the response is returned. Mustache is a simple logic less templating system for injecting values into text. 
 
-When processing the text for mustache tags, Simulcra assembles a variety of data to pass to it for injection:
+When processing the text for mustache tags, Simulacra assembles a variety of data to pass to it for injection:
 
-* `mockServer` - The base URL of the server as sourced from the incoming request. So if the incoming request `Host` header specifies that you app had to call `192.168.0.4:8080` to reference Simulcra through a Docker container or something like that. Then this will be set as the `mockServer` value in the template data so it can be injected into response data containing server URLs. For example, URLS that reference image files.
+* `mockServer` - The base URL of the server as sourced from the incoming request. So if the incoming request `Host` header specifies that you app had to call `192.168.0.4:8080` to reference Simulacra through a Docker container or something like that. Then this will be set as the `mockServer` value in the template data so it can be injected into response data containing server URLs. For example, URLS that reference image files.
 
 * All the data currently residing in the cache. 
 
@@ -273,17 +273,17 @@ When processing the text for mustache tags, Simulcra assembles a variety of data
 
 ## Xcode integration guide
 
-The initial need for something like Simulcra was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Simulcra's design.
+The initial need for something like Simulacra was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Simulacra's design.
 
 ### How does it work?
 
-1. In the `setUp()` of your UI test suite you start and configure an instance of Simulcra.
+1. In the `setUp()` of your UI test suite you start and configure an instance of Simulacra.
 
-2. Using a launch argument, pass Simulcra's URL to your app. 
+2. Using a launch argument, pass Simulacra's URL to your app. 
 
-3. Finally in `teardown()` clear the Simulcra instance otherwise Simulcra and the port will stay allocated until the end of the test run. 
+3. Finally in `teardown()` clear the Simulacra instance otherwise Simulacra and the port will stay allocated until the end of the test run. 
 
-*Note that I said "test run" in step 3. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Simulcra is using so other tests can re-use them.*
+*Note that I said "test run" in step 3. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Simulacra is using so other tests can re-use them.*
 
 ### Endpoints
 
@@ -293,10 +293,10 @@ To help with building endpoints in Swift there is an `Endpoint` type that can be
 let endpoint = Endpoint(.GET, "/accounts/1234", .ok(body: .template("account-details-1234")
 ```
 
-Simulcra has a variety of functions to make adding endpoints easy and flexible. The simplest however is to just pass them to the initialiser via the [Swift Result Builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) `endpoints` argument like this:
+Simulacra has a variety of functions to make adding endpoints easy and flexible. The simplest however is to just pass them to the initialiser via the [Swift Result Builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) `endpoints` argument like this:
 
 ```swift
-server = try Simulcra {
+server = try Simulacra {
             Endpoint(.POST, "/login")
             Endpoint(.GET, "/config", response: .ok(body: .json(["version: 1.0])))
         }
@@ -316,7 +316,7 @@ You can also add endpoints after starting the server using these functions:
 
 ### Swift types
 
-Simulcra uses a number of types to help define responses to APIs.
+Simulacra uses a number of types to help define responses to APIs.
 
 #### HTTPResponse (enum)
 
@@ -380,7 +380,7 @@ In all of the above a `templateData` parameter is for any additional data that y
 Here is an example of a Dynamic response:
 
 ```swift
-server = try Simulcra {
+server = try Simulacra {
     Endpoint(.POST, "/login", response: .dynamic { request, cache in
         cache.userid = request.formParameters.userid
         return .json([
@@ -394,9 +394,9 @@ It's pretty simple, just stashes the userid in the cache and generates some dyna
 
 ## Command line
 
-If you are not using Simulcra in an XCode test suite then you will need to consider the command line option. This is based on a YAML configuration with Javascript as a dynamic language.
+If you are not using Simulacra in an XCode test suite then you will need to consider the command line option. This is based on a YAML configuration with Javascript as a dynamic language.
 
-When launching Simulcra from a command line there is one required argument. **_--config_** specifies a directory or file from which the server's YAML configuration will be read. if it's a directory Simulcra will then scan it for any YAML files and read those files to build the endpoints it needs. If a reference to a file is passed then Simulcra assumes that all the endpoints are defined in that file.
+When launching Simulacra from a command line there is one required argument. **_--config_** specifies a directory or file from which the server's YAML configuration will be read. if it's a directory Simulacra will then scan it for any YAML files and read those files to build the endpoints it needs. If a reference to a file is passed then Simulacra assumes that all the endpoints are defined in that file.
 
 ### Endpoint files
 
@@ -413,7 +413,7 @@ signature: <method> <path>
 response: <response>
 ```
 
-The `signature` tells Simulcra how to match incoming requests. `response` tells it how to respond and provides the HTTP status, optional headers, and body. For example
+The `signature` tells Simulacra how to match incoming requests. `response` tells it how to respond and provides the HTTP status, optional headers, and body. For example
   
 ```yaml
 signature: get /config
@@ -491,7 +491,7 @@ Instead of a data structure with a `signature` value defining the endpoint, this
 
 ### Javascript types
 
-There are a number of pre-defined types that Simulcra makes available to the dynamic javascript functions. 
+There are a number of pre-defined types that Simulacra makes available to the dynamic javascript functions. 
 
 #### Response
 
@@ -561,17 +561,17 @@ Simply because I've never found one that had all the featured I was looking for.
 
 * Response payload templating so we can dynamically modify what is returned.
 
-All the servers I found failed to match this list and whilst I've built a number of custom mock servers for clients over the years, they were all hard coded for their particular needs. Simulcra is designed to take all the features I could never find and make them as easy to configure as possible.
+All the servers I found failed to match this list and whilst I've built a number of custom mock servers for clients over the years, they were all hard coded for their particular needs. Simulacra is designed to take all the features I could never find and make them as easy to configure as possible.
 
-## What dependencies does Simulcra have?
+## What dependencies does Simulacra have?
 
 To build this project I used a number of 3rd party projects. However you don't need to worry about these as the build will download them as needed.
 
-* [Hummingbird][hummingbird] - A very fast and well written Swift NIO based server - This is the core that Simulcra is built around.
+* [Hummingbird][hummingbird] - A very fast and well written Swift NIO based server - This is the core that Simulacra is built around.
 
 * [Yams][yams] - An API to read YAML configuration files.
 
-* [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Simulcra can run on both platforms. 
+* [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Simulacra can run on both platforms. 
 
 * [Nimble][nimble] - Simply the best assertion framework for unit testing.
 
@@ -593,18 +593,18 @@ Here are some sample files showing how various things can be done.
 
 ## XCTest suite class:
 
-Cut-n-paste this to a swift file in you UI tests. It provides the core setup needed to run Simulcra in a XCTest UI test suite.
+Cut-n-paste this to a swift file in you UI tests. It provides the core setup needed to run Simulacra in a XCTest UI test suite.
 
 ```swift
 import XCTest
-import SimulcraCore
+import SimulacraCore
 
 /// Simple UI test suite base class that can be used to start a mock server instance before
 /// running each test.
 open class UITestCase: XCTestCase {
 
     /// The mock server.
-    private(set) var server: Simulcra!
+    private(set) var server: Simulacra!
 
     /// Local app reference.
     private(set) var app: XCUIApplication!
@@ -627,7 +627,7 @@ open class UITestCase: XCTestCase {
     ///
     /// - parameter endpoints: The end points needed by the server.
     func launchServer(@EndpointBuilder endpoints: () -> [Endpoint]) throws {
-        server = try Simulcra(verbose: true, endpoints: endpoints)
+        server = try Simulacra(verbose: true, endpoints: endpoints)
     }
 
     /// Launches your app, passing the common launch arguments and any additional

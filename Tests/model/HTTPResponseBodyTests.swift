@@ -9,20 +9,20 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 
 class HTTPResponseBodyTests: XCTestCase {
 
-    private var context: SimulcraContext!
+    private var context: SimulacraContext!
 
     override func setUp() {
         super.setUp()
-        context = MockSimulcraContext()
+        context = MockSimulacraContext()
     }
 
     func testEmpty() throws {
-        let context = MockSimulcraContext()
+        let context = MockSimulacraContext()
         let request = HBRequest.mock().asHTTPRequest
         let hbBody = try HTTPResponse.Body.empty.hbBody(forRequest: request, serverContext: context)
         expect(hbBody.0) == .empty

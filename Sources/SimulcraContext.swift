@@ -7,7 +7,7 @@ import Hummingbird
 import HummingbirdMustache
 
 /// Defines various features of the server's context.
-public protocol SimulcraContext {
+public protocol SimulacraContext {
 
     /// The port the server is running on.
     var port: Int { get }
@@ -19,7 +19,7 @@ public protocol SimulcraContext {
     var cache: Cache { get }
 }
 
-extension SimulcraContext {
+extension SimulacraContext {
 
     /// Called just before rendering a template, this combines the cache data and an individual request additional data
     /// into a single ``TemplateData`` instance for the render.

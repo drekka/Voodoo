@@ -5,12 +5,12 @@
 import Hummingbird
 import Nimble
 import NIOHTTP1
-import SimulcraCore
+import SimulacraCore
 import XCTest
 
 class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
-    var server: Simulcra!
+    var server: Simulacra!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
@@ -24,8 +24,8 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
     // MARK: - Init
 
-    func testInitWithMulitpleServers() throws {
-        let s2 = try Simulcra()
+    func testInitWithMultipleServers() throws {
+        let s2 = try Simulacra()
         expect(s2.url.host) == server.url.host
         expect(s2.url.port) != server.url.port
     }
@@ -33,47 +33,47 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     func testInitRunsOutOfPorts() {
         let currentPort = server.url.port!
         expect {
-            try Simulcra(portRange: currentPort ... currentPort)
+            try Simulacra(portRange: currentPort ... currentPort)
         }
-        .to(throwError(SimulcraError.noPortAvailable))
+        .to(throwError(SimulacraError.noPortAvailable))
     }
 
     func testInitWithEndpoints() async throws {
-        server = try Simulcra {
+        server = try Simulacra {
             Endpoint(.GET, "/abc")
             Endpoint(.GET, "/def", response: .created())
         }
-        await assert(.GET, "/abc", returns: .ok)
-        await assert(.GET, "/def", returns: .created)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
+        await executeAPICall(.GET, "/def", andExpectStatusCode: 201)
     }
 
     // MARK: - Adding APIs
 
-    func testEndpointViaEndpointType() async {
+    func testAddingEndpoint() async {
         server.add(Endpoint(.GET, "/abc"))
-        await assert(.GET, "/abc", returns: .ok)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
-    func testEndpointsViaEndpointType() async {
+    func testAddingEndpointsViaArray() async {
         server.add([
             Endpoint(.GET, "/abc"),
             Endpoint(.GET, "/def", response: .created()),
         ])
-        await assert(.GET, "/abc", returns: .ok)
-        await assert(.GET, "/def", returns: .created)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
+        await executeAPICall(.GET, "/def", andExpectStatusCode: 201)
     }
 
-    func testEndpointWithDynamicClosure() async {
-        server.add(.GET, "/abc", response: { _, _ in .ok() })
-        await assert(.GET, "/abc", returns: .ok)
-    }
-
-    func testEndpointViaArguments() async {
+    func testAddingEndpointViaIndividualArguments() async {
         server.add(.GET, "/abc")
-        await assert(.GET, "/abc", returns: .ok)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
-    func testEndpointsBuilder() async {
+    func testAddingEndpointWithDynamicClosure() async {
+        server.add(.GET, "/abc", response: { _, _ in .ok() })
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
+    }
+
+    func testAddingEndpointsViaBuilder() async {
 
         @EndpointBuilder
         func otherEndpoints(inc: Bool) -> [Endpoint] {
@@ -94,41 +94,65 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
             }
         }
 
-        await assert(.GET, "/abc", returns: .ok)
-        await assert(.GET, "/def", returns: .created)
-        await assert(.GET, "/aaa", returns: .accepted)
-        await assert(.GET, "/bbb", returns: .ok)
-        await assert(.GET, "/ccc", returns: .ok)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
+        await executeAPICall(.GET, "/def", andExpectStatusCode: 201)
+        await executeAPICall(.GET, "/aaa", andExpectStatusCode: 202)
+        await executeAPICall(.GET, "/bbb", andExpectStatusCode: 200)
+        await executeAPICall(.GET, "/ccc", andExpectStatusCode: 200)
     }
 
-    // MARK: - Swift responses
+    // MARK: - Core responses
 
-    func testResponse() async {
-        server.add(.POST, "/abc", response: .accepted())
-        await assert(.POST, "/abc", returns: .accepted)
+    func testResponseRaw() async {
+        server.add(.GET, "/abc", response: .raw(.accepted, headers: ["abc":"def"], body: .text("Hello world! {{xyz}}", templateData: ["xyz":123])))
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 202)
+
+        let httpResponse = response.response
+
+        expect(String(data: response.data!, encoding: .utf8)) == #"Hello world! 123"#
+
+        expect(httpResponse?.allHeaderFields.count) == 6
+        expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
+        expect(httpResponse?.value(forHTTPHeaderField: "abc")) == "def"
+        expect(httpResponse?.value(forHTTPHeaderField: "server")) == "Simulacra API simulator"
     }
 
-    func testResponseFromClosure() async {
+    func testResponseDynamic() async {
         server.add(.POST, "/abc") { _, _ in
             .ok()
         }
-        await assert(.POST, "/abc", returns: .ok)
+        await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
     }
 
-    func testResponseWithHeaders() async {
+    // MARK: - Convenience responses
 
-        server.add(.POST, "/abc", response: .accepted(headers: ["Token": "123"]))
-        let response = await assert(.POST, "/abc", returns: .accepted)
-
-        expect(response.response?.allHeaderFields.count) == 5
-        expect(response.response?.value(forHTTPHeaderField: "token")) == "123"
-        expect(response.response?.value(forHTTPHeaderField: "server")) == "Simulcra API simulator"
+    func testResponseAccepted() async {
+        server.add(.POST, "/abc", response: .accepted())
+        await executeAPICall(.POST, "/abc", andExpectStatusCode: 202)
     }
+
+    // MARK: - Request and Cache
+
+    func testPassingCacheData() async {
+        server.add(.POST, "/abc") { _, cache in
+            cache.abc = "123"
+            return .ok()
+        }
+        await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
+
+        server.add(.GET, "/def") { _, cache in
+            .ok(headers: ["def": cache.abc as String? ?? ""])
+        }
+        let response = await executeAPICall(.GET, "/def", andExpectStatusCode: 200)
+        expect(response.response?.value(forHTTPHeaderField: "def")) == "123"
+    }
+
+    // MARK: - Bodies
 
     func testResponseWithBody() async {
 
         server.add(.POST, "/abc", response: .accepted(headers: ["Token": "123"], body: .text("Hello")))
-        let response = await assert(.POST, "/abc", returns: .accepted)
+        let response = await executeAPICall(.POST, "/abc", andExpectStatusCode: 202)
         let httpResponse = response.response
 
         expect(httpResponse?.allHeaderFields.count) == 6
@@ -136,10 +160,10 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
     }
 
-    func testResponseWithInlineTemplate() async {
+    func testResponseWithInlineTextTemplate() async {
 
         server.add(.POST, "/abc", response: .accepted(body: .text("Hello {{name}}", templateData: ["name": "Derek"])))
-        let response = await assert(.POST, "/abc", returns: .accepted)
+        let response = await executeAPICall(.POST, "/abc", andExpectStatusCode: 202)
         let httpResponse = response.response
 
         expect(httpResponse?.allHeaderFields.count) == 5
@@ -147,10 +171,21 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.textPlain
     }
 
+    func testResponseWithInlineJSONTemplate() async {
+
+        server.add(.POST, "/abc", response: .ok(body: .json(["abc":"def {{name}}"], templateData: ["name": "Derek"])))
+        let response = await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
+        let httpResponse = response.response
+
+        expect(String(data: response.data!, encoding: .utf8)) == #"{"abc":"def Derek"}"#
+        expect(httpResponse?.allHeaderFields.count) == 5
+        expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
+    }
+
     func testResponseWithFileTemplate() async {
 
         server.add(.POST, "/abc", response: .accepted(body: .template("files/Template", templateData: ["path": "/abc"])))
-        let response = await assert(.POST, "/abc", returns: .accepted)
+        let response = await executeAPICall(.POST, "/abc", andExpectStatusCode: 202)
         let httpResponse = response.response
 
         expect(httpResponse?.allHeaderFields.count) == 5
@@ -158,23 +193,9 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
     }
 
-    func testResponsePassingCacheData() async {
-        server.add(.POST, "/abc") { _, cache in
-            cache.abc = "123"
-            return .ok()
-        }
-        await assert(.POST, "/abc", returns: .ok)
-
-        server.add(.GET, "/def") { _, cache in
-            .ok(headers: ["def": cache.abc as String? ?? ""])
-        }
-        let response = await assert(.GET, "/def", returns: .ok)
-        expect(response.response?.value(forHTTPHeaderField: "def")) == "123"
-    }
-
     // MARK: - Middleware
 
     func testNoResponseFoundMiddleware() async {
-        await assert(.GET, "/abc", returns: .notFound)
+        await executeAPICall(.GET, "/abc", andExpectStatusCode: 404)
     }
 }

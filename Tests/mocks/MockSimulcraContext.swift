@@ -3,10 +3,10 @@
 //
 
 import Foundation
-@testable import SimulcraCore
+@testable import SimulacraCore
 import HummingbirdMustache
 
-struct MockSimulcraContext: SimulcraContext {
+struct MockSimulacraContext: SimulacraContext {
 
     let port = 8080
 

@@ -7,7 +7,7 @@
 
 import Nimble
 import NIOHTTP1
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 
 class ConfigLoaderTests: XCTestCase {
@@ -56,7 +56,7 @@ class ConfigLoaderTests: XCTestCase {
             _ = try loader.load(from: resourcesURL.appendingPathComponent("files/XXXX.yml"))
             fail("Error not thrown")
         } catch {
-            guard case SimulcraError.invalidConfigPath(let message) = error else {
+            guard case SimulacraError.invalidConfigPath(let message) = error else {
                 fail("Incorrect error returned \(error)")
                 return
             }

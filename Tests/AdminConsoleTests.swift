@@ -9,7 +9,7 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOCore
-@testable import SimulcraCore
+@testable import SimulacraCore
 import XCTest
 
 class AdminConsoleTests: XCTestCase {

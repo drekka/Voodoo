@@ -136,7 +136,7 @@ extension KeyedDecodingContainer where Key == HTTPResponse.Body.CodingKeys {
 
 extension HTTPResponse.Body {
 
-    func hbBody(forRequest request: HTTPRequest, serverContext context: SimulcraContext) throws -> (HBResponseBody, String?) {
+    func hbBody(forRequest request: HTTPRequest, serverContext context: SimulacraContext) throws -> (HBResponseBody, String?) {
         switch self {
 
         case .empty:
@@ -162,7 +162,7 @@ extension HTTPResponse.Body {
         case .template(let templateName, let templateData, let contentType):
             let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
             guard let json = context.mustacheRenderer.render(finalTemplateData, withTemplate: templateName) else {
-                throw SimulcraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
+                throw SimulacraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
             return (json.hbResponseBody, contentType)
         }
@@ -179,7 +179,7 @@ extension HTTPResponse.Body {
             return try encoder(payload)
 
         default:
-            throw SimulcraError.conversionError("Unable to convert '\(source)' to a type we can render as a response")
+            throw SimulacraError.conversionError("Unable to convert '\(source)' to a type we can render as a response")
         }
     }
 }
@@ -194,7 +194,7 @@ extension Data {
 
     func string() throws -> String {
         guard let string = String(data: self, encoding: .utf8) else {
-            throw SimulcraError.conversionError("Unable to convert data to a String")
+            throw SimulacraError.conversionError("Unable to convert data to a String")
         }
         return string
     }
@@ -205,7 +205,7 @@ extension Data {
     ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys.
     ///     - request: the request being fulfilled.
     ///     - context: The server context.
-    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulcraContext) throws -> HBResponseBody {
+    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulacraContext) throws -> HBResponseBody {
         return try string().render(withTemplateData: templateData, forRequest: request, context: context)
     }
 }
@@ -228,7 +228,7 @@ extension String {
     ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys.
     ///     - request: The request being fulfilled.
     ///     - context: The server context.
-    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulcraContext) throws -> HBResponseBody {
+    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulacraContext) throws -> HBResponseBody {
         let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
         return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
     }

@@ -8,7 +8,7 @@
 import AnyCodable
 import Foundation
 import Hummingbird
-@testable import SimulcraCore
+@testable import SimulacraCore
 
 // Whilst using `Equatable` isn't my preferred method for asserts, with tests in this code base it makes more sense.
 
@@ -31,7 +31,7 @@ extension HBResponseBody: Equatable {
 
 extension HTTPResponse: Equatable {
 
-    public static func == (lhs: SimulcraCore.HTTPResponse, rhs: SimulcraCore.HTTPResponse) -> Bool {
+    public static func == (lhs: SimulacraCore.HTTPResponse, rhs: SimulacraCore.HTTPResponse) -> Bool {
         switch (lhs, rhs) {
 
         case (.javascript(let lhsScript), .javascript(let rhsScript)):
@@ -72,7 +72,7 @@ extension HTTPResponse: Equatable {
 
 extension HTTPResponse.Body: Equatable {
 
-    public static func == (lhs: SimulcraCore.HTTPResponse.Body, rhs: SimulcraCore.HTTPResponse.Body) -> Bool {
+    public static func == (lhs: SimulacraCore.HTTPResponse.Body, rhs: SimulacraCore.HTTPResponse.Body) -> Bool {
 
         switch (lhs, rhs) {
 
