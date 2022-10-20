@@ -38,6 +38,14 @@ class HTTPResponseTests: XCTestCase {
     }
 
     func testDynamic() async throws {
+        server = try Simulcra {
+            Endpoint(.POST, "/login", response: .dynamic { request, cache in
+                cache.userid = request.formParameters.userid
+                return .json([
+                    "token": UUID().uuidString,
+                ])
+            })
+        }
         let response = HTTPResponse.dynamic { _, _ in
             .ok()
         }

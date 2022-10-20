@@ -1,44 +1,22 @@
 # Simulcra
 
-Simulcra is a mock server specifically designed for debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
+Simulcra is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
 
 It primary features are:
 
-* Easy to configure with a fast startup with no external dependencies.
+* Designed to support direct integration into XCode test suites or run as a stand alone server (for Android or other non-Xcode environments) with seperate or shared configurations.
+ 
+* Fast startup via a Swift API or shell command.
 
-* No data preserved across restarts to ensure consistent state on startup.
+* Multi-port parallel test friendly.
 
-* Support for parallel test suites with automatic scanning for frees port to start the sever on.
+* Configurable via a Swift API, and/or YAML and Javascript.
 
-* Run via a Swift API or from a shell command.
+* Fixed and dynamically generated responses including raw text, JSON, YAML, and custom data with templating via Mustache.
 
-* Multiple ways to configure:
-    
-    * Via a Swift API for Xcode test suites.
-    
-    * Via YAML and Javascript (JS) files for other (Android) test suites.
+* General file serving of non-API resources.
 
-* A variety of programmable responses to cover most situations:
-    
-    * Raw text and data.
-    
-    * JSON/YAML generated from Encodable and other types.
-    
-    * Dynamic responses from Swift and JS.
-
-* Can also serve files for non-API like resources.
-
-* A fast in-memory cache for sharing data between requests. 
-
-* Extra data supplied to Swift and JS code:
-    
-    * Parameters from REST like URLs.
-    
-    * Query arguments.
-    
-    * Form parameters. 
-
-* Built in templating of responses via the Mustache template language.
+* In-memory cache for sharing data between requests. 
 
 # Index
 
@@ -51,20 +29,30 @@ It primary features are:
     - [Templates](#templates)
     - [File sources](#file-sources)
   - [Endpoints](#endpoints)
-    - [Endpoint path paramaters](#endpoint-path-paramaters)
+    - [Endpoint path parameters](#endpoint-path-parameters)
     - [Endpoint responses](#endpoint-responses)
     - [Dynamic responses](#dynamic-responses)
+      - [The incoming request data](#the-incoming-request-data)
+      - [The cache](#the-cache)
     - [Response bodies](#response-bodies)
     - [The mustache engine](#the-mustache-engine)
   - [Xcode integration guide](#xcode-integration-guide)
     - [How does it work?](#how-does-it-work)
     - [Endpoints](#endpoints)
-    - [Response types](#response-types)
-    - [Response bodies](#response-bodies)
+    - [Swift types](#swift-types)
+      - [HTTPResponse (enum)](#httpresponse-enum)
+      - [HTTPResponse.Body (enum)](#httpresponse-body-enum)
+    - [Swift dynamic responses](#swift-dynamic-responses)
   - [Command line](#command-line)
     - [Endpoint files](#endpoint-files)
-    - [Response types](#response-types)
-    - [Response bodies](#response-bodies)
+    - [Endpoint definitions](#endpoint-definitions)
+      - [Simple](#simple)
+      - [Inline javascript](#inline-javascript)
+      - [Javascript file reference](#javascript-file-reference)
+      - [YAML file reference](#yaml-file-reference)
+    - [Javascript types](#javascript-types)
+      - [Response](#response)
+      - [Body](#body)
 - [FAQ](#faq)
   - [When do I need a mock server?](#when-do-i-need-a-mock-server)
   - [How do I ensure my mock server is the same as my production server?](#how-do-i-ensure-my-mock-server-is-the-same-as-my-production-server)
@@ -82,7 +70,11 @@ It primary features are:
 
 ## iOS/OSX SPM package
 
-Simulcra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Simulcra.git` as a package to your test targets.
+Simulcra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Simulcra.git` as a package to your test targets and
+
+```swift
+import SimulcraCore
+```
 
 ## Linux, Windows, Docker, etc
 
@@ -109,7 +101,7 @@ The finished executable will be
 .build/release/simulcra
 ```
 
-Which you can move anywhere you like as it's a fully self contained command line program.
+Which you can move anywhere you like as it's fully self contained.
 
 ### Executing from the command line
 
@@ -121,21 +113,27 @@ The command line program has a number of options, but here is a minimal example:
 
 Seeing as the command line is designed for a non-programmatic situation, at a minimum you need to give it a path to a directory or file where it can load end points from.
 
-A more practical example might look like this:
+However a more practical example might look like this:
 
 ```bash
 .build/release/simulcra run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
-Not hugely different. Basically it's adding a directory where response templates can be looked up and another containing general files such as image and javascript sources for web pages. 
+Which adds a directory of response templates and another containing general files such as images and javascript source for web pages. 
 
 ### Docker additional configuration
 
 When launching Simulcra from within a [Docker container][docker] you will need to forwards Simulcra's ports if you app is not also running within the container.
 
-Firstly you will have to tell Docker to publish the ports Simulcra will be listening on to the outside world. Usually by using something like `docker run -p 8080-8090`. The only issue with this is that Docker appears to automatically reserve the ports you specify even though Simulcra might not being listening on them. I don't know if it's possible to tell Docker to only open a port when something inside the container wants it to. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
+Firstly you will have to tell Docker to publish the ports Simulcra will be listening on to the outside world. Usually by using something like 
 
-In addition Simulcra's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Simulcra with the **_`--use-any-addr`_** flag which tells Simulcra to listen on `0.0.0.0` instead of `127.0.0.1`.
+```bash
+docker run -p 8080-8090
+```
+
+The only issue with this is that Docker appears to automatically reserve the ports you specify even though Simulcra might not being listening on them. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
+
+Finally Simulcra's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Simulcra with the **_`--use-any-addr`_** flag which tells Simulcra to listen on `0.0.0.0` instead of `127.0.0.1`.
 
 # Configuration
 
@@ -152,49 +150,80 @@ server = try Simulcra(templatePath: templatePath) {
 }
 ```
 
-Templates are managed by [The mustache engine](#the-mustache-engine) and keyed based on their file names excluding any extension. By default, the extension for a template is `.json` however that cane be changed to anything using the `templateExtension` argument. So if there is a template file called `accounts/list-accounts.json` then it's key is `accounts/list-accounts`.
+Templates are managed by [The mustache engine](#the-mustache-engine) and keyed based on their file names excluding any extension. By default, the extension for a template is `.json` however that can be changed to anything using the `templateExtension` argument. So if there is a template file called `accounts/list-accounts.json` then it's key is `accounts/list-accounts`.
 
 ### File sources
 
-In addition to defined endpoints for API calls Simulcra can also serve files from one or more directories. Usually you'd use this for things like image files where the path of the incoming request can be directly mapped to a directory structure. 
+In addition to serving responses from defined API endpoints Simulcra can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
 
-For example, if the app requests a logo file on `http://127.0.0.1/8080/images/company/logo.jpg`, and you have the file `Tests/files/images/company/logo.jpg` then starting the server with the argument `filePaths: URL(string: "Tests/files")` or the command line with `--file-dir Tests/files` will serve the logo file without you having to setup an endpoint.
-
-You can also specify multiple file directories if needed.
+To do this you can add the initialiser argument `filePaths: URL(string: "Tests/files")` or add the command line argument `--file-dir Tests/files`. This can be done multiple times if you have multiple directories you want to search for files.
 
 ## Endpoints
 
-In order to response to API requests Simulcra needs to be configured with *Endpoints*. An end point basically tells the server what to watch for and how to response. To do that you need 3 things:
+In order to response to API requests Simulcra needs to be configured with *Endpoints*. An endpoint is basically a definition that Simulcra uses to define what requests response to and how. To do that it need 3 things:
 
 * The HTTP method of the incoming request. ie. `GET`, `POST`, etc.
 * The path of the incoming request. ie. `/login`, `/accounts/list`, etc.  
-* The response which contains the HTTP status code, body, etc.
+* The response to return. ie the HTTP status code, body, etc.
 
-### Endpoint path paramaters
+### Endpoint path parameters
 
-Apart from fixed paths such as `/login` and `/accounts`, end points can also pick out arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can use the path `/accounts/users/:employeeId` and Simulcra will automatically match the incoming path and extract the employee's ID into a field called `employeeId` which is then available to the code that generates the response.
+Apart from watching for fixed paths such as `/login` and `/accounts`, Simulcra can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Simulcra will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
 
 ### Endpoint responses
 
 Generally a response to a request contains these things:
 
-* A response status code.
-* Any additional headers to be returned.
-* A response body.
+* The response status code.
+* Additional headers.
+* The body.
 
 There are some basic responses common to both the YAML/javascript and Swift configurations. Responses such as `ok`, `created`, `notFound`, `unauthorised`, etc. But they also have some unique features to each. Details of which will are in the relevant sections below.
 
 ### Dynamic responses
 
-Dynamic responses are one of the more useful features of Simulcra. In Swift they are created using a closure, in YAML they are a javascript functions. Essentially when a dynamic response specified the corresponding closure/function is called when a request comes in. That closure/function is then expected to return the actual response to the request. Because they functions, all sorts of logic and processing can be included to determine the correct response.
+Dynamic responses are one of the more useful features of Simulcra. Essentially they give you the ability to run code (Swift or Javascript) in response to an incoming request and for that code to decide how to respond.
+In Swift a closure is called with this signature
 
-Dynamic response closure/functions are passed two special objects when they are called. 
+```swift
+(HTTPRequest, Cache) async -> HTTPResponse
+```
+
+in YAML it's a javascript function with this signature
+
+```javascript
+function response(request, cache) { ... }
+``` 
+
+Both of these are passed two special objects when they are called. 
+
+#### The incoming request data
+
+The first argument is a reference to the incoming request. This reference contains the following data:
+
+* `method: HTTPMethod` - The HTTP method.
+ 
+* `headers: Dictionary/Map<String, String>` - The incoming request headers.
+
+* `path: String` - The path part of the incoming URL. ie. `/accounts/user`
+
+* `pathComponents: Array<String>` - The path in components form. ie. `/`, `accounts`, `user`. This is most useful when functionality is layered in RESTful style APIs and you want to make decisions based on various path components. Note that the first component (`/`) is the root indicator as opposed to the component separator used for the rest of a path.
+
+* `pathParameters: Dictionary/Map<String, String>` - Any parameters extracted from the path. For example, if the endpoint path is `/accounts/:user` and an incoming request has the path `/accounts/1234` then this map contains `["user":"1234"]`.
+
+* `query: String?` - The untouched query string from the incoming URL. For example `?firstname=Derek&lastname=Clarkson`.
+
+* `queryParameters: Dictionary/Map<String, String>` - The query parameters extracted into a map. The above example would map into `["firstname":"Derek", "lastname":"Clarkson"]`. Note that it is possible for query parameters to repeat with different values. For example `?search=books&search=airplanes`. If present, duplicates are mapped into a single array with all the value in the order specified. ie. `["search":["books","airplanes"]]`.
+
+* `body: Data?` - The body in a raw `Data` form.
+
+* `bodyJSON: Any?` - If the `Content-Type` header specifies a payload of JSON, this will attempt to deserialise the body into it and return the resulting object. That object will usually be either a single value, array or dictionary/map. 
+
+* `formParameters: Dictionary/Map<String, String>` -  - If the `Content-Type` header specifies that the body contains form data, this will attempt to deserialise it into a dictionary/map and return it. 
 
 #### The cache
 
-The first is a cache which exists whilst the server is running, but not saved. This cache is specifically to allow end points to transfer data between each other. For example, a `/login` end point might create and store a session token in the cache so that `/accounts` endpoints know which account is current.
-
-In both the Swift closure and Javascript function this cache can be accessed and updated busing dynamic properties. For example
+The second argument is a cache which exists whilst the server is running, but is not saved. This allows dynamic end points to transfer data between each other. For example
 
 ```swift
 // In a login dynamic response.
@@ -210,33 +239,11 @@ let payload = [
 ]
 ```
 
-#### The incoming request data
-
-The second things that is available to the dynamic closure/functions is a reference to the incoming request. This reference contains the following data:
-
-* `method: HTTPMethod` - The HTTP method.
- 
-* `headers: Dictionary/Map<String, String>` - Any incoming headers.
-
-* `path: String` - The path part of the incoming URL. ie. `/accounts/user`
-
-* `pathComponents: Array<String>` - The path in components form. ie. `/`, `accounts`, `user`. This is most useful when functionality is layered in RESTful style APIs. 
-
-* `pathParameters: Dictionary/Map<String, String>` - Any parameters extracted from the path. For example, if the endpoint path is `/accounts/:user` and an incoming request has the path `/accounts/1234` then this map to `["user":"1234"]`.
-
-* `query: String?` - The untouched query string from the incoming URL. For example `?firstname=Derek&lastname=Clarkson`.
-
-* `queryParameters: Dictionary/Map<String, String>` - The query parameters extracted into a map. For example, the above parameters would become `["firstname":"Derek", "lastname":"Clarkson"]`. Note that it is possible for query parameters to repeat with different values. For example `?search=books&search=airplanes`. Simulcra will identify duplicates like this and instead of returning a single value, will return an array with all the value in the order specified. ie. `["search":["books","airplanes"]]`.
-
-* `body: Data?` - The body in a raw `Data` form.
-
-* `bodyJSON: Any?` - If the `Content-Type` header specifies a payload of JSON, this will attempt to deserialise the body into it and return the resulting object. That object will usually be either a single value, array or dictionary/map. 
-
-* `formParameters: Dictionary/Map<String, String>` -  - If the `Content-Type` header specifies that the body contains form data, this will attempt to deserialise it into a dictionary/map and return it. 
+Using this cache allows all sorts of hard to manufacture responses to become much easier. One example is to place a simple array in the cache to simulate a shopping cart. That could reduce the number of endpoints required where as a non-cache setup would required many more to simulate all the different states.
  
 ### Response bodies
 
-The response body defines the content (if any) that will be returned in the body of the response. Simulcra has a number of options available:
+The response body defines the content (if any) that will be returned in the body of a response. Simulcra has a number of options available:
 
 * An empty body.
 
@@ -266,31 +273,27 @@ When processing the text for mustache tags, Simulcra assembles a variety of data
 
 ## Xcode integration guide
 
-The initial development of Simulcra was to support Swift UI testing through a local server instead of an unreliable development or QA server.
+The initial need for something like Simulcra was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Simulcra's design.
 
 ### How does it work?
 
 1. In the `setUp()` of your UI test suite you start and configure an instance of Simulcra.
 
-2. From the running instance, get url the server is running on and...
+2. Using a launch argument, pass Simulcra's URL to your app. 
 
-3. Using a launch argument, pass the URL to your app. 
+3. Finally in `teardown()` clear the Simulcra instance otherwise Simulcra and the port will stay allocated until the end of the test run. 
 
-4. Finally in `teardown()` clear the Simulcra instance otherwise Simulcra and the port will stay allocated until the end of the test run. 
-
-*Note that I said "test run" in step 4. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Simulcra is using so other tests can re-use them.*
+*Note that I said "test run" in step 3. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Simulcra is using so other tests can re-use them.*
 
 ### Endpoints
 
 To help with building endpoints in Swift there is an `Endpoint` type that can be created like this:
 
 ```swift
-let endpoint = Endpoint(.GET, "/accounts/:employeeId", .ok(body: .template("ccount-details")
+let endpoint = Endpoint(.GET, "/accounts/1234", .ok(body: .template("account-details-1234")
 ```
 
-And as you can see in the next section there are a variety of ways you can add them.
-
-Simulcra has a variety of functions to make adding endpoints simple, but often the simplest is to just pass them to the initialiser via the [Swift Result Builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) `endpoints` argument like this:
+Simulcra has a variety of functions to make adding endpoints easy and flexible. The simplest however is to just pass them to the initialiser via the [Swift Result Builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) `endpoints` argument like this:
 
 ```swift
 server = try Simulcra {
@@ -299,208 +302,236 @@ server = try Simulcra {
         }
 ```
 
-After that there are a number of functions which you can call after starting the server to add further endpoints:
+You can also add endpoints after starting the server using these functions:
 
-* `add(@EndpointBuilder _ endpoints: () -> [Endpoint])` - Another result builder style convenience function.
+* `add(@EndpointBuilder _ endpoints: () -> [Endpoint])` - A [result builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) style convenience function.
 
 * `add(_ endpoints: [Endpoint])` - Adds an array of end points.
 
 * `add(_ endpoint: Endpoint)` - Adds a single endpoint.
 
-* `add(_ method: HTTPMethod, _ path: String, response handler: @escaping (HTTPRequest, Cache) async -> HTTPResponse)` - Adds a single dynamic endpoint using the passed closure. 
-
 * `add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok())` - Adds a single simple endpoint using the method, path and response.
 
-### Response types
+* `add(_ method: HTTPMethod, _ path: String, response handler: @escaping (HTTPRequest, Cache) async -> HTTPResponse)` - Adds a single dynamic endpoint using the passed closure. 
 
-In Swift there are two core response types:
+### Swift types
 
-* `raw(_: HTTPResponseStatus, headers: HeaderDictionary? = nil, body: Body = .empty)` - which is a fully configurable.
+Simulcra uses a number of types to help define responses to APIs.
 
-* `dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)` - which is used to dynamically generate a response. See [Dynamic responses](#dynamic-responses) for more details.
+#### HTTPResponse (enum)
 
-In addition there are a number of convenience response types for commonly used HTTP Status codes (more will be added over time):
+There are two core response types you can return:
 
-* `ok(headers: HeaderDictionary? = nil, body: Body = .empty)`
+* `.raw(_: HTTPResponseStatus, headers: HeaderDictionary? = nil, body: Body = .empty)` - which allows you to fully configure the response.
 
-* `created(headers: HeaderDictionary? = nil, body: Body = .empty)`
+* `.dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)` - which dynamically generates a response. See [Dynamic responses](#dynamic-responses) for more details.
 
-* `accepted(headers: HeaderDictionary? = nil, body: Body = .empty)`
+In addition there are a number of convenience response types for commonly used HTTP Status codes (more will be added over time). These mostly just call `.raw(...)` with the matching HTTP status code:
 
-* `movedPermanently(_ url: String)`
+* `.ok(headers: HeaderDictionary? = nil, body: Body = .empty)`
 
-* `temporaryRedirect(_ url: String)`
+* `.created(headers: HeaderDictionary? = nil, body: Body = .empty)`
 
-* `badRequest(headers: HeaderDictionary? = nil, body: Body = .empty)`
+* `.accepted(headers: HeaderDictionary? = nil, body: Body = .empty)`
 
-* `unauthorised(headers: HeaderDictionary? = nil, body: Body = .empty)`
+* `.movedPermanently(_ url: String)`
 
-* `forbidden(headers: HeaderDictionary? = nil, body: Body = .empty)`
+* `.temporaryRedirect(_ url: String)`
 
-* `notFound`
+* `.badRequest(headers: HeaderDictionary? = nil, body: Body = .empty)`
 
-* `notAcceptable`
+* `.unauthorised(headers: HeaderDictionary? = nil, body: Body = .empty)`
 
-* `tooManyRequests`
+* `.forbidden(headers: HeaderDictionary? = nil, body: Body = .empty)`
 
-* `internalServerError(headers: HeaderDictionary? = nil, body: Body = .empty)`
+* `.notFound`
 
-### Response bodies
+* `.notAcceptable`
+
+* `.tooManyRequests`
+
+* `.internalServerError(headers: HeaderDictionary? = nil, body: Body = .empty)`
+
+`HeaderDictionary` is just an alias for `[String:String]`.
+
+#### HTTPResponse.Body (enum)
 
 For each of the responses above, a `body` argument can return one of the following payload definitions:
 
-* `empty` - The empty payload.
+* `.empty` - The empty payload.
 
-* `template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)` - Searches the template directory for a template matching the passed name. This excludes the extension which defaults to `json`. However that can be overridden using the `templateExtension` argument when launching the server if you want to use a different extension name. 
+* `.template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)` - Searches the template directory for a template matching the passed name. This excludes the extension which defaults to `json`. However that can be overridden using the `templateExtension` argument when launching the server if you want to use a different extension name. 
 
-* `json(_ payload: Any, templateData: TemplateData? = nil)` - Encodes the passed payload as JSON before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
+* `.json(_ payload: Any, templateData: TemplateData? = nil)` - Encodes the passed payload as JSON before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
 
-* `yaml(_ payload: Any, templateData: TemplateData? = nil)` - Encodes the passed payload as YAML before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
+* `.yaml(_ payload: Any, templateData: TemplateData? = nil)` - Encodes the passed payload as YAML before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
 
-* `text(_ text: String, templateData: TemplateData? = nil)` - Encodes the passed payload as plain text before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
+* `.text(_ text: String, templateData: TemplateData? = nil)` - Encodes the passed payload as plain text before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
 
-* `file(_ url: URL, contentType: String)` - Reads the contents of the passed file and returns it with the specified content type.
+* `.file(_ url: URL, contentType: String)` - Reads the contents of the passed file and returns it with the specified content type. This is not passed to the mustache engine.
 
-* `data(_ data: Data, contentType: String)`- Returns the passed `Data` with the specified content type.
+* `.data(_ data: Data, contentType: String)`- Returns the passed `Data` with the specified content type.
 
 
-In all of the above a `templateData` parameter is for any additional data (usually in the form of a dictionary) that you want to pass to the mustache engine.
+In all of the above a `templateData` parameter is for any additional data that you want to pass to the mustache engine. This is a `TemplateData` type which is an alias for `[String:Any]`.
+
+### Swift dynamic responses
+
+Here is an example of a Dynamic response:
+
+```swift
+server = try Simulcra {
+    Endpoint(.POST, "/login", response: .dynamic { request, cache in
+        cache.userid = request.formParameters.userid
+        return .json([
+            "token": UUID().uuidString,
+        ])
+    })
+}
+```
+
+It's pretty simple, just stashes the userid in the cache and generates some dynamic data for the response.
 
 ## Command line
 
-Generally when using Simulcra in an XCode test suite you would programmatically define the endpoints. However there is nothing to stop you from using a shared YAML/Javascript setup (for example when there is an Android team and you want to share the setup with them). Here we are going to outline how this works.
+If you are not using Simulcra in an XCode test suite then you will need to consider the command line option. This is based on a YAML configuration with Javascript as a dynamic language.
 
-When launching Simulcra from a command line there is one required argument. The **_--config_** argument which specifies a directory from which the server's configuration will be read. This works by scanning the passed directory for any YAML files and reading then with the assumption that each defines one or more endpoints to be configured.
+When launching Simulcra from a command line there is one required argument. **_--config_** specifies a directory or file from which the server's YAML configuration will be read. if it's a directory Simulcra will then scan it for any YAML files and read those files to build the endpoints it needs. If a reference to a file is passed then Simulcra assumes that all the endpoints are defined in that file.
 
 ### Endpoint files
 
-Each endpoint YAML file contains either a single endpoint or a list of endpoints. 
+Each YAML configuration file can contain either a single endpoint, or a list of endpoints. 
 
-Each endpoint takes one of these forms:
+### Endpoint definitions
 
-* A simple endpoint
-  ```yaml
-  signature: <method> <path>
-  response: <response>
-  ```
-  
-  This is the simplest form where you specify the signature to match incoming requests and the response to return. Each response requires a HTTP status, optional headers, and a body. The type of body is detailed in
-  
-  Here's an example:
-  
-  ```yaml
-  signature: get /config
-  response:
-    status: 200
-    headers: { config-version: 1.0 }
-    body:
-      type: json
-      data: {
-        some-flag: true
-      }
-  ``` 
-  
-* An endpoint with an inline javascript function 
+An endpoint definition can take one of 4 possible forms.
 
-  ```yaml
-  signature: <method> <path>
-  javascript: |
-    function response(request, cache) {
+#### Simple
+
+```yaml
+signature: <method> <path>
+response: <response>
+```
+
+The `signature` tells Simulcra how to match incoming requests. `response` tells it how to respond and provides the HTTP status, optional headers, and body. For example
+  
+```yaml
+signature: get /config
+response:
+status: 200
+headers: { config-version: 1.0 }
+body:
+  type: json
+  data: {
+    some-flag: true
+  }
+``` 
+  
+#### Inline javascript
+
+```yaml
+signature: <method> <path>
+javascript: |
+  function response(request, cache) {
       // generate the response here
-    }
-  ```
+  }
+```
   
-  This is where you can execute more dynamic code like this:
+This is the simplest form of a YAML configured dynamic response. For example
 
-  ```yaml  
-    signature: get /config
-    javascript: |
-      function response(request, cache) {
-          if request.headers.app-version == 1.0 {
-              return Response.ok(
-                  Body.json({
-                      some-flag: true  
-                  }),
-                  { config-version: 1.0 })
-          } else {
-              return Response.ok(
-                  Body.json({
-                      some-flag: false  
-                  }),
-                  { config-version: 1.1 })
-          }
+```yaml  
+signature: get /config
+javascript: |
+  function response(request, cache) {
+      if request.headers.app-version == 1.0 {
+          return Response.ok(
+              Body.json({
+                  some-flag: true  
+              }),
+              { config-version: 1.0 }
+          );
+      } else {
+          return Response.ok(
+              Body.json({
+                  some-flag: false  
+              }),
+              { config-version: 1.1 }
+          );
       }
-  ```
+  }
+```
 
-* An end point with a javascript file reference
+#### Javascript file reference
   
-  ```yaml
-  signature: <method> <path>
-  javascriptFile: <js-file-name>
-  ```
+```yaml
+signature: <method> <path>
+javascriptFile: <js-file-name>
+```
+ 
+Also defining a dynamic response endpoint, this form references an external javascript file instead of have the code inline. This is convenient when you have a number of endpoints listed in the YAML file, or you want to store the javascript in a file with a `js` extension so it can be easy edited.  
+
+```yaml
+signature: get /config
+javascriptFile: get-config.js
+```
   
-  This form allows you to reference javascript saved in a seperate file. This is convenient when you have a number of endpoints listed in the YAML file, and also because it allows you to store the javascript in a file with a `js` extension so it can be edited by a javascript editor.  
+#### YAML file reference
 
-  ```yaml
-  signature: get /config
-  javascriptFile: get-config.js
-  ```
-  
-* A YAML file reference
+```yaml
+<reference-to-another-YAML-file>
+```
 
-  ```yaml
-  <reference-to-another-YAML-file>
-  ```
+Instead of a data structure with a `signature` value defining the endpoint, this references another YAML file, effectively including it. This is most useful for situations where you want to define endpoints and then include them in other configurations which define various scenarios you want to load.
 
-Mostly used for composing sets of endpoint configs, this allows you to effectively include one file within another.
+```yaml
+- login.yml
+- accounts.yml
+- accounts/customer-accounts.yml
+```
 
-  ```yaml
-  - login.yaml
-  - accounts.yaml
-  - accounts/customer-accounts.yml
-  ```
+### Javascript types
 
-### Response types
+There are a number of pre-defined types that Simulcra makes available to the dynamic javascript functions. 
 
-There are a number of types available to the javascript code. 
+#### Response
 
 `Response` is a type that has the following `static` factory methods for creating responses:
 
-* `raw(code, body, headers)` - The base response that most of the others drive. `code` is the HTTP status code, `body` is the body of the response as per below and `headers` is an object containing the headers to be returned.
+* `.raw(code, body, headers)` - The base response that most of the others drive. `code` is the HTTP status code, `body` is the body of the response as per below and `headers` is an object containing the headers to be returned.
 
-* `ok(body, headers)` - Convenience for a HTTP 200 status response.
+* `.ok(body, headers)` - Convenience for a HTTP 200 status response.
 
-* `created(body, headers)` - Convenience for a HTTP 201 status response.
+* `.created(body, headers)` - Convenience for a HTTP 201 status response.
 
-* `accepted(body, headers)` - Convenience for a HTTP 202 status response.
+* `.accepted(body, headers)` - Convenience for a HTTP 202 status response.
 
-* `movedPermanently(url)` - Convenience for a HTTP 301 status response.
+* `.movedPermanently(url)` - Convenience for a HTTP 301 status response.
 
-* `temporaryRedirect(url)` - Convenience for a HTTP 307 status response.
+* `.temporaryRedirect(url)` - Convenience for a HTTP 307 status response.
 
-* `notFound()` - Convenience for a HTTP 404 status response.
+* `.notFound()` - Convenience for a HTTP 404 status response.
 
-* `notAcceptable()` - Convenience for a HTTP 406 status response.
+* `.notAcceptable()` - Convenience for a HTTP 406 status response.
 
-* `tooManyRequests()` - Convenience for a HTTP 429 status response.
+* `.tooManyRequests()` - Convenience for a HTTP 429 status response.
 
-* `internalServerError(body, headers)` - Convenience for a HTTP 500 status response.
+* `.internalServerError(body, headers)` - Convenience for a HTTP 500 status response.
 
-### Response bodies
+#### Body
   
 To create the body arguments you can use a number of `Body` `static` factory methods:
 
-* `empty()` - Returns an empty body.
+* `.empty()` - Returns an empty body.
 
-* `text(text, templateData)` - Returns the passed text as the body of the request after passing it through the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
+* `.text(text, templateData)` - Returns the passed text as the body of the request after passing it through the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
 
-* `json(data, templateData)` - Encodes the passed data as JSON before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
+* `.json(data, templateData)` - Encodes the passed data as JSON before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
 
-* `yaml(data, templateData)` - Encodes the passed data as YAML before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
+* `.yaml(data, templateData)` - Encodes the passed data as YAML before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
 
-* `file(url, contentType)` - Reads the contents of the passed file and returns it with the specified content type.
+* `.file(url, contentType)` - Reads the contents of the passed file and returns it with the specified content type.
 
-* `template(name, contentType, templateData)` - Searches the template directory for a template matching the passed name. This excludes the extension which defaults to `json`. However that can be overridden using the `templateExtension` argument when launching the server if you want to use a different extension name. 
+* `.template(name, contentType, templateData)` - Searches the template directory for a template matching the passed name. This excludes the extension which defaults to `json`. However that can be overridden using the `templateExtension` argument when launching the server if you want to use a different extension name. 
 
 # FAQ
 
@@ -546,7 +577,7 @@ To build this project I used a number of 3rd party projects. However you don't n
 
 * [Swift Argument Parser][swift-argument-parser] - The API that the command line program is built on.  
 
-* [AnyCodable][any-codable] - Allows `Any` to be `Codable`.  
+* [AnyCodable][any-codable] - Allows `Any` to be `Codable`. Used extensively to handle response payloads. 
   
 [hummingbird]: https://github.com/hummingbird-project/hummingbird
 [yams]: https://github.com/jpsim/Yams
@@ -684,36 +715,36 @@ response:
 
 ## YAML endpoint file with various inclusions
 
-This file contains a number of responses and inclusions.
+This file contains a number of responses and inclusions. It's a good example of defining multiple responses in a single file.
 
 ```yaml
-# Endpoint with templated response
+# Simple endpoint
 - signature: post /created/text
   response:
     status: 201
+    headers: ~
     body:
       type: text
-      text: Hello {{name}}!
-      templateData: 
-        name: Derek
+      text: Hello world!
+      templateData: ~
 
-# Another YAML file inclusion
+# Included YAML file
 - TestConfig1/get-config.yml
 
-# Endpoint with dynamic javascript response.
-- signature: get /account/:accountId
+# Inline javascript dynamic response
+- signature: get /javascript/inline
   javascript: |
     function response(request, cache) {
-      if request.parthParameter.accountId == "1234" {
-        return Response.ok()
-      } else {
-        return Response.notFound
-      }
+        if request.parthParameter.accountId == "1234" {
+            return Response.ok();
+        } else {
+            return Response.notFound();
+        }
     }
-
-# Request with javascript file inclusion.
-- signature: get /accounts
-  javascriptFile: TestConfig1/list-accounts.js 
+    
+# Referenced javascript file
+- signature: get /javascript/file
+  javascriptFile: TestConfig1/login.js 
 ```
 
 ## Javascript response file
@@ -722,6 +753,6 @@ Javascript response file.
 
 ```javascript
 function response(request, cache) {
-    return Response.ok()
+    return Response.ok(Body.text("hello world!"));
 }
 ```
