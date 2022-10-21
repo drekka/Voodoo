@@ -28,11 +28,8 @@ struct SimulacraCMD: ParsableCommand {
     static var configuration: CommandConfiguration {
 
         return CommandConfiguration(
-            commandName: "Simulacra",
-            abstract: "A simple server designed for testing purposes",
-            discussion: """
-            This starts and manages a mock server that can be used for testing or development purposes.
-            """,
+            commandName: "simulacra",
+            abstract: "A mock server that provides APIs and files for debugging, regression and continuous integration testing.",
             version: "0.1.0",
             shouldDisplay: true,
             subcommands: [Run.self]
