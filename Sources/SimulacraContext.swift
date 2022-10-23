@@ -29,13 +29,13 @@ extension SimulacraContext {
     ///
     /// - parameter requestData: Additional data unique to the current request.
     func requestTemplateData(forRequest request: HTTPRequest, adding requestData: TemplateData? = nil) -> [String: Any] {
-        var overlay: [String: Any] = [:]
+        var overlay: [String: Any?] = [:]
         if let hostAddress = request.headers["host"] {
             overlay["mockServer"] = hostAddress
         }
         if let requestData {
             overlay.merge(requestData) { $1 }
         }
-        return cache.dictionaryRepresentation().merging(overlay) { $1 }
+        return cache.dictionaryRepresentation().merging(overlay.compactMapValues { $0 }) { $1 }
     }
 }

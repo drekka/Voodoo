@@ -10,7 +10,7 @@ import JXKit
 import NIOFoundationCompat
 
 /// Type for template data used to inject values.
-public typealias TemplateData = [String: Any]
+public typealias TemplateData = [String: Any?]
 public typealias HeaderDictionary = [String: String]
 
 /// Commonly used content types..

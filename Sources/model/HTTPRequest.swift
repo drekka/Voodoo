@@ -6,10 +6,13 @@ import Foundation
 import Hummingbird
 
 /// Provides access to header and query parameters.
+@dynamicMemberLookup
 public protocol KeyedValues {
     var uniqueKeys: [String] { get }
     subscript(_: String) -> String? { get }
     subscript(_: String) -> [String] { get }
+    subscript(dynamicMember _: String) -> String? { get }
+    subscript(dynamicMember _: String) -> [String] { get }
 }
 
 /// Contains the details of a received request and provide convenient access to commonly used data.
@@ -45,6 +48,11 @@ public protocol HTTPRequest {
     ///
     /// Returns the raw JSON data structure or a `nil` if it cannot be parsed.
     var bodyJSON: Any? { get }
+
+    /// Attempts to parse the body as a YAML object.
+    ///
+    /// Returns the raw YAML data structure or a `nil` if it cannot be parsed.
+    var bodyYAML: Any? { get }
 
     /// If the request is a form submission then this contains the fields and their values from the form.
     var formParameters: [String: String] { get }

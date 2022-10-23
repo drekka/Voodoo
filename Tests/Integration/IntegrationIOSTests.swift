@@ -104,7 +104,14 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     // MARK: - Core responses
 
     func testResponseRaw() async {
-        server.add(.GET, "/abc", response: .raw(.accepted, headers: ["abc":"def"], body: .text("Hello world! {{xyz}}", templateData: ["xyz":123])))
+        server.add(.GET, "/abc", response: .raw(
+            .accepted,
+            headers: ["abc": "def"],
+            body: .text(
+                "Hello world! {{xyz}}",
+                templateData: ["xyz": 123]
+            )
+        ))
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 202)
 
         let httpResponse = response.response
@@ -118,10 +125,50 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     }
 
     func testResponseDynamic() async {
+        server.add(.POST, "/abc/:accountId",
+                   response: .dynamic { request, _ in
+                       .ok(headers: ["header1": request.headers.header1!],
+                           body: .text("AccountID: {{account}}, search: {{searchTerms}}",
+                                       templateData: [
+                                           "account": request.pathParameters.accountId!,
+                                           "searchTerms": request.queryParameters.search ?? "",
+                                       ]))
+                   })
+
+        var request = URLRequest(url: URL(string: server.url.absoluteString + "/abc/1234?search=books")!)
+        request.httpMethod = "POST"
+        request.addValue("Hello world!", forHTTPHeaderField: "header1")
+
+        let response = await executeAPICall(request, andExpectStatusCode: 200)
+        expect(response.response?.value(forHTTPHeaderField: "header1")) == "Hello world!"
+        expect(String(data: response.data!, encoding: .utf8)!) == "AccountID: 1234, search: books"
+    }
+
+    func testResponseDynamicViaFunction() async {
         server.add(.POST, "/abc") { _, _ in
             .ok()
         }
         await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
+    }
+
+    func testResponseDynamicPassingCacheDataBetweenRequests() async {
+        server.add(.POST, "/abc") { _, cache in
+            cache.abc = "Hello world!"
+            cache.def = 123
+            cache.xyz = [123, 456]
+            return .ok()
+        }
+        await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
+
+        server.add(.GET, "/def") { _, cache in
+            .ok(headers: [
+                "def": cache.abc as String? ?? "",
+            ],
+            body: .text("Count {{def}}, trailing: {{xyz}}", templateData: ["def": cache.def, "xyz": cache.xyz]))
+        }
+        let response = await executeAPICall(.GET, "/def", andExpectStatusCode: 200)
+        expect(response.response?.value(forHTTPHeaderField: "def")) == "Hello world!"
+        expect(response.response?.value(forHTTPHeaderField: "def")) == "Hello world!"
     }
 
     // MARK: - Convenience responses
@@ -129,22 +176,6 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     func testResponseAccepted() async {
         server.add(.POST, "/abc", response: .accepted())
         await executeAPICall(.POST, "/abc", andExpectStatusCode: 202)
-    }
-
-    // MARK: - Request and Cache
-
-    func testPassingCacheData() async {
-        server.add(.POST, "/abc") { _, cache in
-            cache.abc = "123"
-            return .ok()
-        }
-        await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
-
-        server.add(.GET, "/def") { _, cache in
-            .ok(headers: ["def": cache.abc as String? ?? ""])
-        }
-        let response = await executeAPICall(.GET, "/def", andExpectStatusCode: 200)
-        expect(response.response?.value(forHTTPHeaderField: "def")) == "123"
     }
 
     // MARK: - Bodies
@@ -173,7 +204,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
     func testResponseWithInlineJSONTemplate() async {
 
-        server.add(.POST, "/abc", response: .ok(body: .json(["abc":"def {{name}}"], templateData: ["name": "Derek"])))
+        server.add(.POST, "/abc", response: .ok(body: .json(["abc": "def {{name}}"], templateData: ["name": "Derek"])))
         let response = await executeAPICall(.POST, "/abc", andExpectStatusCode: 200)
         let httpResponse = response.response
 

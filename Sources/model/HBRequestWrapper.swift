@@ -5,45 +5,8 @@
 import Foundation
 import Hummingbird
 import NIOCore
-import NIOFoundationCompat
-
-extension String {
-
-    /// The same effect as ``URL.pathComponents`` property but assuming the string is a path.
-    var urlPathComponents: [String.SubSequence] {
-        ["/"] + split(separator: "/")
-    }
-}
-
-extension HBRequest {
-
-    /// Convenience variable to obtain a wrapped request.
-    var asHTTPRequest: HTTPRequest {
-        HBRequestWrapper(request: self)
-    }
-}
-
-extension HTTPHeaders: KeyedValues {
-
-    public var uniqueKeys: [String] {
-        var hashes = Set<Int>()
-        return compactMap { hashes.insert($0.name.hashValue).inserted ? $0.name : nil }
-    }
-
-    public subscript(key: String) -> String? { first(name: key) }
-}
-
-extension HBParameters: KeyedValues {
-
-    public var uniqueKeys: [String] {
-        var hashes = Set<Int>()
-        return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
-    }
-
-    public subscript(key: String) -> [String] {
-        getAll(key)
-    }
-}
+import Yams
+import AnyCodable
 
 /// Thin wrapper around the core Hummingbird request that provides some additional processing.
 struct HBRequestWrapper: HTTPRequest {
@@ -77,6 +40,12 @@ struct HBRequestWrapper: HTTPRequest {
         return try? JSONSerialization.jsonObject(with: buffer)
     }
 
+    var bodyYAML: Any? {
+        guard request.headers[ContentType.key].first == ContentType.applicationYAML,
+              let data = request.body.buffer?.data else { return nil }
+        return try? YAMLDecoder().decode(AnyDecodable.self, from: data)
+    }
+
     var formParameters: [String: String] {
 
         guard request.headers[ContentType.key].first == ContentType.applicationFormData,
@@ -99,4 +68,70 @@ struct HBRequestWrapper: HTTPRequest {
             return ($0.name, value)
         }) { $1 }
     }
+}
+
+extension String {
+
+    /// The same effect as ``URL.pathComponents`` property but assuming the string is a path.
+    var urlPathComponents: [String.SubSequence] {
+        ["/"] + split(separator: "/")
+    }
+}
+
+extension HBRequest {
+
+    /// Convenience variable to obtain a wrapped request.
+    var asHTTPRequest: HTTPRequest {
+        HBRequestWrapper(request: self)
+    }
+}
+
+// MARK: - Supporting extensions
+
+/// Applies ``KeyedValues`` to the headers.
+extension HTTPHeaders: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.name.hashValue).inserted ? $0.name : nil }
+    }
+
+    public subscript(key: String) -> String? { first(name: key) }
+
+    public subscript(dynamicMember key: String) -> String? { first(name: key) }
+
+    public subscript(dynamicMember key: String) -> [String] { self[key] }
+}
+
+/// Used to apply dynamic member lookup to a dictionary.
+@dynamicMemberLookup
+public protocol DictionaryDynamicLookup {
+    associatedtype Key
+    associatedtype Value
+    subscript(_: Key) -> Value? { get }
+}
+
+/// Used to apply dynamic member lookup to a dictionary.
+public extension DictionaryDynamicLookup where Key == String {
+    subscript(dynamicMember member: String) -> Value? {
+        return self[member]
+    }
+}
+
+/// Make string dictionaries, for example the path parameters, dynamic lookup.
+extension Dictionary: DictionaryDynamicLookup where Key == String, Value == String {}
+
+/// Applies ``KeyedValues`` to Hummingbird's parameters.
+extension HBParameters: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
+    }
+
+    public subscript(key: String) -> [String] { getAll(key) }
+
+    public subscript(dynamicMember key: String) -> String? { self[key] }
+
+    public subscript(dynamicMember key: String) -> [String] { getAll(key) }
 }
