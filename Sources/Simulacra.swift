@@ -62,6 +62,11 @@ public class Simulacra {
                     continue
                 }
 
+                if error is SimulacraError {
+                    print("👻 Unexpected error: \(error.localizedDescription)")
+                    throw error
+                }
+
                 print("👻 Unexpected error: \(error.localizedDescription)")
                 throw SimulacraError.unexpectedError(error)
             }

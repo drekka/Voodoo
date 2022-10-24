@@ -105,8 +105,7 @@ extension HTTPResponse.Body: Decodable {
             self = .json(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
 
         case "yaml":
-            let yaml = try container.decode([String: AnyCodable].self, forKey: .data)
-            self = .yaml(yaml, templateData: try container.templateData)
+            self = .yaml(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
 
         case "file":
             let fileURL = try container.decode(URL.self, forKey: .url)
@@ -197,16 +196,6 @@ extension Data {
             throw SimulacraError.conversionError("Unable to convert data to a String")
         }
         return string
-    }
-
-    /// Renders this data as a response body.
-    ///
-    /// - parameters:
-    ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys.
-    ///     - request: the request being fulfilled.
-    ///     - context: The server context.
-    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulacraContext) throws -> HBResponseBody {
-        return try string().render(withTemplateData: templateData, forRequest: request, context: context)
     }
 }
 

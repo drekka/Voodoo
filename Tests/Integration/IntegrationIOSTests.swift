@@ -47,6 +47,33 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         await executeAPICall(.GET, "/def", andExpectStatusCode: 201)
     }
 
+    // MARK: - File serving.
+
+    func testFileServing() async throws {
+
+        let resourcesURL = Bundle.testBundle.resourceURL!
+        let filesURL = resourcesURL.appendingPathComponent("files")
+        server = try Simulacra(filePaths: [filesURL])
+
+        let response = await executeAPICall(.GET, "/Simple.html", andExpectStatusCode: 200)
+        expect(String(data: response.data!, encoding: .utf8)) == "<html><body></body></html>\n"
+        expect(response.response?.value(forHTTPHeaderField: "content-type")) == "text/html"
+    }
+
+    func testFileServingInvalidDirectory() async throws {
+
+        let resourcesURL = Bundle.testBundle.resourceURL!
+        let filesURL = resourcesURL.appendingPathComponent("XXXX")
+
+        expect { try Simulacra(filePaths: [filesURL]) }.to(throwError { (error: Error) in
+            guard case SimulacraError.directoryNotExists(let message) = error else {
+                fail("Incorrect error \(error.localizedDescription)")
+                return
+            }
+            expect(message).to(endWith("XXXX"))
+        })
+    }
+
     // MARK: - Adding APIs
 
     func testAddingEndpoint() async {

@@ -99,7 +99,7 @@ extension HTTPRequest {
         try request.defineProperty("bodyJSON") { property in
             // .json(...) converts a JSON string into an object so bypass bodyJSON
             // because we'd be converting from JSON to objects and back to JSON which is pointless.
-            if let body, let json = String(data: body, encoding: .utf8) {
+            if let json = try body?.string() {
                 return try property.context.json(json)
             }
             return property.context.null()
@@ -164,9 +164,8 @@ extension Cache {
         }
 
         // If the value is an array or dictionary we encode it to JSON and then to an object.
-        if value as? [String: Any] != nil || value as? [Any] != nil,
-           let json = String(data: try JSONSerialization.data(withJSONObject: value), encoding: .utf8) {
-            return try context.json(json)
+        if value as? [String: Any] != nil || value as? [Any] != nil {
+            return try context.json(try JSONSerialization.data(withJSONObject: value).string())
         }
 
         // If the value is encodable the we encode it into a JXValue.

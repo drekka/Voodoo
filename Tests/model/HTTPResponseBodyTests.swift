@@ -11,6 +11,7 @@ import HummingbirdMustache
 import Nimble
 @testable import SimulacraCore
 import XCTest
+import Yams
 
 class HTTPResponseBodyTests: XCTestCase {
 
@@ -79,6 +80,29 @@ class HTTPResponseBodyTests: XCTestCase {
                    contentType: ContentType.applicationJSON)
     }
 
+    // MARK: - YAML types
+
+    func testYAMLWithDictionary() throws {
+        try assert(.yaml([
+                       "abc": "def {{xyz}}",
+                   ],
+                   templateData: ["xyz": 123]),
+                   generates: "abc: def 123\n",
+                   contentType: ContentType.applicationYAML)
+    }
+
+    func testYAMLWithEncodable() throws {
+
+        struct YAMLTest: Codable {
+            let abc: String
+        }
+
+        let encodable = YAMLTest(abc: #"def {{xyz}}"#)
+        try assert(.yaml(encodable, templateData: ["xyz": 123]),
+                   generates: "abc: def 123\n",
+                   contentType: ContentType.applicationYAML)
+    }
+
     // MARK: - Support functions
 
     func assert(file: StaticString = #file, line: UInt = #line,
@@ -116,7 +140,18 @@ class HTTPREsponseBodyDecodableTests: XCTestCase {
                 "abc":"xyz"
             }
         }
-        """#, decodesTo: .json(["abc":"xyz"]))
+        """#, decodesTo: .json(["abc": "xyz"]))
+    }
+
+    func testDecodeYAML() throws {
+        try assert(#"""
+        {
+            "type":"yaml",
+            "data":{
+                "abc":"xyz"
+            }
+        }
+        """#, decodesTo: .yaml(["abc": "xyz"]))
     }
 
     func testUnknownError() throws {

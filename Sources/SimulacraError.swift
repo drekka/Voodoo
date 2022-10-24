@@ -22,24 +22,28 @@ public enum SimulacraError: Error, HBHTTPResponseError {
     public var status: HTTPResponseStatus { .internalServerError }
 
     public var headers: HTTPHeaders {
+        return [Self.headerKey: localizedDescription]
+    }
+
+    public var localizedDescription: String {
         switch self {
         case .conversionError(let message),
              .templateRenderingFailure(let message),
              .javascriptError(let message),
              .configLoadFailure(let message):
-            return [Self.headerKey: message]
+            return message
 
         case .noPortAvailable:
-            return [Self.headerKey: "All ports taken."]
+            return "All ports taken."
 
         case .invalidConfigPath(let path):
-            return [Self.headerKey: "Invalid config path \(path)"]
+            return "Invalid config path \(path)"
 
         case .directoryNotExists(let path):
-            return [Self.headerKey: "Missing or URL was not a directory: \(path)"]
+            return "Missing or URL was not a directory: \(path)"
 
         case .unexpectedError(let error):
-            return [Self.headerKey: error.localizedDescription]
+            return error.localizedDescription
         }
     }
 
