@@ -69,10 +69,27 @@ class HBRequestWrapperTests: XCTestCase {
         expect(json["abc"] as? String) == "def"
     }
 
+    func testYAMLContent() {
+        let wrapper = HBRequest.mock(contentType: ContentType.applicationYAML,
+                                     body: #"""
+                                     abc: def
+                                     """#).asHTTPRequest
+        let json = wrapper.bodyYAML as! [String: Any]
+        expect(json["abc"] as? String) == "def"
+    }
+
     func testFormValues() {
         let wrapper = HBRequest.mock(contentType: "application/x-www-form-urlencoded",
-                                     body: #"formField1=Hello%20world"#).asHTTPRequest
-        expect(String(data: wrapper.body ?? Data(), encoding: .utf8)) == "formField1=Hello%20world"
+                                     body: #"formField1=Hello%20world&formField2&formField3=Goodbye!"#).asHTTPRequest
+
+        expect(String(data: wrapper.body ?? Data(), encoding: .utf8)) == "formField1=Hello%20world&formField2&formField3=Goodbye!"
+
         expect(wrapper.formParameters["formField1"]) == "Hello world"
+        expect(wrapper.formParameters["formField2"]).to(beNil())
+        expect(wrapper.formParameters["formField3"]) == "Goodbye!"
+
+        expect(wrapper.formParameters.formField1) == "Hello world"
+        expect(wrapper.formParameters.formField2).to(beNil())
+        expect(wrapper.formParameters.formField3) == "Goodbye!"
     }
 }

@@ -43,7 +43,7 @@ struct HBRequestWrapper: HTTPRequest {
     var bodyYAML: Any? {
         guard request.headers[ContentType.key].first == ContentType.applicationYAML,
               let data = request.body.buffer?.data else { return nil }
-        return try? YAMLDecoder().decode(AnyDecodable.self, from: data)
+        return try? YAMLDecoder().decode(AnyDecodable.self, from: data).value
     }
 
     var formParameters: [String: String] {
