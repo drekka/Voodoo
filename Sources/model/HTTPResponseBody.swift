@@ -148,12 +148,36 @@ extension HTTPResponse.Body {
             return (data.hbResponseBody, contentType)
 
         case .json(let payload, let templateData):
-            let template = try generateTemplate(from: payload, using: { try JSONEncoder().encode($0).string() })
-            return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+
+            do {
+                let template: String
+                switch payload {
+                case let payload as String: template = payload
+                case let payload as Encodable: template = try JSONEncoder().encode(payload).string()
+                default: template = try JSONSerialization.data(withJSONObject: payload).string()
+                }
+                return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+
+            } catch {
+                throw SimulacraError.conversionError("Unable to convert '\(payload)' to JSON: \(error.localizedDescription)")
+            }
 
         case .yaml(let payload, let templateData):
-            let template = try generateTemplate(from: payload, using: { try YAMLEncoder().encode($0) })
-            return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
+            do {
+                let template: String
+                switch payload {
+                case let payload as String: template = payload
+                case let payload as Encodable: template = try YAMLEncoder().encode(payload)
+                default:
+                    // Try wrapping and decoding.
+                    let payload = AnyCodable(payload)
+                    template = try YAMLEncoder().encode(payload)
+                }
+                return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
+
+            } catch {
+                throw SimulacraError.conversionError("Unable to convert '\(payload)' to YAML: \(error.localizedDescription)")
+            }
 
         case .file(let url, let contentType):
             return (try Data(contentsOf: url).hbResponseBody, contentType)
@@ -164,21 +188,6 @@ extension HTTPResponse.Body {
                 throw SimulacraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
             return (json.hbResponseBody, contentType)
-        }
-    }
-
-    // Handles encoding the JSON and YAML values into strings for template processing.
-    private func generateTemplate(from source: Any, using encoder: (Encodable) throws -> String) throws -> String {
-        switch source {
-
-        case let payload as String:
-            return payload
-
-        case let payload as Encodable:
-            return try encoder(payload)
-
-        default:
-            throw SimulacraError.conversionError("Unable to convert '\(source)' to a type we can render as a response")
         }
     }
 }
