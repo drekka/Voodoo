@@ -9,6 +9,20 @@ import Foundation
 
 enum JavascriptModels {
     static let responseType = #"""
+
+        // Used to define function arguments that are required.
+        //        Object.defineProperty(globalThis, 'REQUIRED', {
+        //            configurable: false,
+        //            get: function() {
+        //                let err = new Error('');
+        //                let trace = err.stack.split('\n');
+        //                let msg = '';
+        //                for (let i = 2; i < trace.length; i++) msg += trace[i] + '\n';
+        //                throw 'Error : Missing required parameter\n' + msg;
+        //            }
+        //        });
+
+
         class Response {
 
             static raw(code, body, headers) {
@@ -37,6 +51,10 @@ enum JavascriptModels {
 
             static notFound() {
                 return this.raw(404);
+            }
+
+            static unauthorised(body, headers) {
+                return this.raw(403, body, headers);
             }
 
             static notAcceptable() {
@@ -77,6 +95,9 @@ enum JavascriptModels {
             }
 
             static template(name, contentType, templateData) {
+                if (contentType == undefined) {
+                    throw "Body.template(name, contentType, templateData) requires 'contentType' to be passed.";
+                }
                 return { type: "template", name: name, templateData: templateData, contentType: contentType };
             }
         }

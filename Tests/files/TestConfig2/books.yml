@@ -2,10 +2,20 @@
   response:
     status: 200
     body: 
-      type: json
-      data: | 
-        [        
-        {{> iab1}},
-        {{> iab2}},
-        {{> iab3}},
-        ]
+      type: template
+      name: books
+      contentType: application/json
+- signature: get /book/:bookId
+  javascript: |
+    function response(request, cache) {
+      console.log("Book " + request.pathParameters.bookId + " requested");
+      if (request.pathParameters.bookId == "1000-01") {
+        return Response.ok(Body.template("iab1", "application/json"));
+      } else if (request.pathParameters.bookId == "1000-02") {
+        return Response.ok(Body.template("iab2", "application/json"));
+      } else if (request.pathParameters.bookId == "1000-03") {
+        return Response.ok(Body.template("iab3", "application/json"));
+      } else {
+        return Response.notFound();
+      }
+    }
