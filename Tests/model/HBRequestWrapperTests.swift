@@ -84,6 +84,25 @@ class HBRequestWrapperTests: XCTestCase {
 
         expect(String(data: wrapper.body ?? Data(), encoding: .utf8)) == "formField1=Hello%20world&formField2&formField3=Goodbye!"
 
+        expect(wrapper.formParameters.count) == 2
+
+        expect(wrapper.formParameters["formField1"]) == "Hello world"
+        expect(wrapper.formParameters["formField2"]).to(beNil())
+        expect(wrapper.formParameters["formField3"]) == "Goodbye!"
+
+        expect(wrapper.formParameters.formField1) == "Hello world"
+        expect(wrapper.formParameters.formField2).to(beNil())
+        expect(wrapper.formParameters.formField3) == "Goodbye!"
+    }
+
+    func testFormValuesFromExtendedContentType() {
+        let wrapper = HBRequest.mock(contentType: "application/x-www-form-urlencoded; charset=utf-8",
+                                     body: #"formField1=Hello%20world&formField2&formField3=Goodbye!"#).asHTTPRequest
+
+        expect(String(data: wrapper.body ?? Data(), encoding: .utf8)) == "formField1=Hello%20world&formField2&formField3=Goodbye!"
+
+        expect(wrapper.formParameters.count) == 2
+
         expect(wrapper.formParameters["formField1"]) == "Hello world"
         expect(wrapper.formParameters["formField2"]).to(beNil())
         expect(wrapper.formParameters["formField3"]) == "Goodbye!"

@@ -1,0 +1,12 @@
+- signature: POST /security/login
+  javascript: |
+    function response(request, cache) {
+      let token = "1234-12345678-1234";
+      let user = request.formParameters.user;
+      console.log("Customer token for " + user + ": " + token);
+      cache.token = token;
+      return Response.ok(Body.empty(), {
+        userToken: token
+      });
+    }
+    

@@ -82,15 +82,16 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     // MARK: - Other tests
 
+    // These tests are part of debugging errors that occured when trying to use Scenario 2.
+
     func testScenario2ConfigConversionError() async throws {
         let resourcesURL = Bundle.testBundle.resourceURL!
         let filesURL = resourcesURL.appendingPathComponent("files")
         let endpoints = try ConfigLoader(verbose: true).load(from: filesURL.appendingPathComponent("/TestConfig2/core.yml"))
         server = try Simulacra { endpoints }
         let response = await executeAPICall(.GET, "/app/config", andExpectStatusCode: 200)
-        let payload = try JSONSerialization.jsonObject(with: response.data!) as! [String:Any]
+        let payload = try JSONSerialization.jsonObject(with: response.data!) as! [String: Any]
         expect(payload["version"] as? Double) == 1.0
         expect(payload["featureFlag"] as? Bool) == true
     }
-
 }

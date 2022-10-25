@@ -2,11 +2,11 @@
 //  Created by Derek Clarkson on 6/8/2022.
 //
 
+import AnyCodable
 import Foundation
 import Hummingbird
 import NIOCore
 import Yams
-import AnyCodable
 
 /// Thin wrapper around the core Hummingbird request that provides some additional processing.
 struct HBRequestWrapper: HTTPRequest {
@@ -35,20 +35,20 @@ struct HBRequestWrapper: HTTPRequest {
     var body: Data? { return request.body.buffer?.data }
 
     var bodyJSON: Any? {
-        guard request.headers[ContentType.key].first == ContentType.applicationJSON,
+        guard request.contentType(is: ContentType.applicationJSON),
               let buffer = request.body.buffer else { return nil }
         return try? JSONSerialization.jsonObject(with: buffer)
     }
 
     var bodyYAML: Any? {
-        guard request.headers[ContentType.key].first == ContentType.applicationYAML,
+        guard request.contentType(is: ContentType.applicationYAML),
               let data = request.body.buffer?.data else { return nil }
         return try? YAMLDecoder().decode(AnyDecodable.self, from: data).value
     }
 
     var formParameters: [String: String] {
 
-        guard request.headers[ContentType.key].first == ContentType.applicationFormData,
+        guard request.contentType(is: ContentType.applicationFormData),
               let buffer = request.body.buffer else { return [:] }
 
         // Forms come in using encoding that's the same as that used for URL query arguments.
@@ -83,6 +83,11 @@ extension HBRequest {
     /// Convenience variable to obtain a wrapped request.
     var asHTTPRequest: HTTPRequest {
         HBRequestWrapper(request: self)
+    }
+
+    /// Helper for analysing the content type of a request.
+    func contentType(is contentType: String) -> Bool {
+        headers[ContentType.key].first?.contains(contentType) ?? false
     }
 }
 

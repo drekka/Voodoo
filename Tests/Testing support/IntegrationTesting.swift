@@ -23,7 +23,16 @@ protocol IntegrationTesting: AnyObject {
     func tearDownServer()
 
     @discardableResult
-    func executeAPICall(_ method: HTTPMethod, _ path: String, andExpectStatusCode expectedStatusCode: Int, file: StaticString, line: UInt) async -> ServerResponse
+    func executeAPICall(_ method: HTTPMethod,
+                        _ path: String,
+                        withHeaders headers: [String: String]?,
+                        andExpectStatusCode expectedStatusCode: Int,
+                        file: StaticString, line: UInt) async -> ServerResponse
+
+    @discardableResult
+    func executeAPICall(_ request: URLRequest,
+                        andExpectStatusCode expectedStatusCode: Int,
+                        file: StaticString, line: UInt) async -> ServerResponse
 }
 
 extension IntegrationTesting {
@@ -38,14 +47,23 @@ extension IntegrationTesting {
     }
 
     @discardableResult
-    func executeAPICall(_ method: HTTPMethod, _ path: String, andExpectStatusCode expectedStatusCode: Int, file _: StaticString = #file, line _: UInt = #line) async -> ServerResponse {
+    func executeAPICall(_ method: HTTPMethod,
+                        _ path: String,
+                        withHeaders headers: [String: String]? = nil,
+                        andExpectStatusCode expectedStatusCode: Int,
+                        file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
-        return await executeAPICall(request, andExpectStatusCode: expectedStatusCode)
+        headers?.forEach {
+            request.addValue($1, forHTTPHeaderField: $0)
+        }
+        return await executeAPICall(request, andExpectStatusCode: expectedStatusCode, file: file, line: line)
     }
 
     @discardableResult
-    func executeAPICall(_ request: URLRequest, andExpectStatusCode expectedStatusCode: Int, file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
+    func executeAPICall(_ request: URLRequest,
+                        andExpectStatusCode expectedStatusCode: Int,
+                        file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         let response: ServerResponse
         do {
             let callResponse = try await URLSession.shared.data(for: request)

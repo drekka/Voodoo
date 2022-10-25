@@ -291,6 +291,18 @@ class JavascriptExecutorTests: XCTestCase {
                        toThrowError: "Error evaluating javascript: SyntaxError: Unexpected token ';'. Expected ')' to end an argument list.")
     }
 
+    // MARK: - Headers
+
+    func testHeaderAccessInJavascript() throws {
+        try expectResponse(#"""
+                           let abc = request.headers.abc;
+                           console.log("abc: " + abc);
+                           return Response.ok(Body.text(abc));
+                           """#,
+                           withHeaders: [("abc", "123")],
+                           toReturn: .ok(body: .text("123")))
+    }
+
     // MARK: - Cache
 
     func testCacheMiss() throws {
@@ -380,6 +392,7 @@ class JavascriptExecutorTests: XCTestCase {
     // MARK: - Support
 
     private func expectResponse(_ response: String,
+                                withHeaders headers: [(String, String)]? = nil,
                                 inContext: SimulacraContext = MockSimulacraContext(),
                                 toReturn expectedResponse: HTTPResponse) throws {
         let executor = try JavascriptExecutor(serverContext: inContext)
@@ -387,7 +400,7 @@ class JavascriptExecutorTests: XCTestCase {
             function response(request, cache) {
                 \#(response)
             }
-        """#, for: HBRequest.mock().asHTTPRequest)
+        """#, for: HBRequest.mock(headers: headers).asHTTPRequest)
         expect(result) == expectedResponse
     }
 
