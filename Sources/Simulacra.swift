@@ -78,7 +78,7 @@ public class Simulacra {
 
     public func wait() {
         if verbose {
-            print(#"👻 CTRL+C or "curl \#(url.absoluteString)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
+            print(#"👻 CTRL+C or "curl -X "POST" \#(url.absoluteString)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
             print(#"👻 Have a nice day 🙂"#)
         } else {
             print(url.absoluteString)

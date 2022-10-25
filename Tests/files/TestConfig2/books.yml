@@ -1,0 +1,28 @@
+- signature: get /books
+  response:
+    status: 200
+    body: 
+      type: json
+      data: [        
+        {
+        "id": "1000-01",
+          "name": "Consider Phlebas",
+          "author": "Ian M. Banks",
+          "price": 25.00  
+        },
+        {
+        "id": "1000-02",
+          "name": "Surface Detail",
+          "author": "Ian M. Banks",
+          "price": 30.00  
+        },
+        {
+        "id": "1000-03",
+          "name": "The State of the Art",
+          "author": "Ian M. Banks",
+          "price": 20.99  
+        }
+      ]
+      
+        
+      

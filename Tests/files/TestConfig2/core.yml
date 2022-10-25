@@ -1,8 +1,0 @@
-- signature: get /app/config
-  response: 
-    status: 200
-    body: 
-      type: json
-      data: 
-        version: 1.0
-        featureFlag: true
