@@ -17,8 +17,6 @@ function response(request, cache) {
             price: payload.price,
             quantity: 0
         }
-        console.log("Adding " + cartItem);
-        cart[payload.id] = cartItem;
     }
 
     console.log("Setting quantity in " + cartItem);

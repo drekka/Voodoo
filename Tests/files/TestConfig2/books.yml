@@ -5,6 +5,7 @@
       type: template
       name: books
       contentType: application/json
+      
 - signature: get /book/:bookId
   javascript: |
     function response(request, cache) {
