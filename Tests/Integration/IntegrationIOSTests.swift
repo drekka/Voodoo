@@ -11,10 +11,11 @@ import XCTest
 class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
     var server: Simulacra!
+    var resourcesUrl: URL = Bundle.testBundle.resourceURL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try setUpServer()
+        server = try Simulacra(templatePath: resourcesUrl)
     }
 
     override func tearDown() {
@@ -29,7 +30,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
-    func testAddingEndpointsViaArray() async {
+    func testAddingEndpointsViaArray() async throws {
         server.add([
             Endpoint(.GET, "/abc"),
             Endpoint(.GET, "/def", response: .created()),
@@ -198,5 +199,4 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(server.url.host!):\#(server.url.port!)",\#n    "path": "/abc"\#n}\#n"#
         expect(httpResponse?.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
     }
-
 }

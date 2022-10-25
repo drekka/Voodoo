@@ -42,7 +42,7 @@ class HTTPResponseBodyTests: XCTestCase {
                    contentType: ContentType.textPlain)
     }
 
-    func testTemplate() throws {
+    func testemplate() throws {
         let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
         context.mustacheRenderer.register(template, named: "fred")
         try assert(.template("fred", templateData: ["xyz": 123], contentType: ContentType.textPlain),

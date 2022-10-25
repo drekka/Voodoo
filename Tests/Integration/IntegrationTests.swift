@@ -11,11 +11,7 @@ import XCTest
 class IntegrationTests: XCTestCase, IntegrationTesting {
 
     var server: Simulacra!
-
-    override func setUpWithError() throws {
-        try super.setUpWithError()
-        try setUpServer()
-    }
+    let resourcesURL: URL = Bundle.testBundle.resourceURL!
 
     override func tearDown() {
         tearDownServer()
@@ -25,13 +21,15 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     // MARK: - Init
 
     func testInitWithMultipleServers() throws {
+        let s1 = try Simulacra()
         let s2 = try Simulacra()
-        expect(s2.url.host) == server.url.host
-        expect(s2.url.port) != server.url.port
+        expect(s2.url.host) == s1.url.host
+        expect(s2.url.port) != s1.url.port
     }
 
-    func testInitRunsOutOfPorts() {
-        let currentPort = server.url.port!
+    func testInitRunsOutOfPorts() throws {
+        let s1 = try Simulacra()
+        let currentPort = s1.url.port!
         expect {
             try Simulacra(portRange: currentPort ... currentPort)
         }
@@ -51,7 +49,6 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testFileServing() async throws {
 
-        let resourcesURL = Bundle.testBundle.resourceURL!
         let filesURL = resourcesURL.appendingPathComponent("files")
         server = try Simulacra(filePaths: [filesURL])
 
@@ -62,7 +59,6 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testFileServingInvalidDirectory() async throws {
 
-        let resourcesURL = Bundle.testBundle.resourceURL!
         let filesURL = resourcesURL.appendingPathComponent("XXXX")
 
         expect { try Simulacra(filePaths: [filesURL]) }.to(throwError { (error: Error) in
@@ -74,9 +70,52 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
         })
     }
 
+    // MARK: - Mustache templates
+
+    func testTemplateWithReferences() async throws {
+
+        server = try Simulacra(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
+        server.add(.GET, "/", response: .ok(body: .template("books")))
+
+        let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
+        let httpResponse = response.response! as HTTPURLResponse
+
+        expect(httpResponse.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
+        let json = try JSONSerialization.jsonObject(with: response.data!) as! [[String: Any]]
+
+        expect(json[0]["name"] as? String) == "Consider Phlebas"
+        expect(json[1]["name"] as? String) == "Surface Detail"
+        expect(json[2]["name"] as? String) == "The State of the Art"
+    }
+
+    func testDynamicTemplateIncludesReferencedTemplates() async throws {
+
+        server = try Simulacra(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
+        server.add(.GET, "/", response: .ok(body: .json(
+            #"""
+            [
+                {{> iab1 }},
+                {{> iab2 }},
+                {{> iab3 }},
+            ]
+            """#
+        )))
+
+        let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
+        let httpResponse = response.response! as HTTPURLResponse
+
+        expect(httpResponse.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
+        let json = try JSONSerialization.jsonObject(with: response.data!) as! [[String: Any]]
+
+        expect(json[0]["name"] as? String) == "Consider Phlebas"
+        expect(json[1]["name"] as? String) == "Surface Detail"
+        expect(json[2]["name"] as? String) == "The State of the Art"
+    }
+
     // MARK: - Middleware
 
-    func testNoResponseFoundMiddleware() async {
+    func testNoResponseFoundMiddleware() async throws {
+        server = try Simulacra()
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 404)
     }
 
@@ -85,9 +124,8 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     // These tests are part of debugging errors that occured when trying to use Scenario 2.
 
     func testScenario2ConfigConversionError() async throws {
-        let resourcesURL = Bundle.testBundle.resourceURL!
         let filesURL = resourcesURL.appendingPathComponent("files")
-        let endpoints = try ConfigLoader(verbose: true).load(from: filesURL.appendingPathComponent("/TestConfig2/core.yml"))
+        let endpoints = try ConfigLoader(verbose: true).load(from: filesURL.appendingPathComponent("/TestConfig2/getConfig.yml"))
         server = try Simulacra { endpoints }
         let response = await executeAPICall(.GET, "/app/config", andExpectStatusCode: 200)
         let payload = try JSONSerialization.jsonObject(with: response.data!) as! [String: Any]

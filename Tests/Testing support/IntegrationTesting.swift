@@ -18,8 +18,6 @@ protocol IntegrationTesting: AnyObject {
 
     var server: Simulacra! { get set }
 
-    func setUpServer() throws
-
     func tearDownServer()
 
     @discardableResult
@@ -37,13 +35,9 @@ protocol IntegrationTesting: AnyObject {
 
 extension IntegrationTesting {
 
-    func setUpServer() throws {
-        let templatePath = Bundle.testBundle.resourceURL!
-        server = try Simulacra(templatePath: templatePath, verbose: true)
-    }
-
     func tearDownServer() {
         server?.stop()
+        server = nil
     }
 
     @discardableResult

@@ -184,10 +184,10 @@ extension HTTPResponse.Body {
 
         case .template(let templateName, let templateData, let contentType):
             let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
-            guard let json = context.mustacheRenderer.render(finalTemplateData, withTemplate: templateName) else {
+            guard let payload = context.mustacheRenderer.render(finalTemplateData, withTemplate: templateName) else {
                 throw SimulacraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
-            return (json.hbResponseBody, contentType)
+            return (payload.hbResponseBody, contentType)
         }
     }
 }
@@ -227,7 +227,12 @@ extension String {
     ///     - request: The request being fulfilled.
     ///     - context: The server context.
     func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulacraContext) throws -> HBResponseBody {
+        let dynamicTemplate = try HBMustacheTemplate(string: self)
+        context.mustacheRenderer.register(dynamicTemplate, named: "_dynamic")
         let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
-        return try HBMustacheTemplate(string: self).render(finalTemplateData).hbResponseBody
+        guard let payload = context.mustacheRenderer.render(finalTemplateData, withTemplate: "_dynamic") else {
+            throw SimulacraError.templateRenderingFailure("Rendering template failed.")
+        }
+        return payload.hbResponseBody
     }
 }

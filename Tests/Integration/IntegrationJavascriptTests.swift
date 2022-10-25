@@ -14,7 +14,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        try setUpServer()
+        server = try Simulacra()
     }
 
     override func tearDown() {
