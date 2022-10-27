@@ -13,18 +13,6 @@ import NIOFoundationCompat
 public typealias TemplateData = [String: Any?]
 public typealias HeaderDictionary = [String: String]
 
-/// Commonly used content types..
-public enum ContentType {
-
-    public static let key = "content-type"
-
-    public static let textPlain = "text/plain"
-    public static let textHTML = "text/html"
-    public static let applicationJSON = "application/json"
-    public static let applicationYAML = "application/yaml"
-    public static let applicationFormData = "application/x-www-form-urlencoded"
-}
-
 /// Defines a response to an API call.
 public enum HTTPResponse {
 
@@ -50,6 +38,7 @@ public enum HTTPResponse {
 
     case movedPermanently(_ url: String)
     case temporaryRedirect(_ url: String)
+    case permanentRedirect(_ url: String)
 
     case badRequest(headers: HeaderDictionary? = nil, body: Body = .empty)
     case unauthorised(headers: HeaderDictionary? = nil, body: Body = .empty)
@@ -112,6 +101,9 @@ extension HTTPResponse: Decodable {
         case .temporaryRedirect:
             self = .temporaryRedirect(try container.decode(String.self, forKey: .url))
 
+        case .permanentRedirect:
+            self = .permanentRedirect(try container.decode(String.self, forKey: .url))
+
         case .notFound:
             self = .notFound
         case .notAcceptable:
@@ -141,7 +133,7 @@ extension HTTPResponse {
             // Add additional headers returned with the body.
             var finalHeaders = headers ?? [:]
             if let contentType = body.1 {
-                finalHeaders[ContentType.key] = contentType
+                finalHeaders[Header.contentType] = contentType
             }
 
             return HBResponse(status: status, headers: finalHeaders.hbHeaders, body: body.0)
@@ -172,11 +164,14 @@ extension HTTPResponse {
         case .accepted(headers: let headers, body: let body):
             return try hbResponse(.accepted, headers: headers, body: body)
 
-        case .movedPermanently:
-            return HBResponse(status: .movedPermanently)
+        case .movedPermanently(let url):
+            return HBResponse(status: .movedPermanently, headers: [Header.location: url])
 
-        case .temporaryRedirect:
-            return HBResponse(status: .temporaryRedirect)
+        case .temporaryRedirect(let url):
+            return HBResponse(status: .temporaryRedirect, headers: [Header.location: url])
+
+        case .permanentRedirect(let url):
+            return HBResponse(status: .permanentRedirect, headers: [Header.location: url])
 
         case .badRequest(headers: let headers, body: let body):
             return try hbResponse(.badRequest, headers: headers, body: body)

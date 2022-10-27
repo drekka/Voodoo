@@ -63,14 +63,14 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testJSONContent() {
-        let wrapper = HBRequest.mock(contentType: ContentType.applicationJSON,
+        let wrapper = HBRequest.mock(contentType: Header.ContentType.applicationJSON,
                                      body: #"{"abc":"def"}"#).asHTTPRequest
         let json = wrapper.bodyJSON as! [String: Any]
         expect(json["abc"] as? String) == "def"
     }
 
     func testYAMLContent() {
-        let wrapper = HBRequest.mock(contentType: ContentType.applicationYAML,
+        let wrapper = HBRequest.mock(contentType: Header.ContentType.applicationYAML,
                                      body: #"""
                                      abc: def
                                      """#).asHTTPRequest

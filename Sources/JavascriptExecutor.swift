@@ -64,7 +64,7 @@ struct JavascriptExecutor {
         do {
             return try rawResponse.toDecodable(ofType: HTTPResponse.self) as HTTPResponse
         } catch {
-            throw SimulacraError.javascriptError("The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
+            throw SimulacraError.javascriptError("The javascript function returned an unexpected response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
         }
     }
 
@@ -79,6 +79,8 @@ struct JavascriptExecutor {
 }
 
 extension HTTPRequest {
+
+    /// Creates a javascript wrapper that forwards the requests properties and functions.
     func asJavascriptObject(in jsCtx: JXContext) throws -> JXValue {
 
         let request = jsCtx.object()
@@ -156,6 +158,7 @@ extension Cache {
 
     func cacheGet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
+        // Index 0 is target javascript object, index 1 is the key of the property being requested.
         let key = try args[1].string
 
         let value: Any? = self[key]

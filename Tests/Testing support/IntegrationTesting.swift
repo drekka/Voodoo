@@ -66,8 +66,8 @@ extension IntegrationTesting {
             response = ServerResponse(data: nil, response: nil, error: error)
         }
 
-        expect(file: file, line: line, response.response!.statusCode) == expectedStatusCode
-        expect(file: file, line: line, response.error).to(beNil())
+        expect(file: file, line: line, response.response!.statusCode).to(equal(expectedStatusCode), description: "HTTP status code incorrect,")
+        expect(file: file, line: line, response.error).to(beNil(), description: "Expected error to be 'nil',")
 
         return response
     }

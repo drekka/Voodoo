@@ -33,6 +33,13 @@ extension HTTPResponse: Equatable {
 
     public static func == (lhs: SimulacraCore.HTTPResponse, rhs: SimulacraCore.HTTPResponse) -> Bool {
         switch (lhs, rhs) {
+        case (.raw(let lhsStatus, let lhsHeaders, let lhsBody), .raw(let rhsStatus, let rhsHeaders, let rhsBody)):
+
+            guard lhsHeaders?.count == rhsHeaders?.count else {
+                return false
+            }
+
+            return lhsStatus == rhsStatus && lhsHeaders == rhsHeaders && lhsBody == rhsBody
 
         case (.javascript(let lhsScript), .javascript(let rhsScript)):
             return lhsScript == rhsScript
@@ -48,6 +55,7 @@ extension HTTPResponse: Equatable {
             return lhsHeaders == rhsHeaders && lhsBody == rhsBody
 
         case (.movedPermanently(let lhsURL), .movedPermanently(let rhsURL)),
+             (.permanentRedirect(let lhsURL), .permanentRedirect(let rhsURL)),
              (.temporaryRedirect(let lhsURL), .temporaryRedirect(let rhsURL)):
             return lhsURL == rhsURL
 
@@ -95,7 +103,7 @@ extension HTTPResponse.Body: Equatable {
 
         case (.data(let lhsData, let lhsContentType), .data(let rhsData, let rhsContentType)):
             return lhsData == rhsData
-            && AnyCodable(lhsContentType) == AnyCodable(rhsContentType)
+                && AnyCodable(lhsContentType) == AnyCodable(rhsContentType)
 
         case (.file(let lhsURL, let lhsContentType), .file(let rhsURL, let rhsContentType)):
             return lhsURL == rhsURL && lhsContentType == rhsContentType

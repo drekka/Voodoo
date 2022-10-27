@@ -80,7 +80,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
         let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
         let httpResponse = response.response! as HTTPURLResponse
 
-        expect(httpResponse.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
+        expect(httpResponse.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.applicationJSON
         let json = try JSONSerialization.jsonObject(with: response.data!) as! [[String: Any]]
 
         expect(json[0]["name"] as? String) == "Consider Phlebas"
@@ -104,7 +104,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
         let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
         let httpResponse = response.response! as HTTPURLResponse
 
-        expect(httpResponse.value(forHTTPHeaderField: ContentType.key)) == ContentType.applicationJSON
+        expect(httpResponse.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.applicationJSON
         let json = try JSONSerialization.jsonObject(with: response.data!) as! [[String: Any]]
 
         expect(json[0]["name"] as? String) == "Consider Phlebas"

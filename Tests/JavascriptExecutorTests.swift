@@ -21,6 +21,43 @@ class JavascriptExecutorTests: XCTestCase {
 
     // MARK: - Request details
 
+    func testRequestDetailsMinimal() throws {
+
+        let request = HBRequest.mock()
+        try expectRequest(request, javascript: #"""
+            console.log("Path components " + request.pathComponents);
+            var data = {
+                method: request.method,
+                headers: request.headers,
+                path: request.path,
+                pathComponents: request.pathComponents,
+                pathParameters: request.pathParameters,
+                query: request.query,
+                queryParameters: request.queryParameters,
+                body: String.fromCharCode.apply(null, new Uint8Array(request.body))
+            };
+            return Response.ok(Body.json(data));
+        """#) { results in
+
+            expect(results["method"] as? String) == "GET"
+            expect(results["path"] as? String) == "/abc"
+            expect(results["pathComponents"] as? [String]) == ["/", "abc"]
+
+            let headers = results["headers"] as! [String: Any]
+            expect(headers.count) == 1
+            expect(headers["host"] as? String) == "127.0.0.1:8080"
+
+            let pathParameters = results["pathParameters"] as! [String: Any]
+            expect(pathParameters.count) == 0
+
+            expect(results["query"] as? String) == nil
+            let queryParameters = results["queryParameters"] as! [String: Any]
+            expect(queryParameters.count) == 0
+
+            expect(results["body"] as? String) == ""
+        }
+    }
+
     func testRequestDetails() throws {
 
         let request = HBRequest.mock(path: "/abc/def?q1=123&q2=123&q1=456",
@@ -53,11 +90,12 @@ class JavascriptExecutorTests: XCTestCase {
             let pathParameters = results["pathParameters"] as! [String: Any]
             expect(pathParameters["pp1"] as? String) == "123"
             expect(pathParameters["pp2"] as? String) == "456"
-            expect(results["query"] as? String) == "q1=123&q2=123&q1=456"
 
+            expect(results["query"] as? String) == "q1=123&q2=123&q1=456"
             let queryParameters = results["queryParameters"] as! [String: Any]
             expect(queryParameters["q1"] as? [String]) == ["123", "456"]
             expect(queryParameters["q2"] as? String) == "123"
+
             expect(results["body"] as? String) == "Hello world!"
         }
     }
@@ -65,7 +103,7 @@ class JavascriptExecutorTests: XCTestCase {
     func testRequestFormParameters() throws {
 
         let request = HBRequest.mock(
-            contentType: ContentType.applicationFormData,
+            contentType: Header.ContentType.applicationFormData,
             body: #"formField1=Hello%20world!"#
         )
         try expectRequest(request, javascript: #"""
@@ -85,7 +123,7 @@ class JavascriptExecutorTests: XCTestCase {
     func testRequestBodyJSON() throws {
 
         let request = HBRequest.mock(
-            contentType: ContentType.applicationJSON,
+            contentType: Header.ContentType.applicationJSON,
             body: #"{"abc":"def"}"#
         )
         try expectRequest(request, javascript: #"""
@@ -195,6 +233,11 @@ class JavascriptExecutorTests: XCTestCase {
                            toReturn: .temporaryRedirect(mockServer))
     }
 
+    func testResponsePermanendRedirect() throws {
+        try expectResponse(#"return Response.permanentRedirect("\#(mockServer)");"#,
+                           toReturn: .permanentRedirect(mockServer))
+    }
+
     func testResponseNotFound() throws {
         try expectResponse(#"return Response.notFound();"#, toReturn: .notFound)
     }
@@ -252,17 +295,17 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testResponseBodyFile() throws {
         try expectResponse(#"return Response.ok(Body.file("/dir/file.dat", "text/plain"));"#,
-                           toReturn: .ok(body: .file(URL(string: "/dir/file.dat")!, contentType: ContentType.textPlain)))
+                           toReturn: .ok(body: .file(URL(string: "/dir/file.dat")!, contentType: Header.ContentType.textPlain)))
     }
 
     func testResponseBodyTemplate() throws {
         try expectResponse(#"return Response.ok(Body.template("template-name", "text/plain"));"#,
-                           toReturn: .ok(body: .template("template-name", contentType: ContentType.textPlain)))
+                           toReturn: .ok(body: .template("template-name", contentType: Header.ContentType.textPlain)))
     }
 
     func testResponseBodyTemplateWithTemplateData() throws {
         try expectResponse(#"return Response.ok(Body.template("template-name", "text/plain", {abc: "Hello"}));"#,
-                           toReturn: .ok(body: .template("template-name", templateData: ["abc": "Hello"], contentType: ContentType.textPlain)))
+                           toReturn: .ok(body: .template("template-name", templateData: ["abc": "Hello"], contentType: Header.ContentType.textPlain)))
     }
 
     // MARK: - Errors
@@ -281,7 +324,14 @@ class JavascriptExecutorTests: XCTestCase {
         expectResponse(#"""
                        return "abc";
                        """#,
-                       toThrowError: #"The javascript function returned an invalid response. Make sure you are using the 'Response' object to generate a response. Returned error: typeMismatch(Swift.Dictionary<Swift.String, Any>, Swift.DecodingError.Context(codingPath: [], debugDescription: "Expected to decode Dictionary<String, Any> but found JXValue instead.", underlyingError: nil))"#)
+                       toThrowError: #"The javascript function returned an unexpected response. Make sure you are using the 'Response' object to generate a response. Returned error: typeMismatch(Swift.Dictionary<Swift.String, Any>, Swift.DecodingError.Context(codingPath: [], debugDescription: "Expected to decode Dictionary<String, Any> but found JXValue instead.", underlyingError: nil))"#)
+    }
+
+    func testFailureWhenInvalidResponseReturned() throws {
+        expectResponse(#"""
+                       throw "Error!!!!";
+                       """#,
+                       toThrowError: "Javascript execution failed. Error: Error!!!!")
     }
 
     func testFailureWithInvalidJavascript() throws {
@@ -304,6 +354,20 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     // MARK: - Cache
+
+    func testUnconvertableValue() throws {
+
+        struct NonCodable {}
+
+        let cache = InMemoryCache()
+        cache.abc = NonCodable()
+
+        let context = JXContext()
+        let keyArg = context.string("abc")
+        let result = try cache.cacheGet(context: context, object: nil, args: [ context.object(), keyArg])
+
+        expect(result.isNull) == true
+    }
 
     func testCacheMiss() throws {
         try expectResponse(#"""
@@ -404,9 +468,11 @@ class JavascriptExecutorTests: XCTestCase {
         expect(result) == expectedResponse
     }
 
-    private func expectResponse(_ response: String,
+    private func expectResponse(file: StaticString = #file, line: UInt = #line,
+                                _ response: String,
                                 toThrowError expectedMessage: String) {
-        expectScript(#"""
+        expectScript(file: file, line: line,
+                     #"""
                      function response(request, cache) {
                          \#(response)
                      }
@@ -414,21 +480,22 @@ class JavascriptExecutorTests: XCTestCase {
                      toThrowError: expectedMessage)
     }
 
-    private func expectScript(_ script: String,
+    private func expectScript(file: StaticString = #file, line: UInt = #line,
+                              _ script: String,
                               inContext context: SimulacraContext = MockSimulacraContext(),
                               toThrowError expectedMessage: String) {
         do {
             let executor = try JavascriptExecutor(serverContext: context)
             _ = try executor.execute(script: script, for: HBRequest.mock().asHTTPRequest)
-            fail("Expected exception not thrown executing script")
+            fail("Expected exception not thrown executing script", file: file, line: line)
         } catch {
             if case SimulacraError.javascriptError(let message) = error {
                 if message != expectedMessage {
-                    fail("expected '\(expectedMessage)' got '\(message)'")
+                    fail("expected '\(expectedMessage)' got '\(message)'", file: file, line: line)
                 }
                 return
             }
-            fail("Unexpected error executing script: \(error.localizedDescription)")
+            fail("Unexpected error executing script: \(error.localizedDescription)", file: file, line: line)
         }
     }
 }

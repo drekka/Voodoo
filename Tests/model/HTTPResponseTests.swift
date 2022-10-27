@@ -33,7 +33,7 @@ class HTTPResponseTests: XCTestCase {
         let response = HTTPResponse.raw(.ok, body: .text("hello"))
         try await assert(response: response,
                          returnsStatus: .ok,
-                         withHeaders: [ContentType.key: ContentType.textPlain],
+                         withHeaders: [Header.contentType: Header.ContentType.textPlain],
                          body: "hello")
     }
 
@@ -70,7 +70,7 @@ class HTTPResponseTests: XCTestCase {
     func assertConvenienceCase(_ enumInit: (HeaderDictionary, HTTPResponse.Body) -> HTTPResponse, returnsStatus expectedStatus: HTTPResponseStatus) async throws {
         let response = enumInit(testHeaders, .text("hello"))
         var expectedHeaders = testHeaders
-        expectedHeaders[ContentType.key] = ContentType.textPlain
+        expectedHeaders[Header.contentType] = Header.ContentType.textPlain
         try await assert(response: response, returnsStatus: expectedStatus, withHeaders: expectedHeaders, body: "hello")
     }
 
@@ -153,6 +153,10 @@ class HTTPResponseDecodableTests: XCTestCase {
         try assert(#"{"status": 307,"url":"\#(mockServer)"}"#, decodesTo: .temporaryRedirect(mockServer))
     }
 
+    func testDecodePermanentRedirect() throws {
+        try assert(#"{"status": 308,"url":"\#(mockServer)"}"#, decodesTo: .permanentRedirect(mockServer))
+    }
+
     func testDecodeNotFound() throws {
         try assert(#"{"status":404}"#, decodesTo: .notFound)
     }
@@ -167,6 +171,10 @@ class HTTPResponseDecodableTests: XCTestCase {
 
     func testDecodeInternalServerError() throws {
         try assert(#"{"status":500}"#, decodesTo: .internalServerError())
+    }
+
+    func testDecodeOther() throws {
+        try assert(#"{"status":999}"#, decodesTo: .raw(.custom(code: 999, reasonPhrase: "")))
     }
 
     // MARK: - Helpers

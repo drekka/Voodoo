@@ -35,20 +35,20 @@ struct HBRequestWrapper: HTTPRequest {
     var body: Data? { return request.body.buffer?.data }
 
     var bodyJSON: Any? {
-        guard request.contentType(is: ContentType.applicationJSON),
+        guard request.contentType(is: Header.ContentType.applicationJSON),
               let buffer = request.body.buffer else { return nil }
         return try? JSONSerialization.jsonObject(with: buffer)
     }
 
     var bodyYAML: Any? {
-        guard request.contentType(is: ContentType.applicationYAML),
+        guard request.contentType(is: Header.ContentType.applicationYAML),
               let data = request.body.buffer?.data else { return nil }
         return try? YAMLDecoder().decode(AnyDecodable.self, from: data).value
     }
 
     var formParameters: [String: String] {
 
-        guard request.contentType(is: ContentType.applicationFormData),
+        guard request.contentType(is: Header.ContentType.applicationFormData),
               let buffer = request.body.buffer else { return [:] }
 
         // Forms come in using encoding that's the same as that used for URL query arguments.
@@ -87,7 +87,7 @@ extension HBRequest {
 
     /// Helper for analysing the content type of a request.
     func contentType(is contentType: String) -> Bool {
-        headers[ContentType.key].first?.contains(contentType) ?? false
+        headers[Header.contentType].first?.contains(contentType) ?? false
     }
 }
 

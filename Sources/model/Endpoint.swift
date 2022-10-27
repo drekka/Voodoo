@@ -39,7 +39,7 @@ public struct Endpoint: Decodable {
         method = methodPath.0
         path = methodPath.1
         response = try container.inlineScriptResponse()
-            ?? (try container.fileScriptResponse(userInfo: decoder.userInfo))
+            ?? (try container.scriptFileResponse(userInfo: decoder.userInfo))
             ?? (try container.dataStructureResponse())
             ?? (try container.missingResponseError())
     }
@@ -83,7 +83,7 @@ extension KeyedDecodingContainer where Key == Endpoint.CodingKeys {
         return .javascript(script)
     }
 
-    func fileScriptResponse(userInfo: [CodingUserInfoKey: Any]) throws -> HTTPResponse? {
+    func scriptFileResponse(userInfo: [CodingUserInfoKey: Any]) throws -> HTTPResponse? {
 
         guard let scriptFile = try decodeIfPresent(String.self, forKey: .javascriptFile) else {
             return nil

@@ -25,7 +25,7 @@ public extension HTTPResponse {
         ///   - templateName: The name of the template as registered in the template engine.
         ///   - templateData: A dictionary containing additional data required by the template.
         ///   - contentType: The `content-type` to be returned in the HTTP response. This should match the content-type of the template.
-        case template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)
+        case template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = Header.ContentType.applicationJSON)
 
         /// generates a JSON payload.
         ///
@@ -142,7 +142,7 @@ extension HTTPResponse.Body {
             return (.empty, nil)
 
         case .text(let text, let templateData):
-            return (try text.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.textPlain)
+            return (try text.render(withTemplateData: templateData, forRequest: request, context: context), Header.ContentType.textPlain)
 
         case .data(let data, let contentType):
             return (data.hbResponseBody, contentType)
@@ -156,7 +156,7 @@ extension HTTPResponse.Body {
                 case let payload as Encodable: template = try JSONEncoder().encode(payload).string()
                 default: template = try JSONSerialization.data(withJSONObject: payload).string()
                 }
-                return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationJSON)
+                return (try template.render(withTemplateData: templateData, forRequest: request, context: context), Header.ContentType.applicationJSON)
 
             } catch {
                 throw SimulacraError.conversionError("Unable to convert '\(payload)' to JSON: \(error.localizedDescription)")
@@ -173,7 +173,7 @@ extension HTTPResponse.Body {
                     let payload = AnyCodable(payload)
                     template = try YAMLEncoder().encode(payload)
                 }
-                return (try template.render(withTemplateData: templateData, forRequest: request, context: context), ContentType.applicationYAML)
+                return (try template.render(withTemplateData: templateData, forRequest: request, context: context), Header.ContentType.applicationYAML)
 
             } catch {
                 throw SimulacraError.conversionError("Unable to convert '\(payload)' to YAML: \(error.localizedDescription)")

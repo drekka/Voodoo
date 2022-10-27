@@ -49,6 +49,10 @@ enum JavascriptModels {
                 return { status: 307, url: url };
             }
 
+            static permanentRedirect(url) {
+                return { status: 308, url: url };
+            }
+
             static notFound() {
                 return this.raw(404);
             }

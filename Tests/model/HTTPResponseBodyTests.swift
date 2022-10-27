@@ -33,28 +33,28 @@ class HTTPResponseBodyTests: XCTestCase {
     func testText() throws {
         try assert(.text(#"def {{xyz}}"#, templateData: ["xyz": 123]),
                    generates: #"def 123"#,
-                   contentType: ContentType.textPlain)
+                   contentType: Header.ContentType.textPlain)
     }
 
     func testData() throws {
-        try assert(.data("abc".data(using: .utf8)!, contentType: ContentType.textPlain),
+        try assert(.data("abc".data(using: .utf8)!, contentType: Header.ContentType.textPlain),
                    generates: "abc",
-                   contentType: ContentType.textPlain)
+                   contentType: Header.ContentType.textPlain)
     }
 
     func testemplate() throws {
         let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
         context.mustacheRenderer.register(template, named: "fred")
-        try assert(.template("fred", templateData: ["xyz": 123], contentType: ContentType.textPlain),
+        try assert(.template("fred", templateData: ["xyz": 123], contentType: Header.ContentType.textPlain),
                    generates: #"Hello 123"#,
-                   contentType: ContentType.textPlain)
+                   contentType: Header.ContentType.textPlain)
     }
 
     func testFile() throws {
         let url = Bundle.testBundle.url(forResource: "files/Simple", withExtension: "html")!
-        try assert(.file(url, contentType: ContentType.textHTML),
+        try assert(.file(url, contentType: Header.ContentType.textHTML),
                    generates: #"<html><body></body></html>\#n"#,
-                   contentType: ContentType.textHTML)
+                   contentType: Header.ContentType.textHTML)
     }
 
     // MARK: - JSON types
@@ -65,7 +65,7 @@ class HTTPResponseBodyTests: XCTestCase {
                    ],
                    templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
+                   contentType: Header.ContentType.applicationJSON)
     }
 
     func testJSONWithEncodable() throws {
@@ -77,7 +77,7 @@ class HTTPResponseBodyTests: XCTestCase {
         let encodable = JSONTest(abc: #"def {{xyz}}"#)
         try assert(.json(encodable, templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
-                   contentType: ContentType.applicationJSON)
+                   contentType: Header.ContentType.applicationJSON)
     }
 
     // MARK: - YAML types
@@ -88,7 +88,7 @@ class HTTPResponseBodyTests: XCTestCase {
                    ],
                    templateData: ["xyz": 123]),
                    generates: "abc: def 123\n",
-                   contentType: ContentType.applicationYAML)
+                   contentType: Header.ContentType.applicationYAML)
     }
 
     func testYAMLWithEncodable() throws {
@@ -100,7 +100,7 @@ class HTTPResponseBodyTests: XCTestCase {
         let encodable = YAMLTest(abc: #"def {{xyz}}"#)
         try assert(.yaml(encodable, templateData: ["xyz": 123]),
                    generates: "abc: def 123\n",
-                   contentType: ContentType.applicationYAML)
+                   contentType: Header.ContentType.applicationYAML)
     }
 
     // MARK: - Support functions
