@@ -108,24 +108,6 @@ extension HTTPHeaders: KeyedValues {
     public subscript(dynamicMember key: String) -> [String] { self[key] }
 }
 
-/// Used to apply dynamic member lookup to a dictionary.
-@dynamicMemberLookup
-public protocol DictionaryDynamicLookup {
-    associatedtype Key
-    associatedtype Value
-    subscript(_: Key) -> Value? { get }
-}
-
-/// Used to apply dynamic member lookup to a dictionary.
-public extension DictionaryDynamicLookup where Key == String {
-    subscript(dynamicMember member: String) -> Value? {
-        return self[member]
-    }
-}
-
-/// Make string dictionaries, for example the path parameters, dynamic lookup.
-extension Dictionary: DictionaryDynamicLookup where Key == String, Value == String {}
-
 /// Applies ``KeyedValues`` to Hummingbird's parameters.
 extension HBParameters: KeyedValues {
 

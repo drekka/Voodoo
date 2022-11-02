@@ -161,8 +161,7 @@ extension Cache {
         // Index 0 is target javascript object, index 1 is the key of the property being requested.
         let key = try args[1].string
 
-        let value: Any? = self[key]
-        guard let value else {
+        guard let value = self[key] else {
             return context.null()
         }
 
