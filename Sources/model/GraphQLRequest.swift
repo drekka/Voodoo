@@ -5,8 +5,17 @@
 //  Created by Derek Clarkson on 30/10/2022.
 //
 
+import AnyCodable
 import Foundation
 import GraphQL
+import Hummingbird
+
+/// Used to decode a incoming request.
+struct GraphQLPayload: Codable {
+    let query: String
+    let operationName: String?
+    let variables: AnyCodable?
+}
 
 /// Simple data structure representing a GraphQL request.
 ///
@@ -31,6 +40,7 @@ public class GraphQLRequest {
 
     // MARK: - Initialisers
 
+    /// Default initializer
     public init(query: String, operation: String? = nil, variables: [String: Any]? = nil) throws {
         rawQuery = query
         selectedOperation = operation
@@ -38,7 +48,8 @@ public class GraphQLRequest {
         try analyse(query: query)
     }
 
-    public convenience init(query: String, operation: String? = nil, variables: String? = nil) throws {
+    /// Convenience initializer for parsing variable strings.
+    public convenience init(query: String, operation: String? = nil, variables: String?) throws {
         // Assume any passed variables follow the GraphQL recommendation of being in a JSON dictionary form.
         var variablesDictionary: [String: Any]?
         if let variables,
@@ -49,17 +60,43 @@ public class GraphQLRequest {
         try self.init(query: query, operation: operation, variables: variablesDictionary)
     }
 
+    /// Convenience intializer for reading queries from incoming requests.
     public convenience init?(request: HTTPRequest) throws {
 
-        guard request.method == .GET,
-              let escapedQuery = request.queryParameters.query,
-              let query = escapedQuery.removingPercentEncoding else {
+        switch request.method {
+
+        case .GET:
+            guard let escapedQuery = request.queryParameters.query,
+                  let query = escapedQuery.removingPercentEncoding else {
+                return nil
+            }
+            try self.init(query: query,
+                          operation: request.queryParameters.operationName,
+                          variables: request.queryParameters.variables)
+
+        // If the content type is graphQL then treat the whole body as the query.
+        // Per https://graphql.org/learn/serving-over-http/#post-request
+        case .POST where request.contentType(is: Header.ContentType.applicationGraphQL):
+            guard let body = request.body,
+                  let query = String(data: body, encoding: .utf8) else {
+                return nil
+            }
+            try? self.init(query: query)
+
+        // If the content type is JSON then assume the body contains a dictionary.
+        // Per https://graphql.org/learn/serving-over-http/#post-request
+        case .POST where request.contentType(is: Header.ContentType.applicationJSON):
+            guard let body = request.body,
+                  let content = try? JSONDecoder().decode(GraphQLPayload.self, from: body) else {
+                return nil
+            }
+            try? self.init(query: content.query,
+                           operation: content.operationName,
+                           variables: content.variables?.value as? [String: Any])
+
+        default:
             return nil
         }
-
-        try self.init(query: query,
-                      operation: request.queryParameters.operationName,
-                      variables: request.queryParameters.variables)
     }
 
     // MARK: - Analysing

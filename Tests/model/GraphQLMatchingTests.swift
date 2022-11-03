@@ -12,6 +12,39 @@ import XCTest
 
 class GraphQLMatchingTests: XCTestCase {
 
+    // MARK: - Requests
+
+    func testRequest() throws {
+        let incomingQuery = "query {jediHero:hero{name}}"
+        let matcherQuery = "query {jediHero:hero{name}}"
+
+        let incomingRequest = try GraphQLRequest(query: incomingQuery, operation: "jediHeros")
+        let matcher = try GraphQLRequest(query: matcherQuery, operation: "jediHeros")
+
+        expect(matcher.matches(incomingRequest)) == true
+    }
+
+    func testRequestMatchOneQueryFromMany() throws {
+        let incomingQuery = """
+        query empireHeros {
+            hero(episode: EMPIRE) {
+                name
+            }
+        }
+        query jediHeros {
+            hero(episode: JEDI) {
+                name
+            }
+        }
+        """
+        let matcherQuery = "query {jediHero:hero{name}}"
+
+        let incomingRequest = try GraphQLRequest(query: incomingQuery, operation: "jediHeros")
+        let matcher = try GraphQLRequest(query: matcherQuery, operation: "jediHeros")
+
+        expect(matcher.matches(incomingRequest)) == true
+    }
+
     // MARK: - Operation
 
     func testOperation() {

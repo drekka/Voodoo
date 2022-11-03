@@ -11,7 +11,9 @@ import Nimble
 @testable import SimulacraCore
 import XCTest
 
-class GraphQLParserTests: XCTestCase {
+class GraphQLRequestTests: XCTestCase {
+
+    // MARK: - Query analysis
 
     let queryWithArgs = """
         query ($preview: Boolean) {
@@ -119,7 +121,73 @@ class GraphQLParserTests: XCTestCase {
         expect(requestQuery.jediHero?.arguments[0].value as? String) == "JEDI"
     }
 
-    // MARK: Test support
+    // MARK: - Request parsing
+
+    func testGetRequest() throws {
+        let query = "query {hero{name}}"
+
+        let request = try parse(request: HBRequest.mock(query: "query=" + query))
+        validate(request: request, hasQuery: query, operations: 1)
+
+        let requestQuery = request.defaultOperation!
+        expect(requestQuery.name) == nil
+        expect(requestQuery.type) == .query
+        validate(field: requestQuery.hero, hasName: "hero", fields: 1)
+    }
+
+    func testPostJSON() throws {
+        let query = "query {hero{name}}"
+        let payload = GraphQLPayload(query: query, operationName: nil, variables: nil)
+        let body = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
+        let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationJSON)],
+                                     body: body)
+
+        let request = try parse(request: hbRequest)
+        validate(request: request, hasQuery: query, operations: 1)
+
+        let requestQuery = request.defaultOperation!
+        expect(requestQuery.name) == nil
+        expect(requestQuery.type) == .query
+        validate(field: requestQuery.hero, hasName: "hero", fields: 1)
+    }
+
+    func testPostGraphQL() throws {
+        let query = "query {hero{name}}"
+        let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationGraphQL)],
+                                     body: query)
+
+        let request = try parse(request: hbRequest)
+        validate(request: request, hasQuery: query, operations: 1)
+
+        let requestQuery = request.defaultOperation!
+        expect(requestQuery.name) == nil
+        expect(requestQuery.type) == .query
+        validate(field: requestQuery.hero, hasName: "hero", fields: 1)
+    }
+
+    func testMatchOneQueryFromMany() throws {
+        let incomingQuery = """
+        query empireHeros {
+            hero(episode: EMPIRE) {
+                name
+            }
+        }
+        query jediHeros {
+            hero(episode: JEDI) {
+                name
+            }
+        }
+        """
+
+        let matcherQuery = "query {jediHero:hero{name}}"
+
+        let incomingRequest = try parse(request: HBRequest.mock(query: "query=" + incomingQuery + "&operationName=jediHeros"))
+        let matcher = try GraphQLRequest(query: matcherQuery, operation: "jediHeros")
+
+        expect(matcher.matches(incomingRequest)) == true
+    }
+
+    // MARK: - Test support
 
     func validate(file: StaticString = #file, line: UInt = #line,
                   request: GraphQLRequest,
@@ -171,7 +239,10 @@ class GraphQLParserTests: XCTestCase {
         if let operation {
             queryString += "&operation=\(operation)"
         }
-        let httpRequest = HBRequest.mock(query: queryString).asHTTPRequest
-        return try GraphQLRequest(request: httpRequest)!
+        return try parse(request: HBRequest.mock(query: queryString))
+    }
+
+    func parse(request: HBRequest) throws -> GraphQLRequest {
+        return try GraphQLRequest(request: request.asHTTPRequest)!
     }
 }

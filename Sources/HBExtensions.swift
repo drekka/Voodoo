@@ -45,3 +45,42 @@ extension HBRouter {
         }
     }
 }
+
+extension HBRequest {
+
+    /// Convenience variable to obtain a wrapped request.
+    var asHTTPRequest: HTTPRequest {
+        HBRequestWrapper(request: self)
+    }
+}
+
+/// Applies ``KeyedValues`` to the headers.
+extension HTTPHeaders: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.name.hashValue).inserted ? $0.name : nil }
+    }
+
+    public subscript(key: String) -> String? { first(name: key) }
+
+    public subscript(dynamicMember key: String) -> String? { first(name: key) }
+
+    public subscript(dynamicMember key: String) -> [String] { self[key] }
+}
+
+/// Applies ``KeyedValues`` to Hummingbird's parameters.
+extension HBParameters: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
+    }
+
+    public subscript(key: String) -> [String] { getAll(key) }
+
+    public subscript(dynamicMember key: String) -> String? { self[key] }
+
+    public subscript(dynamicMember key: String) -> [String] { getAll(key) }
+}
+

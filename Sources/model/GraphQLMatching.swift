@@ -24,7 +24,13 @@ extension GraphQLRequest: Matchable {
     /// is a subset of the other request. This is useful when we want to use a simple request
     /// as a means to match an incoming request.
     func matches(_ other: GraphQLRequest) -> Bool {
-        return false
+        var selectedOperationMatched = true
+        if let selectedOperation {
+            selectedOperationMatched = selectedOperation == other.selectedOperation
+        }
+        return selectedOperationMatched
+        && operations.match(other.operations)
+        && fragments.match(other.fragments)
     }
 }
 
@@ -73,7 +79,7 @@ extension Directive: Matchable {
 
 extension Argument: Matchable {
     func matches(_ other: Argument) -> Bool {
-        name == other.name && value(value, matches: other.value)
+        name == other.name && match(value, matches: other.value)
     }
 }
 
@@ -86,7 +92,7 @@ extension Variable: Matchable {
 // MARK: - Supporting functions
 
 /// Used to compare the fields in dictionary with the fields from another dictionary.
-extension Dictionary where Key == String, Value == Field {
+extension Dictionary where Key == String, Value: Matchable {
 
     /// Compares the contents of this dictionary with the contents of a second dictionary
     /// and returns `true` if all the elements of this array match with an element
@@ -94,10 +100,10 @@ extension Dictionary where Key == String, Value == Field {
     /// multiple elements may match the same element in the other array.
     ///
     /// - parameter other: The dictionary to match against.
-    func match(_ otherFields: [Key: Value]) -> Bool {
-        allSatisfy { fieldTuple in
-            if let matchingSubField = otherFields[fieldTuple.key] {
-                return fieldTuple.value.matches(matchingSubField)
+    func match(_ other: [Key: Value]) -> Bool {
+        allSatisfy { thisKeyValue in
+            if let otherMatchable = other[thisKeyValue.key] {
+                return thisKeyValue.value.matches(otherMatchable)
             }
             return false
         }
@@ -121,7 +127,9 @@ extension Array where Element: Matchable {
 }
 
 extension Matchable {
-    func value(_ value: Any?, matches otherValue: Any?) -> Bool {
+
+    /// This is used to match primitive non-matchable values.
+    func match(_ value: Any?, matches otherValue: Any?) -> Bool {
 
         // If this value is `nil` we are ignoring the match so return a success.
         guard let value else { return true }
@@ -130,6 +138,15 @@ extension Matchable {
         guard let otherValue else { return false }
 
         switch (value, otherValue) {
+
+        case (let x as Bool, let y as Bool):
+            return x == y
+
+        case (let x as Double, let y as Double):
+            return x == y
+
+        case (let x as Float, let y as Float):
+            return x == y
 
         case (let x as Int, let y as Int):
             return x == y

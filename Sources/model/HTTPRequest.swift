@@ -56,4 +56,13 @@ public protocol HTTPRequest {
 
     /// If the request is a form submission then this contains the fields and their values from the form.
     var formParameters: [String: String] { get }
+
+    /// Examines the request and if it is a GraphQL request, returns the details of that request.
+    var graphQLRequest: GraphQLRequest? { get }
+
+    /// Returns true if the passed content type is a match.
+    ///
+    /// Note that this does a contains to allow for extra parameters added to a content type such as encoding.
+    func contentType(is contentType: String) -> Bool
+
 }

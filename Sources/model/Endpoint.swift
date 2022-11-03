@@ -5,6 +5,10 @@
 import Foundation
 import NIOHTTP1
 
+public GraphQLQuery: Endpoint {
+
+}
+
 /// The definition of a mocked endpoint.
 public struct Endpoint: Decodable {
 
@@ -48,6 +52,7 @@ public struct Endpoint: Decodable {
 /// Extensions that let us coalesce the code in the init.
 extension KeyedDecodingContainer where Key == Endpoint.CodingKeys {
 
+    // Processes the "<method> <path>" string of an YAML signature.
     func methodPath(userInfo: [CodingUserInfoKey: Any]) throws -> (HTTPMethod, String) {
         // Set the signature properties.
         let signature = try decode(String.self, forKey: .signature)

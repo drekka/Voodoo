@@ -30,7 +30,7 @@ public enum HTTPResponse {
 
     // Convenience
 
-    /// Return a HTTP 200  with an optional body and headers.
+    /// Return a HTTP 200 with an optional body and headers.
     case ok(headers: HeaderDictionary? = nil, body: Body = .empty)
 
     case created(headers: HeaderDictionary? = nil, body: Body = .empty)
