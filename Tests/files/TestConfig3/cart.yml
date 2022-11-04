@@ -1,9 +1,10 @@
-- http:
-    api: put /cart
+- graphQL:
+    method: post
   javascriptFile: addToCart.js
   
-- http:    api: get /cart
+- graphQL:
+    method get
   javascript: |
     function response(request, cache) {
       return Response.ok(Body.json(cache.cart ?? {}));
-    } 
+    }

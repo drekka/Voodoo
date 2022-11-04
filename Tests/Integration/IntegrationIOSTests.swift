@@ -26,14 +26,14 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     // MARK: - Adding APIs
 
     func testAddingEndpoint() async {
-        server.add(Endpoint(.GET, "/abc"))
+        server.add(HTTPEndpoint(.GET, "/abc"))
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
     func testAddingEndpointsViaArray() async throws {
         server.add([
-            Endpoint(.GET, "/abc"),
-            Endpoint(.GET, "/def", response: .created()),
+            HTTPEndpoint(.GET, "/abc"),
+            HTTPEndpoint(.GET, "/def", response: .created()),
         ])
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         await executeAPICall(.GET, "/def", andExpectStatusCode: 201)
@@ -54,19 +54,19 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         @EndpointBuilder
         func otherEndpoints(inc: Bool) -> [Endpoint] {
             if inc {
-                Endpoint(.GET, "/aaa", response: .accepted())
+                HTTPEndpoint(.GET, "/aaa", response: .accepted())
             } else {
-                Endpoint(.GET, "/bbb")
+                HTTPEndpoint(.GET, "/bbb")
             }
         }
 
         server.add {
-            Endpoint(.GET, "/abc")
-            Endpoint(.GET, "/def", response: .created())
+            HTTPEndpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/def", response: .created())
             otherEndpoints(inc: true)
             otherEndpoints(inc: false)
             if true {
-                Endpoint(.GET, "/ccc")
+                HTTPEndpoint(.GET, "/ccc")
             }
         }
 

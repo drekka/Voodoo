@@ -1,4 +1,5 @@
-signature: get /config
+http:
+  api: get /config
 response:
   status: 200
   body:

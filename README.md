@@ -409,14 +409,16 @@ An endpoint definition can take one of 4 possible forms.
 #### Simple
 
 ```yaml
-signature: <method> <path>
+http:
+  api: <method> <path>
 response: <response>
 ```
 
 The `signature` tells Simulacra how to match incoming requests. `response` tells it how to respond and provides the HTTP status, optional headers, and body. For example
   
 ```yaml
-signature: get /config
+http: 
+  api: get /config
 response:
 status: 200
 headers: { config-version: 1.0 }
@@ -430,7 +432,8 @@ body:
 #### Inline javascript
 
 ```yaml
-signature: <method> <path>
+http: 
+  api:<method> <path>
 javascript: |
   function response(request, cache) {
       // generate the response here
@@ -440,7 +443,8 @@ javascript: |
 This is the simplest form of a YAML configured dynamic response. For example
 
 ```yaml  
-signature: get /config
+http:
+  api: get /config
 javascript: |
   function response(request, cache) {
       if request.headers.app-version == 1.0 {
@@ -464,14 +468,16 @@ javascript: |
 #### Javascript file reference
   
 ```yaml
-signature: <method> <path>
+http:
+  api: <method> <path>
 javascriptFile: <js-file-name>
 ```
  
 Also defining a dynamic response endpoint, this form references an external javascript file instead of have the code inline. This is convenient when you have a number of endpoints listed in the YAML file, or you want to store the javascript in a file with a `js` extension so it can be easy edited.  
 
 ```yaml
-signature: get /config
+http:
+  api: get /config
 javascriptFile: get-config.js
 ```
   
@@ -703,7 +709,8 @@ class IndividualUITests: UITestCase {
 Here is a simple file that returns a fixed response.
 
 ```yaml
-signature: get /config
+http:
+  api: get /config
 response:
   status: 200
   body:
@@ -719,7 +726,7 @@ This file contains a number of responses and inclusions. It's a good example of 
 
 ```yaml
 # Simple endpoint
-- signature: post /created/text
+- http:    api: post /created/text
   response:
     status: 201
     headers: ~
@@ -732,7 +739,7 @@ This file contains a number of responses and inclusions. It's a good example of 
 - TestConfig1/get-config.yml
 
 # Inline javascript dynamic response
-- signature: get /javascript/inline
+- http:    api: get /javascript/inline
   javascript: |
     function response(request, cache) {
         if request.parthParameter.accountId == "1234" {
@@ -743,7 +750,7 @@ This file contains a number of responses and inclusions. It's a good example of 
     }
     
 # Referenced javascript file
-- signature: get /javascript/file
+- http:    api: get /javascript/file
   javascriptFile: TestConfig1/login.js 
 ```
 

@@ -61,6 +61,6 @@ public struct ConfigLoader {
                                             ConfigLoader.userInfoDirectoryKey: directory,
                                             ConfigLoader.userInfoFilenameKey: file.lastPathComponent,
                                             ConfigLoader.userInfoVerboseKey: verbose,
-                                        ]).apis
+                                        ]).endpoints
     }
 }

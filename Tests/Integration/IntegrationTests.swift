@@ -38,8 +38,8 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testInitWithEndpoints() async throws {
         server = try Simulacra {
-            Endpoint(.GET, "/abc")
-            Endpoint(.GET, "/def", response: .created())
+            HTTPEndpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/def", response: .created())
         }
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         await executeAPICall(.GET, "/def", andExpectStatusCode: 201)

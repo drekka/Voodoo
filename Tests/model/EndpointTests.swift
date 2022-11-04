@@ -15,7 +15,7 @@ import Yams
 class EndpointTests: XCTestCase {
 
     func testInitWithArgs() {
-        let endpoint = Endpoint(.GET, "/abc")
+        let endpoint = HTTPEndpoint(.GET, "/abc")
         expect(endpoint.method) == .GET
         expect(endpoint.path) == "/abc"
         expect(endpoint.response) == .ok()
@@ -23,7 +23,8 @@ class EndpointTests: XCTestCase {
 
     func testDecode() throws {
         try expectYML(#"""
-                      signature: "post /abc"
+                      http:
+                        api: "post /abc"
                       response:
                         status: 200
                       """#,
@@ -32,7 +33,8 @@ class EndpointTests: XCTestCase {
 
     func testDecodeWithResponse() throws {
         try expectYML(#"""
-                      signature: "post /abc"
+                      http:
+                        api: "post /abc"
                       response:
                         status: 200
                         headers:
@@ -51,7 +53,8 @@ class EndpointTests: XCTestCase {
 
     func testDecodeWithInvalidSignature() throws {
         try expectYML(#"""
-                      signature: "post/abc"
+                      http:
+                        api: "post/abc"
                       response: "ok"
                       """#,
                       toFailWithDataCorrupt: "Incorrect signature. Expected <method> <path>")
@@ -59,7 +62,8 @@ class EndpointTests: XCTestCase {
 
     func testDecodeWithEmbeddedJavascript() throws {
         try expectYML(#"""
-                      signature: "post /abc"
+                      http:
+                        api: "post /abc"
                       javascript: |
                         function response(request, cache) {
                            return Response.ok()
@@ -71,7 +75,8 @@ class EndpointTests: XCTestCase {
 
     func testDecodeWithExternalJavascript() throws {
         try expectYML(#"""
-                      signature: "post /abc"
+                      http:
+                        api: "post /abc"
                       javascriptFile: files/TestConfig1/login.js
                       """#,
                       toDecodeAs: .POST, "/abc",
@@ -80,7 +85,8 @@ class EndpointTests: XCTestCase {
 
     func testDecodeWithMissingExternalJavascript() throws {
         try expectYML(#"""
-                      signature: "get post/abc"
+                      http:
+                        api: "get post/abc"
                       javascriptFile: files/TestConfig1/xxx.js
                       """#) { error in
             guard case DecodingError.dataCorrupted(let context) = error else {
@@ -94,7 +100,8 @@ class EndpointTests: XCTestCase {
 
     func testDecodeWithNoResponse() throws {
         try expectYML(#"""
-                      signature: "get post/abc"
+                      http:
+                        api: "get post/abc"
                       """#,
                       toFailWithDataCorrupt: "Expected to find 'response', 'javascript' or 'javascriptFile'")
     }
@@ -105,7 +112,7 @@ class EndpointTests: XCTestCase {
                            toDecodeAs expectedMethod: HTTPMethod,
                            _ expectedPath: String,
                            response expectedResponse: HTTPResponse) throws {
-        let endpoint = try YAMLDecoder().decode(Endpoint.self, from: yml, userInfo: userInfo())
+        let endpoint = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
 
         expect(endpoint.method) == expectedMethod
         expect(endpoint.path) == expectedPath
@@ -124,7 +131,7 @@ class EndpointTests: XCTestCase {
 
     private func expectYML(_ yml: String, toFail errorValidation: (Error) -> Void) throws {
         do {
-            _ = try YAMLDecoder().decode(Endpoint.self, from: yml, userInfo: userInfo())
+            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
             fail("Error not thrown")
         } catch {
             errorValidation(error)

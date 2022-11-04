@@ -1,5 +1,6 @@
-http:
-  api: get /app/config
+graphQL:
+  method: get
+  operation: getConfig
 response:
   status: 200
   body:

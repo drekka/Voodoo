@@ -1,3 +1,4 @@
-signature: post /login
+http:
+  api: post /login
 javascript: login.js
 
