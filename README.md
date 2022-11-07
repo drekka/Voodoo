@@ -1,6 +1,7 @@
-# Voodoo
 
-![Voodoo-Doll-Step-10](assets/Voodoo-Doll-Step-10.png)
+![Untitled](assets/Untitled.png)
+
+
 
 
 Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
@@ -14,6 +15,8 @@ It primary features are:
 * Multi-port parallel test friendly.
 
 * Configurable via a Swift API, and/or YAML and Javascript.
+
+* RESTful and GraphQL query support.
 
 * Fixed and dynamically generated responses including raw text, JSON, YAML, and custom data with templating via Mustache.
 
@@ -104,7 +107,7 @@ This will download all dependencies and build the command line program. On my 10
 The finished executable will be
 
 ```bash
-.build/release/Voodoo
+.build/release/magic
 ```
 
 Which you can move anywhere you like as it's fully self contained.
@@ -114,7 +117,7 @@ Which you can move anywhere you like as it's fully self contained.
 The command line program has a number of options, but here is a minimal example:
 
 ```bash
-.build/release/Voodoo run --config Tests/files/TestConfig1 
+.build/release/magic run --config Tests/files/TestConfig1 
 ```
 
 Seeing as the command line is designed for a non-programmatic situation, at a minimum you need to give it a path to a directory or file where it can load end points from.
@@ -122,7 +125,7 @@ Seeing as the command line is designed for a non-programmatic situation, at a mi
 However a more practical example might look like this:
 
 ```bash
-.build/release/Voodoo run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
+.build/release/magic run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
 Which adds a directory of response templates and another containing general files such as images and javascript source for web pages. 
@@ -151,7 +154,7 @@ Voodoo has the ability to read templates of responses stored in a directory. Thi
 
 ```swift
 let templatePath = Bundle.testBundle.resourceURL!
-server = try Voodoo(templatePath: templatePath) {
+server = try VoodooServer(templatePath: templatePath) {
     // Endpoints configured here.
 }
 ```
@@ -591,7 +594,7 @@ To build this project I used a number of 3rd party projects. However you don't n
 
 * [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Voodoo can run on both platforms. 
 
-* [Nimble][nimble] - Simply the best assertion framework for unit testing.
+* [Nimble][nimble] - Simply the best assertion framework for unit testing. Not a direct dependency, just used to test Voodoo.
 
 * [Swift Argument Parser][swift-argument-parser] - The API that the command line program is built on.  
 
@@ -645,7 +648,7 @@ open class UITestCase: XCTestCase {
     ///
     /// - parameter endpoints: The end points needed by the server.
     func launchServer(@EndpointBuilder endpoints: () -> [Endpoint]) throws {
-        server = try Voodoo(verbose: true, endpoints: endpoints)
+        server = try VoodooServer(verbose: true, endpoints: endpoints)
     }
 
     /// Launches your app, passing the common launch arguments and any additional
