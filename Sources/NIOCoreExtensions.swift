@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 21/9/2022.
 //
 
@@ -26,5 +23,3 @@ extension HTTPMethod: Decodable {
         self = HTTPMethod(rawValue: rawMethod.uppercased())
     }
 }
-
-

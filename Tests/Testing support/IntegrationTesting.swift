@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 30/9/2022.
 //
 
@@ -9,14 +6,14 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 
 /// Add this protocol to gain access to integration testing functions.
 protocol IntegrationTesting: AnyObject {
 
     typealias ServerResponse = (data: Data?, response: HTTPURLResponse?, error: Error?)
 
-    var server: Simulacra! { get set }
+    var server: VoodooServer! { get set }
 
     func tearDownServer()
 

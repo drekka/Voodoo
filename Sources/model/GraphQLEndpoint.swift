@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 4/11/2022.
 //
 
@@ -51,4 +48,3 @@ public struct GraphQLEndpoint: Endpoint {
         response = try decoder.decodeResponse()
     }
 }
-

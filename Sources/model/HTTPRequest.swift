@@ -64,5 +64,4 @@ public protocol HTTPRequest {
     ///
     /// Note that this does a contains to allow for extra parameters added to a content type such as encoding.
     func contentType(is contentType: String) -> Bool
-
 }

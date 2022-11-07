@@ -1,12 +1,9 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 5/11/2022.
 //
 
 import Foundation
-@testable import SimulacraCore
+@testable import Voodoo
 
 extension GraphQLSelector: Equatable {
     public static func == (lhs: GraphQLSelector, rhs: GraphQLSelector) -> Bool {

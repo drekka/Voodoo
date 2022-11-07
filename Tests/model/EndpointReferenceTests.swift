@@ -1,13 +1,10 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 4/11/2022.
 //
 
 import Foundation
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 import Yams
 

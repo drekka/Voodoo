@@ -6,9 +6,9 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 
-// Simulacra extensions to Hummingbird
+// Voodoo extensions to Hummingbird
 
-extension HBApplication: SimulacraContext {
+extension HBApplication: VoodooContext {
 
     public var port: Int {
         guard let port = configuration.address.port else {
@@ -83,4 +83,3 @@ extension HBParameters: KeyedValues {
 
     public subscript(dynamicMember key: String) -> [String] { getAll(key) }
 }
-

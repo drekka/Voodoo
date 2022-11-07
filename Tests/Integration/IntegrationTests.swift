@@ -5,12 +5,12 @@
 import Hummingbird
 import Nimble
 import NIOHTTP1
-import SimulacraCore
+import Voodoo
 import XCTest
 
 class IntegrationTests: XCTestCase, IntegrationTesting {
 
-    var server: Simulacra!
+    var server: VoodooServer!
     let resourcesURL: URL = Bundle.testBundle.resourceURL!
 
     override func tearDown() {
@@ -21,23 +21,23 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     // MARK: - Init
 
     func testInitWithMultipleServers() throws {
-        let s1 = try Simulacra()
-        let s2 = try Simulacra()
+        let s1 = try VoodooServer()
+        let s2 = try VoodooServer()
         expect(s2.url.host) == s1.url.host
         expect(s2.url.port) != s1.url.port
     }
 
     func testInitRunsOutOfPorts() throws {
-        let s1 = try Simulacra()
+        let s1 = try VoodooServer()
         let currentPort = s1.url.port!
         expect {
-            try Simulacra(portRange: currentPort ... currentPort)
+            try VoodooServer(portRange: currentPort ... currentPort)
         }
-        .to(throwError(SimulacraError.noPortAvailable))
+        .to(throwError(VoodooError.noPortAvailable))
     }
 
     func testInitWithEndpoints() async throws {
-        server = try Simulacra {
+        server = try VoodooServer {
             HTTPEndpoint(.GET, "/abc")
             HTTPEndpoint(.GET, "/def", response: .created())
         }
@@ -50,7 +50,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     func testFileServing() async throws {
 
         let filesURL = resourcesURL.appendingPathComponent("files")
-        server = try Simulacra(filePaths: [filesURL])
+        server = try VoodooServer(filePaths: [filesURL])
 
         let response = await executeAPICall(.GET, "/Simple.html", andExpectStatusCode: 200)
         expect(String(data: response.data!, encoding: .utf8)) == "<html><body></body></html>\n"
@@ -61,8 +61,8 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
         let filesURL = resourcesURL.appendingPathComponent("XXXX")
 
-        expect { try Simulacra(filePaths: [filesURL]) }.to(throwError { (error: Error) in
-            guard case SimulacraError.directoryNotExists(let message) = error else {
+        expect { try VoodooServer(filePaths: [filesURL]) }.to(throwError { (error: Error) in
+            guard case VoodooError.directoryNotExists(let message) = error else {
                 fail("Incorrect error \(error.localizedDescription)")
                 return
             }
@@ -74,7 +74,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testTemplateWithReferences() async throws {
 
-        server = try Simulacra(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
+        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
         server.add(.GET, "/", response: .ok(body: .template("books")))
 
         let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
@@ -90,7 +90,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testDynamicTemplateIncludesReferencedTemplates() async throws {
 
-        server = try Simulacra(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
+        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
         server.add(.GET, "/", response: .ok(body: .json(
             #"""
             [
@@ -115,7 +115,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     // MARK: - Middleware
 
     func testNoResponseFoundMiddleware() async throws {
-        server = try Simulacra()
+        server = try VoodooServer()
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 404)
     }
 
@@ -126,7 +126,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     func testScenario2ConfigConversionError() async throws {
         let filesURL = resourcesURL.appendingPathComponent("files")
         let endpoints = try ConfigLoader(verbose: true).load(from: filesURL.appendingPathComponent("/TestConfig2/getConfig.yml"))
-        server = try Simulacra { endpoints }
+        server = try VoodooServer { endpoints }
         let response = await executeAPICall(.GET, "/app/config", andExpectStatusCode: 200)
         let payload = try JSONSerialization.jsonObject(with: response.data!) as! [String: Any]
         expect(payload["version"] as? Double) == 1.0

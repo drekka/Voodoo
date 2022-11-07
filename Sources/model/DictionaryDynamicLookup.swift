@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Derek Clarkson on 31/10/2022.
 //
@@ -20,7 +20,6 @@ public protocol DictionaryDynamicLookup {
 
 public extension DictionaryDynamicLookup where Key == String {
     subscript(dynamicMember key: String) -> Value? {
-        return self[key]
+        self[key]
     }
 }
-

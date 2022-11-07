@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 17/9/2022.
 //
 
@@ -9,7 +6,7 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOCore
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class AdminConsoleTests: XCTestCase {

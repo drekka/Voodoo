@@ -6,9 +6,9 @@ import Foundation
 import Hummingbird
 import NIOCore
 
-public enum SimulacraError: Error, HBHTTPResponseError {
+public enum VoodooError: Error, HBHTTPResponseError {
 
-    public static let headerKey = "Simulacra-Error"
+    public static let headerKey = "Voodoo-Error"
 
     case conversionError(String)
     case templateRenderingFailure(String)
@@ -22,7 +22,7 @@ public enum SimulacraError: Error, HBHTTPResponseError {
     public var status: HTTPResponseStatus { .internalServerError }
 
     public var headers: HTTPHeaders {
-        return [Self.headerKey: localizedDescription]
+        [Self.headerKey: localizedDescription]
     }
 
     public var localizedDescription: String {

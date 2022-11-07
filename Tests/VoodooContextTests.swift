@@ -6,17 +6,17 @@ import AnyCodable
 import Foundation
 import Hummingbird
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
-class SimulacraContextTests: XCTestCase {
+class VoodooContextTests: XCTestCase {
 
-    var context: MockSimulacraContext!
+    var context: MockVoodooContext!
 
     private let host = "127.0.0.1:8080"
 
     override func setUp() {
-        context = MockSimulacraContext()
+        context = MockVoodooContext()
     }
 
     func testRequestTemplateDataWithNil() {

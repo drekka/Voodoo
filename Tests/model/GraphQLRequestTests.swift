@@ -1,14 +1,11 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 28/10/2022.
 //
 
 import Foundation
 import Hummingbird
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class GraphQLRequestTests: XCTestCase {
@@ -140,7 +137,7 @@ class GraphQLRequestTests: XCTestCase {
         let payload = GraphQLPayload(query: query, operationName: nil, variables: nil)
         let body = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
         let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationJSON)],
-                                     body: body)
+                                       body: body)
 
         let request = try parse(request: hbRequest)
         validate(request: request, hasQuery: query, operations: 1)
@@ -154,7 +151,7 @@ class GraphQLRequestTests: XCTestCase {
     func testPostGraphQL() throws {
         let query = "query {hero{name}}"
         let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationGraphQL)],
-                                     body: query)
+                                       body: query)
 
         let request = try parse(request: hbRequest)
         validate(request: request, hasQuery: query, operations: 1)
@@ -243,6 +240,6 @@ class GraphQLRequestTests: XCTestCase {
     }
 
     func parse(request: HBRequest) throws -> GraphQLRequest {
-        return try GraphQLRequest(request: request.asHTTPRequest)!
+        try GraphQLRequest(request: request.asHTTPRequest)!
     }
 }

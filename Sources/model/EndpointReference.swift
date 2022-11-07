@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 4/11/2022.
 //
 
@@ -27,7 +24,7 @@ struct EndpointReference: Decodable, EndpointSource {
         } else if let graphQLEndpoint = try container.decodeEndpoint(GraphQLEndpoint.self) {
             endpoints = [graphQLEndpoint]
         } else {
-            throw SimulacraError.configLoadFailure("Failure decoding end points in \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] ?? "[Unknown]")")
+            throw VoodooError.configLoadFailure("Failure decoding end points in \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] ?? "[Unknown]")")
         }
     }
 }

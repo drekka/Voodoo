@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 31/10/2022.
 //
 
@@ -130,14 +127,14 @@ extension GraphQL.Value {
         case let value as BooleanValue: return value.value
         case is NullValue: return nil
         case let value as EnumValue: return value.value
-        case let value as ListValue: return value.values.map { $0.rawValue }
+        case let value as ListValue: return value.values.map(\.rawValue)
         case let value as ObjectValue: return Dictionary(value.fields.map { ($0.name.value, $0.value.rawValue) }) { $1 }
         default: return nil
         }
     }
 }
 
-extension Array where Element == Selection {
+extension [Selection] {
     var fields: [String: Field] {
         Dictionary(uniqueKeysWithValues: compactMap {
             guard let field = Field(gQLSelection: $0) else {

@@ -21,8 +21,8 @@ extension Error {
     }
 }
 
-/// The main Simulacra server.
-public class Simulacra {
+/// The main Voodoo server.
+public class VoodooServer {
 
     private let server: HBApplication
     private let verbose: Bool
@@ -58,8 +58,8 @@ public class Simulacra {
 
         // Validate the file paths.
         try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
-            if $0.fileSystemStatus != .isDirectory  {
-                throw SimulacraError.directoryNotExists($0.filePath)
+            if $0.fileSystemStatus != .isDirectory {
+                throw VoodooError.directoryNotExists($0.filePath)
             }
         }
 
@@ -70,7 +70,6 @@ public class Simulacra {
         } else {
             mustacheEngine = HBMustacheLibrary()
         }
-
 
         for nextPort in portRange {
 
@@ -95,19 +94,19 @@ public class Simulacra {
                     print("👻 Port \(nextPort) busy, trying next port in range")
                     continue
 
-                case let error as SimulacraError:
+                case let error as VoodooError:
                     print("👻 Unexpected error: \(error.localizedDescription)")
                     throw error
 
                 default:
                     print("👻 Unexpected error: \(error.localizedDescription)")
-                    throw SimulacraError.unexpectedError(error)
+                    throw VoodooError.unexpectedError(error)
                 }
             }
         }
 
         print("👻 Exhausted all ports in range \(portRange)")
-        throw SimulacraError.noPortAvailable
+        throw VoodooError.noPortAvailable
     }
 
     public func wait() {
@@ -142,9 +141,9 @@ public class Simulacra {
     public func add(_ endpoint: Endpoint) {
         switch endpoint {
         case let endpoint as HTTPEndpoint:
-                add(endpoint.method, endpoint.path, response: endpoint.response)
+            add(endpoint.method, endpoint.path, response: endpoint.response)
         case let endpoint as GraphQLEndpoint:
-                add(endpoint.method, endpoint.selector, response: endpoint.response)
+            add(endpoint.method, endpoint.selector, response: endpoint.response)
         default:
             break
         }
@@ -169,7 +168,7 @@ public class Simulacra {
     }
 
     /// Adds a GraphQL endpoint.
-    public func add(_ method: HTTPMethod, _ graphQLSelector: GraphQLSelector, response: HTTPResponse = .ok()) {
+    public func add(_ method: HTTPMethod, _: GraphQLSelector, response _: HTTPResponse = .ok()) {
         if verbose { print(#"👻 Adding GraphQL endpoint:\#(method)"#) }
     }
 
@@ -188,12 +187,12 @@ extension HBApplication {
                       middleware: [HBMiddleware],
                       mustacheEngine: HBMustacheLibrary,
                       filePaths: [URL]?,
-                      verbose: Bool,
+                      verbose _: Bool,
                       hummingbirdVerbose: Bool) throws -> HBApplication {
 
         let configuration = HBApplication.Configuration(
             address: .hostname(useAnyAddr ? "0.0.0.0" : "127.0.0.1", port: port),
-            serverName: "Simulacra API simulator",
+            serverName: "Voodoo API simulator",
             logLevel: hummingbirdVerbose ? .trace : .error
         )
 
@@ -206,7 +205,7 @@ extension HBApplication {
         middleware.forEach(server.middleware.add(_:))
 
         // File path middleware requires a server reference so we cannot set them up in advance.
-        filePaths?.map {HBFileMiddleware($0.filePath, application: server)}.forEach(server.middleware.add(_:))
+        filePaths?.map { HBFileMiddleware($0.filePath, application: server) }.forEach(server.middleware.add(_:))
 
         // Setup resources and engines.
         server.cache = InMemoryCache()

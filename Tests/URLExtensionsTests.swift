@@ -1,13 +1,10 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 10/10/2022.
 //
 
 import Foundation
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class URLExtensionsTests: XCTestCase {
@@ -26,5 +23,4 @@ class URLExtensionsTests: XCTestCase {
         let url = Bundle.testBundle.url(forResource: "files", withExtension: nil)!
         expect(url.fileSystemStatus) == .isDirectory
     }
-
 }

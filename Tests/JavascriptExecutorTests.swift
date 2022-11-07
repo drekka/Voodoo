@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 30/9/2022.
 //
 
@@ -10,7 +7,7 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 import JXKit
@@ -142,7 +139,7 @@ class JavascriptExecutorTests: XCTestCase {
                                javascript: String,
                                toReturn validate: ([String: Any]) -> Void) throws {
         let httpRequest = request.asHTTPRequest
-        let executor = try JavascriptExecutor(serverContext: MockSimulacraContext())
+        let executor = try JavascriptExecutor(serverContext: MockVoodooContext())
         let response = try executor.execute(script: #"""
                                                     function response(request, cache) {
                                                         \#(javascript)
@@ -365,7 +362,7 @@ class JavascriptExecutorTests: XCTestCase {
 
         let context = JXContext()
         let keyArg = context.string("abc")
-        let result = try cache.cacheGet(context: context, object: nil, args: [ context.object(), keyArg])
+        let result = try cache.cacheGet(context: context, object: nil, args: [context.object(), keyArg])
 
         expect(result.isNull) == true
     }
@@ -378,7 +375,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheString() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = "Hello world!";
                            return Response.ok();
@@ -393,7 +390,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheInt() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = 123;
                            return Response.ok();
@@ -408,7 +405,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheJSObject() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = {
                                def: "Hello world!"
@@ -426,7 +423,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheJSArray() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = [
                            {
@@ -458,7 +455,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     private func expectResponse(_ response: String,
                                 withHeaders headers: [(String, String)]? = nil,
-                                inContext: SimulacraContext = MockSimulacraContext(),
+                                inContext: VoodooContext = MockVoodooContext(),
                                 toReturn expectedResponse: HTTPResponse) throws {
         let executor = try JavascriptExecutor(serverContext: inContext)
         let result = try executor.execute(script: #"""
@@ -483,14 +480,14 @@ class JavascriptExecutorTests: XCTestCase {
 
     private func expectScript(file: StaticString = #file, line: UInt = #line,
                               _ script: String,
-                              inContext context: SimulacraContext = MockSimulacraContext(),
+                              inContext context: VoodooContext = MockVoodooContext(),
                               toThrowError expectedMessage: String) {
         do {
             let executor = try JavascriptExecutor(serverContext: context)
             _ = try executor.execute(script: script, for: HBRequest.mock().asHTTPRequest)
             fail("Expected exception not thrown executing script", file: file, line: line)
         } catch {
-            if case SimulacraError.javascriptError(let message) = error {
+            if case VoodooError.javascriptError(let message) = error {
                 if message != expectedMessage {
                     fail("expected '\(expectedMessage)' got '\(message)'", file: file, line: line)
                 }

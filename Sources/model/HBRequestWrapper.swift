@@ -34,7 +34,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     var queryParameters: KeyedValues { request.uri.queryParameters }
 
-    var body: Data? { return request.body.buffer?.data }
+    var body: Data? { request.body.buffer?.data }
 
     var bodyJSON: Any? {
         guard contentType(is: Header.ContentType.applicationJSON),
@@ -72,7 +72,7 @@ struct HBRequestWrapper: HTTPRequest {
     }
 
     var graphQLRequest: GraphQLRequest? {
-        return try? GraphQLRequest(request: self)
+        try? GraphQLRequest(request: self)
     }
 
     /// Helper for analysing the content type of a request.
@@ -90,4 +90,3 @@ extension String {
         ["/"] + split(separator: "/")
     }
 }
-

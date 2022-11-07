@@ -1,16 +1,16 @@
 
 # Xcode integration guide
 
-The initial development of Simulacra was to support Swift UI testing through a local server instead of an unreliable development or QA server.
+The initial development of Voodoo was to support Swift UI testing through a local server instead of an unreliable development or QA server.
 
 ## How does it work?
 
-1. In the `setUp()` of your UI test suite you start and configure an instance of Simulacra.
+1. In the `setUp()` of your UI test suite you start and configure an instance of Voodoo.
 2. From the running instance, get url the server is running on and...
 3. Using a launch argument, pass the URL to your app. 
-4. Finally in `teardown()` clear the Simulacra instance otherwise Simulacra and the port will stay allocated until the end of the test run. 
+4. Finally in `teardown()` clear the Voodoo instance otherwise Voodoo and the port will stay allocated until the end of the test run. 
 
-*Note that I said "test run" in step 4. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Simulacra is using so other tests can re-use them.*
+*Note that I said "test run" in step 4. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Voodoo is using so other tests can re-use them.*
 
 
 ## Adding mock endpoints
@@ -25,7 +25,7 @@ The initial development of Simulacra was to support Swift UI testing through a l
 open class UITestCase: XCTestCase {
 
     /// The mock server.
-    private(set) var server: Simulacra!
+    private(set) var server: Voodoo!
 
     /// Local app reference.
     private(set) var app: XCUIApplication!
@@ -48,7 +48,7 @@ open class UITestCase: XCTestCase {
     ///
     /// - parameter endpoints: The end points needed by the server.
     func launchServer(@EndpointBuilder endpoints: () -> [Endpoint]) throws {
-        server = try Simulacra(verbose: true, endpoints: endpoints)
+        server = try Voodoo(verbose: true, endpoints: endpoints)
     }
 
     /// Launches your app, passing the common launch arguments and any additional

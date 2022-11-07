@@ -1,13 +1,10 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 11/10/2022.
 //
 
 import Foundation
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 import Yams
 
@@ -15,6 +12,7 @@ extension ConfigFile {
     var httpEndpoints: [HTTPEndpoint] {
         endpoints.compactMap { $0 as? HTTPEndpoint }
     }
+
     var graphQLEndpoints: [GraphQLEndpoint] {
         endpoints.compactMap { $0 as? GraphQLEndpoint }
     }

@@ -1,13 +1,10 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 13/10/2022.
 //
 
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class ConfigLoaderTests: XCTestCase {
@@ -56,7 +53,7 @@ class ConfigLoaderTests: XCTestCase {
             _ = try loader.load(from: resourcesURL.appendingPathComponent("files/XXXX.yml"))
             fail("Error not thrown")
         } catch {
-            guard case SimulacraError.invalidConfigPath(let message) = error else {
+            guard case VoodooError.invalidConfigPath(let message) = error else {
                 fail("Incorrect error returned \(error)")
                 return
             }

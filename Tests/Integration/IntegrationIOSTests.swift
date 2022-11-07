@@ -5,17 +5,17 @@
 import Hummingbird
 import Nimble
 import NIOHTTP1
-import SimulacraCore
+import Voodoo
 import XCTest
 
 class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
-    var server: Simulacra!
+    var server: VoodooServer!
     var resourcesUrl: URL = Bundle.testBundle.resourceURL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        server = try Simulacra(templatePath: resourcesUrl)
+        server = try VoodooServer(templatePath: resourcesUrl)
     }
 
     override func tearDown() {
@@ -97,7 +97,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(httpResponse?.allHeaderFields.count) == 6
         expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
         expect(httpResponse?.value(forHTTPHeaderField: "abc")) == "def"
-        expect(httpResponse?.value(forHTTPHeaderField: "server")) == "Simulacra API simulator"
+        expect(httpResponse?.value(forHTTPHeaderField: "server")) == "Voodoo API simulator"
     }
 
     func testResponseDynamic() async {

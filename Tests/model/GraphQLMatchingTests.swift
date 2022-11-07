@@ -1,13 +1,10 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 2/11/2022.
 //
 
 import Foundation
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class GraphQLMatchingTests: XCTestCase {
@@ -64,7 +61,7 @@ class GraphQLMatchingTests: XCTestCase {
         let o4 = Operation.mock(withName: "123", type: .query, variables: [("def", "String", nil)])
         let o5 = Operation.mock(withName: "abc",
                                 type: .query,
-                                variables: [("123", "String", nil),("def", "String", nil),("456", "String", nil)])
+                                variables: [("123", "String", nil), ("def", "String", nil), ("456", "String", nil)])
         expect(o1.matches(o2)) == true
         expect(o1.matches(o3)) == false
         expect(o1.matches(o4)) == false

@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 2/11/2022.
 //
 
@@ -29,19 +26,19 @@ extension GraphQLRequest: Matchable {
             selectedOperationMatched = selectedOperation == other.selectedOperation
         }
         return selectedOperationMatched
-        && operations.match(other.operations)
-        && fragments.match(other.fragments)
+            && operations.match(other.operations)
+            && fragments.match(other.fragments)
     }
 }
 
 extension Operation: Matchable {
     func matches(_ other: Operation) -> Bool {
         name == other.name
-        && type == other.type
-        && fields.match(other.fields)
-        && variables.match(other.variables)
-        && directives.match(other.directives)
-        && fragmentReferences.match(other.fragmentReferences)
+            && type == other.type
+            && fields.match(other.fields)
+            && variables.match(other.variables)
+            && directives.match(other.directives)
+            && fragmentReferences.match(other.fragmentReferences)
     }
 }
 

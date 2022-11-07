@@ -1,14 +1,11 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 7/10/2022.
 //
 
 import Foundation
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 import Yams
 
@@ -66,7 +63,6 @@ class HTTPEndpointTests: XCTestCase {
             }
             expect(file: file, line: line, context.debugDescription) == expectedMessage
         }
-
     }
 
     private func userInfo() -> [CodingUserInfoKey: Any] {

@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 19/9/2022.
 //
 
@@ -9,7 +6,7 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class HTTPResponseTests: XCTestCase {
@@ -80,7 +77,7 @@ class HTTPResponseTests: XCTestCase {
                 body expectedBody: String? = nil) async throws {
 
         let request = HBRequest.mock().asHTTPRequest
-        let context = MockSimulacraContext()
+        let context = MockVoodooContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 
         expect(hbResponse.status) == expectedStatus
@@ -158,7 +155,7 @@ class HTTPResponseDecodableTests: XCTestCase {
             _ = try JSONDecoder().decode(HTTPResponse.self, from: data)
             fail("Expected error not thrown")
         } catch DecodingError.dataCorrupted(let context) {
-            expect(context.codingPath.map { $0.stringValue }) == expectedPath
+            expect(context.codingPath.map(\.stringValue)) == expectedPath
             expect(context.debugDescription) == expectedError
         }
     }

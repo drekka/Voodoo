@@ -15,7 +15,7 @@ public enum EndpointBuilder {
     public static func buildOptional(_ endpoints: [Endpoint]?) -> [Endpoint] { endpoints ?? [] }
     public static func buildEither(first source: EndpointSource) -> [Endpoint] { source.endpoints }
     public static func buildEither(second source: EndpointSource) -> [Endpoint] { source.endpoints }
-    public static func buildBlock(_ endpoints: EndpointSource...) -> [Endpoint] { endpoints.flatMap { $0.endpoints } }
+    public static func buildBlock(_ endpoints: EndpointSource...) -> [Endpoint] { endpoints.flatMap(\.endpoints) }
 }
 
 // MARK: - Extensions
@@ -28,7 +28,6 @@ extension GraphQLEndpoint: EndpointSource {
     public var endpoints: [Endpoint] { [self] }
 }
 
-extension Array: EndpointSource where Element == Endpoint {
+extension [Endpoint]: EndpointSource {
     public var endpoints: [Endpoint] { self }
 }
-

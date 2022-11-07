@@ -6,14 +6,12 @@ import Foundation
 import Hummingbird
 import NIOCore
 
-
 class MockResponder: HBResponder {
 
-    var gotRequest: Bool = false
+    var gotRequest = false
 
     func respond(to request: Hummingbird.HBRequest) -> EventLoopFuture<Hummingbird.HBResponse> {
         gotRequest = true
         return request.success(HBResponse(status: .ok))
     }
-
 }

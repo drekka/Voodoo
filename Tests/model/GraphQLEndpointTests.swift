@@ -1,14 +1,11 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 7/10/2022.
 //
 
 import Foundation
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 import Yams
 
@@ -55,12 +52,12 @@ class GraphQLEndpointTests: XCTestCase {
 
     func testDecodeMissingSelector() throws {
         try expectYML(#"""
-                  graphQL:
-                    method: get
-                  response:
-                    status: 200
-                  """#,
-                  toFailWithDataCorrupt: "Expected to find 'operation' or 'selector'")
+                      graphQL:
+                        method: get
+                      response:
+                        status: 200
+                      """#,
+                      toFailWithDataCorrupt: "Expected to find 'operation' or 'selector'")
     }
 
     func testDecodeWithNoResponse() throws {

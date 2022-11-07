@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 6/10/2022.
 //
 
@@ -126,7 +123,7 @@ extension HTTPResponse.Body: Decodable {
 extension KeyedDecodingContainer where Key == HTTPResponse.Body.CodingKeys {
     var templateData: [String: Any]? {
         get throws {
-            return try decodeIfPresent(AnyCodable.self, forKey: .templateData)?.value as? [String: Any]
+            try decodeIfPresent(AnyCodable.self, forKey: .templateData)?.value as? [String: Any]
         }
     }
 }
@@ -135,7 +132,7 @@ extension KeyedDecodingContainer where Key == HTTPResponse.Body.CodingKeys {
 
 extension HTTPResponse.Body {
 
-    func hbBody(forRequest request: HTTPRequest, serverContext context: SimulacraContext) throws -> (HBResponseBody, String?) {
+    func hbBody(forRequest request: HTTPRequest, serverContext context: VoodooContext) throws -> (HBResponseBody, String?) {
         switch self {
 
         case .empty:
@@ -159,7 +156,7 @@ extension HTTPResponse.Body {
                 return (try template.render(withTemplateData: templateData, forRequest: request, context: context), Header.ContentType.applicationJSON)
 
             } catch {
-                throw SimulacraError.conversionError("Unable to convert '\(payload)' to JSON: \(error.localizedDescription)")
+                throw VoodooError.conversionError("Unable to convert '\(payload)' to JSON: \(error.localizedDescription)")
             }
 
         case .yaml(let payload, let templateData):
@@ -176,7 +173,7 @@ extension HTTPResponse.Body {
                 return (try template.render(withTemplateData: templateData, forRequest: request, context: context), Header.ContentType.applicationYAML)
 
             } catch {
-                throw SimulacraError.conversionError("Unable to convert '\(payload)' to YAML: \(error.localizedDescription)")
+                throw VoodooError.conversionError("Unable to convert '\(payload)' to YAML: \(error.localizedDescription)")
             }
 
         case .file(let url, let contentType):
@@ -185,7 +182,7 @@ extension HTTPResponse.Body {
         case .template(let templateName, let templateData, let contentType):
             let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
             guard let payload = context.mustacheRenderer.render(finalTemplateData, withTemplate: templateName) else {
-                throw SimulacraError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
+                throw VoodooError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
             return (payload.hbResponseBody, contentType)
         }
@@ -202,7 +199,7 @@ extension Data {
 
     func string() throws -> String {
         guard let string = String(data: self, encoding: .utf8) else {
-            throw SimulacraError.conversionError("Unable to convert data to a String")
+            throw VoodooError.conversionError("Unable to convert data to a String")
         }
         return string
     }
@@ -226,12 +223,12 @@ extension String {
     ///     - templateData: Additional data that can be injected into this string assuming this string contains mustache keys.
     ///     - request: The request being fulfilled.
     ///     - context: The server context.
-    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: SimulacraContext) throws -> HBResponseBody {
+    func render(withTemplateData templateData: TemplateData?, forRequest request: HTTPRequest, context: VoodooContext) throws -> HBResponseBody {
         let dynamicTemplate = try HBMustacheTemplate(string: self)
         context.mustacheRenderer.register(dynamicTemplate, named: "_dynamic")
         let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
         guard let payload = context.mustacheRenderer.render(finalTemplateData, withTemplate: "_dynamic") else {
-            throw SimulacraError.templateRenderingFailure("Rendering template failed.")
+            throw VoodooError.templateRenderingFailure("Rendering template failed.")
         }
         return payload.hbResponseBody
     }

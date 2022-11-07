@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 6/11/2022.
 //
 
@@ -60,4 +57,3 @@ extension Decoder {
         throw DecodingError.dataCorrupted(context)
     }
 }
-

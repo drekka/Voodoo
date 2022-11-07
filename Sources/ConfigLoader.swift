@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 8/10/2022.
 //
 
@@ -45,7 +42,7 @@ public struct ConfigLoader {
         default:
             let fileSystemPath = path.filePath
             print("👻 Config file or directory does not exist '\(fileSystemPath)'")
-            throw SimulacraError.invalidConfigPath(fileSystemPath)
+            throw VoodooError.invalidConfigPath(fileSystemPath)
         }
     }
 

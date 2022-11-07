@@ -3,15 +3,14 @@
 //
 
 import Foundation
-@testable import SimulacraCore
 import HummingbirdMustache
+@testable import Voodoo
 
-struct MockSimulacraContext: SimulacraContext {
+struct MockVoodooContext: VoodooContext {
 
     let port = 8080
 
     let mustacheRenderer = HBMustacheLibrary()
 
     var cache: Cache = InMemoryCache()
-
 }

@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 5/10/2022.
 //
 
@@ -9,21 +6,21 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 import Yams
 
 class HTTPResponseBodyTests: XCTestCase {
 
-    private var context: SimulacraContext!
+    private var context: VoodooContext!
 
     override func setUp() {
         super.setUp()
-        context = MockSimulacraContext()
+        context = MockVoodooContext()
     }
 
     func testEmpty() throws {
-        let context = MockSimulacraContext()
+        let context = MockVoodooContext()
         let request = HBRequest.mock().asHTTPRequest
         let hbBody = try HTTPResponse.Body.empty.hbBody(forRequest: request, serverContext: context)
         expect(hbBody.0) == .empty

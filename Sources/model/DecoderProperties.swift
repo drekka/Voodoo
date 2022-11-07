@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  
+//
 //
 //  Created by Derek Clarkson on 4/11/2022.
 //
@@ -27,6 +27,6 @@ extension Decoder {
 
     /// Returns the server's verbose setting.
     var verbose: Bool {
-       userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false
+        userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false
     }
 }
