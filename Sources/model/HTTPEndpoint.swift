@@ -5,7 +5,6 @@
 import Foundation
 import NIOHTTP1
 
-
 /// The definition of a mocked endpoint.
 public struct HTTPEndpoint: Endpoint {
 
@@ -27,83 +26,46 @@ public struct HTTPEndpoint: Endpoint {
         self.response = response
     }
 
-    enum CodingKeys: CodingKey {
-        case signature
-        case response
-        case javascript
-        case javascriptFile
+    enum EndpointKeys: CodingKey {
+        case http
     }
 
     public init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let methodPath = try container.methodPath(userInfo: decoder.userInfo)
+
+        let container = try decoder.container(keyedBy: EndpointKeys.self)
+        let methodPath = try container.methodPath()
         method = methodPath.0
         path = methodPath.1
-        response = try container.decodeInlineScriptResponse()
-            ?? (try container.decodeScriptFileResponse(userInfo: decoder.userInfo))
-            ?? (try container.decodeFixedResponse())
-            ?? (try container.throwMissingResponseError())
+
+        response = try decoder.decodeResponse()
     }
 }
 
-/// Extensions that let us coalesce the code in the init.
-extension KeyedDecodingContainer where Key == HTTPEndpoint.CodingKeys {
+private extension KeyedDecodingContainer where Key == HTTPEndpoint.EndpointKeys {
+
+    enum EndpointSelectorKeys: CodingKey {
+        case api
+    }
 
     // Processes the "<method> <path>" string of an YAML signature.
-    func methodPath(userInfo: [CodingUserInfoKey: Any]) throws -> (HTTPMethod, String) {
-        // Set the signature properties.
-        // TODO: Does super decoder work here?
-        let signature = try decode(String.self, forKey: .signature)
-        if userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false {
-            print("👻 \(userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found endpoint config: \(signature)")
+    func methodPath() throws -> (HTTPMethod, String) {
+
+        // Get the request api property.
+        let selectorContainer = try nestedContainer(keyedBy: EndpointSelectorKeys.self, forKey: .http)
+        let api = try selectorContainer.decode(String.self, forKey: .api)
+
+        if try superDecoder(forKey: .http).verbose {
+            print("👻 \(try superDecoder(forKey: .http).configFileName), found endpoint config: \(api)")
         }
 
-        let components = signature.split(separator: " ")
+        // Split the api value into the method and path.
+        let components = api.split(separator: " ")
         if components.endIndex != 2 {
-            throw DecodingError.dataCorruptedError(forKey: .signature,
-                                                   in: self,
-                                                   debugDescription: "Incorrect signature. Expected <method> <path>")
+            throw DecodingError.dataCorruptedError(forKey: .api,
+                                                   in: selectorContainer,
+                                                   debugDescription: "Incorrect 'api' value. Expected <method> <path>")
         }
 
         return (HTTPMethod(rawValue: components[0].uppercased()), String(components[1]))
-    }
-
-    /// Throws an error if there is a missing response.
-    func throwMissingResponseError() throws -> HTTPResponse {
-        // At this point it's an error.
-        let context = DecodingError.Context(codingPath: codingPath,
-                                            debugDescription: "Expected to find '\(Key.response.stringValue)', '\(Key.javascript.stringValue)' or '\(Key.javascriptFile.stringValue)'")
-        throw DecodingError.dataCorrupted(context)
-    }
-
-    func decodeFixedResponse() throws -> HTTPResponse? {
-        try decodeIfPresent(HTTPResponse.self, forKey: .response)
-    }
-
-    func decodeInlineScriptResponse() throws -> HTTPResponse? {
-        guard let script = try decodeIfPresent(String.self, forKey: .javascript) else {
-            return nil
-        }
-        return .javascript(script)
-    }
-
-    func decodeScriptFileResponse(userInfo: [CodingUserInfoKey: Any]) throws -> HTTPResponse? {
-
-        guard let scriptFile = try decodeIfPresent(String.self, forKey: .javascriptFile) else {
-            return nil
-        }
-
-        guard let directory = userInfo[ConfigLoader.userInfoDirectoryKey] as? URL else {
-            preconditionFailure("Directory missing from user info (developer error)")
-        }
-
-        let scriptFileURL = directory.appendingPathComponent(scriptFile)
-        guard scriptFileURL.fileSystemStatus == .isFile else {
-            throw DecodingError.dataCorruptedError(forKey: .javascriptFile,
-                                                   in: self,
-                                                   debugDescription: "Unable to find referenced javascript file '\(scriptFileURL.filePath)'")
-        }
-
-        return .javascript(try String(contentsOf: scriptFileURL))
     }
 }

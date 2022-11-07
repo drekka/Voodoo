@@ -179,7 +179,7 @@ class GraphQLRequestTests: XCTestCase {
         }
         """
 
-        let matcherQuery = "query {jediHero:hero{name}}"
+        let matcherQuery = "query jediHeros {hero{name}}"
 
         let incomingRequest = try parse(request: HBRequest.mock(query: "query=" + incomingQuery + "&operationName=jediHeros"))
         let matcher = try GraphQLRequest(query: matcherQuery, operation: "jediHeros")

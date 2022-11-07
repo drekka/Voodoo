@@ -59,29 +59,16 @@ extension HTTPResponse: Decodable {
         case body
         case url
         case headers
-        case javascript
     }
 
     public init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // First check for some javascript to be executed.
-        if let javascript = try container.decodeIfPresent(String.self, forKey: .javascript) {
-
-            if container.contains(.status) {
-                throw DecodingError.dataCorruptedError(forKey: .javascript, in: container, debugDescription: "Cannot have both 'status' and 'javascript'.")
-            }
-            self = .javascript(javascript)
-            return
-        }
-
         // Now look for a hard coded response.
-        guard let statusCode = try container.decodeIfPresent(Int.self, forKey: .status) else {
-            throw DecodingError.dataCorruptedError(forKey: .status, in: container, debugDescription: "Response must container either 'status' or 'javascript'.")
-        }
-
+        let statusCode = try container.decode(Int.self, forKey: .status)
         let status = HTTPResponseStatus(statusCode: statusCode)
+
         let body = try container.decodeIfPresent(HTTPResponse.Body.self, forKey: .body) ?? .empty
         let headers = try container.decodeIfPresent(HeaderDictionary.self, forKey: .headers)
 

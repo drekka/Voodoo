@@ -106,33 +106,6 @@ class HTTPResponseDecodableTests: XCTestCase {
 
     private let mockServer = "http://127.0.0.1:8080"
 
-    func testStatusAndJavascriptIsInvalid() throws {
-        try assert(#"""
-                   {
-                       "status":200,
-                       "javascript": "function response(request, cache) { return .ok(); }"
-                   }
-                   """#,
-                   failsOnPath: ["javascript"], withError: "Cannot have both 'status' and 'javascript'.")
-    }
-
-    func testNoStatusOrJavahkscriptIsInvalid() throws {
-        try assert(#"""
-                   {
-                   }
-                   """#,
-                   failsOnPath: ["status"], withError: "Response must container either 'status' or 'javascript'.")
-    }
-
-    func testDecodeJavascript() throws {
-        try assert(#"""
-                   {
-                    "javascript": "function response(request, cache) { return .ok(); }"
-                   }
-                   """#,
-                   decodesTo: .javascript(#"function response(request, cache) { return .ok(); }"#))
-    }
-
     func testDecodeOk() throws {
         try assert(#"{"status":200}"#, decodesTo: .ok())
     }

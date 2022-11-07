@@ -1,0 +1,29 @@
+- graphQL:
+    method: get
+    selector: |
+      query {
+        books
+      }
+  response:
+    status: 200
+    body: 
+      type: template
+      name: books
+      contentType: application/json
+      
+- graphQL:
+    method: get
+    operation: getBook
+  javascript: |
+    function response(request, cache) {
+      console.log("Book " + request.graphQL.bookId + " requested");
+      if (request.pathParameters.bookId == "1000-01") {
+        return Response.ok(Body.template("iab1", "application/json"));
+      } else if (request.pathParameters.bookId == "1000-02") {
+        return Response.ok(Body.template("iab2", "application/json"));
+      } else if (request.pathParameters.bookId == "1000-03") {
+        return Response.ok(Body.template("iab3", "application/json"));
+      } else {
+        return Response.notFound();
+      }
+    }

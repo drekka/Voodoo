@@ -18,6 +18,13 @@ extension Decoder {
         return directory
     }
 
+    var configFileName: String {
+        guard let filename = userInfo[ConfigLoader.userInfoFilenameKey] as? String else {
+            preconditionFailure("User info incomplete (developer error).")
+        }
+        return filename
+    }
+
     /// Returns the server's verbose setting.
     var verbose: Bool {
        userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false

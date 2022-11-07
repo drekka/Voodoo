@@ -60,8 +60,9 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestDetails() throws {
 
-        let request = HBRequest.mock(path: "/abc/def?q1=123&q2=123&q1=456",
+        let request = HBRequest.mock(path: "/abc/def",
                                      pathParameters: ["pp1": "123", "pp2": "456"],
+                                     query: "q1=123&q2=123&q1=456",
                                      headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
                                      body: "Hello world!")
         try expectRequest(request, javascript: #"""

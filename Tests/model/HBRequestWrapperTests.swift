@@ -39,26 +39,26 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testQueryParameters() {
-        let wrapper = HBRequest.mock(path: "/xyz?xxx=5&yyy=6").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz", query: "xxx=5&yyy=6").asHTTPRequest
         expect(wrapper.query) == "xxx=5&yyy=6"
         expect(wrapper.queryParameters["xxx"]) == "5"
         expect(wrapper.queryParameters["yyy"]) == "6"
     }
 
     func testQueryParametersPercentEncoding() {
-        let wrapper = HBRequest.mock(path: "/xyz?xxx=Hello%20world").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz", query: "xxx=Hello world").asHTTPRequest
         expect(wrapper.query) == "xxx=Hello%20world"
         expect(wrapper.queryParameters["xxx"]) == "Hello world"
     }
 
     func testQueryParametersPlusEncoding() {
-        let wrapper = HBRequest.mock(path: "/xyz?xxx=Hello+world").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz", query: "xxx=Hello+world").asHTTPRequest
         expect(wrapper.query) == "xxx=Hello+world"
         expect(wrapper.queryParameters["xxx"]) == "Hello+world"
     }
 
     func testQueryParametersMultiples() {
-        let wrapper = HBRequest.mock(path: "/xyz?xxx=5&xxx=6&xxx=7").asHTTPRequest
+        let wrapper = HBRequest.mock(path: "/xyz", query: "xxx=5&xxx=6&xxx=7").asHTTPRequest
         expect(wrapper.queryParameters["xxx"]) == ["5", "6", "7"]
     }
 

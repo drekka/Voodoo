@@ -18,7 +18,7 @@ extension HBRequest {
 
         var components = URLComponents(string: "http://127.0.0.1:8080")!
         components.path = path
-        components.query = query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)
+        components.query = query
         var hbHeaders = HTTPHeaders(dictionaryLiteral: ("host", "127.0.0.1:8080"))
         headers?.forEach { hbHeaders.add(name: $0.0, value: $0.1) }
         if let contentType {
@@ -26,7 +26,6 @@ extension HBRequest {
         }
 
         let head = HTTPRequestHead(version: .http1_1, method: method, uri: components.url!.absoluteString, headers: hbHeaders)
-
         let application = HBApplication()
         let context = MockHBRequestContext()
         var hbRequest = HBRequest(head: head, body: body.hbRequestBody, application: application, context: context)

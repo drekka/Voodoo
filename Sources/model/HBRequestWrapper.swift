@@ -28,7 +28,9 @@ struct HBRequestWrapper: HTTPRequest {
         return Dictionary(request.parameters.map { (String($0.key), String($0.value)) }) { $1 }
     }
 
-    var query: String? { request.uri.query }
+    var query: String? {
+        request.uri.query
+    }
 
     var queryParameters: KeyedValues { request.uri.queryParameters }
 
