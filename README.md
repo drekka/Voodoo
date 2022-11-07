@@ -1,5 +1,8 @@
 # Voodoo
 
+![Voodoo-Doll-Step-10](assets/Voodoo-Doll-Step-10.png)
+
+
 Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
 
 It primary features are:
@@ -26,38 +29,41 @@ It primary features are:
     - [Executing from the command line](#executing-from-the-command-line)
     - [Docker additional configuration](#docker-additional-configuration)
 - [Configuration](#configuration)
-    - [Templates](#templates)
-    - [File sources](#file-sources)
+  - [Templates](#templates)
+  - [File sources](#file-sources)
   - [Endpoints](#endpoints)
-    - [Endpoint path parameters](#endpoint-path-parameters)
-    - [Endpoint responses](#endpoint-responses)
+    - [HTTP endpoints](#http-endpoints)
+      - [Path parameters](#path-parameters)
+    - [GraphQL endpoints](#graphql-endpoints)
+  - [Responses](#responses)
+    - [Fixed responses](#fixed-responses)
     - [Dynamic responses](#dynamic-responses)
       - [The incoming request data](#the-incoming-request-data)
       - [The cache](#the-cache)
     - [Response bodies](#response-bodies)
     - [The mustache engine](#the-mustache-engine)
-  - [Xcode integration guide](#xcode-integration-guide)
-    - [How does it work?](#how-does-it-work)
-    - [Endpoints](#endpoints)
-    - [Swift types](#swift-types)
-      - [HTTPResponse (enum)](#httpresponse-enum)
-      - [HTTPResponse.Body (enum)](#httpresponse-body-enum)
-    - [Swift dynamic responses](#swift-dynamic-responses)
-  - [Command line](#command-line)
-    - [Endpoint files](#endpoint-files)
-    - [Endpoint definitions](#endpoint-definitions)
-      - [Simple](#simple)
-      - [Inline javascript](#inline-javascript)
-      - [Javascript file reference](#javascript-file-reference)
-      - [YAML file reference](#yaml-file-reference)
-    - [Javascript types](#javascript-types)
-      - [Response](#response)
-      - [Body](#body)
+- [Xcode integration guide](#xcode-integration-guide)
+  - [How does it work?](#how-does-it-work)
+  - [Endpoints](#endpoints)
+  - [Swift types](#swift-types)
+    - [HTTPResponse (enum)](#httpresponse-enum)
+    - [HTTPResponse.Body (enum)](#httpresponse-body-enum)
+  - [Swift dynamic responses](#swift-dynamic-responses)
+- [Command line integration guide](#command-line-integration-guide)
+  - [Endpoint files](#endpoint-files)
+  - [Endpoint definitions](#endpoint-definitions)
+    - [Simple](#simple)
+    - [Inline javascript](#inline-javascript)
+    - [Javascript file reference](#javascript-file-reference)
+  - [YAML file reference](#yaml-file-reference)
+  - [Javascript types](#javascript-types)
+    - [Response](#response)
+    - [Body](#body)
 - [FAQ](#faq)
   - [When do I need a mock server?](#when-do-i-need-a-mock-server)
   - [How do I ensure my mock server is the same as my production server?](#how-do-i-ensure-my-mock-server-is-the-same-as-my-production-server)
   - [There's a bazillion mock servers out there, why do we need another?](#there-s-a-bazillion-mock-servers-out-there-why-do-we-need-another)
-  - [What dependencies does Voodoo have?](#what-dependencies-does-Voodoo-have)
+  - [What dependencies does Voodoo have?](#what-dependencies-does-voodoo-have)
 - [Samples](#samples)
   - [XCTest suite class:](#xctest-suite-class)
   - [XCTest simple tests with shared server](#xctest-simple-tests-with-shared-server)
@@ -139,7 +145,7 @@ Finally Voodoo's default IP of `127.0.0.1` isn't accessible from outside the con
 
 The thing about Voodoo is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
 
-### Templates
+## Templates
 
 Voodoo has the ability to read templates of responses stored in a directory. This is most useful when you are mocking out a server that generates a lot of response in JSON or some other textural form. By specifying a template directory when initialising the server these templates can be automatically made available as response payloads for incoming requests. Here's an example from a Swift UI test setup:
 
@@ -152,7 +158,7 @@ server = try Voodoo(templatePath: templatePath) {
 
 Templates are managed by [The mustache engine](#the-mustache-engine) and keyed based on their file names excluding any extension. By default, the extension for a template is `.json` however that can be changed to anything using the `templateExtension` argument. So if there is a template file called `accounts/list-accounts.json` then it's key is `accounts/list-accounts`.
 
-### File sources
+## File sources
 
 In addition to serving responses from defined API endpoints Voodoo can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
 
@@ -160,17 +166,21 @@ To do this you can add the initialiser argument `filePaths: URL(string: "Tests/f
 
 ## Endpoints
 
+### HTTP endpoints
+
 In order to response to API requests Voodoo needs to be configured with *Endpoints*. An endpoint is basically a definition that Voodoo uses to define what requests response to and how. To do that it need 3 things:
 
 * The HTTP method of the incoming request. ie. `GET`, `POST`, etc.
 * The path of the incoming request. ie. `/login`, `/accounts/list`, etc.  
 * The response to return. ie the HTTP status code, body, etc.
 
-### Endpoint path parameters
+#### Path parameters
 
 Apart from watching for fixed paths such as `/login` and `/accounts`, Voodoo can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Voodoo will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
 
-### Endpoint responses
+### GraphQL endpoints
+
+## Responses
 
 Generally a response to a request contains these things:
 
@@ -179,6 +189,8 @@ Generally a response to a request contains these things:
 * The body.
 
 There are some basic responses common to both the YAML/javascript and Swift configurations. Responses such as `ok`, `created`, `notFound`, `unauthorised`, etc. But they also have some unique features to each. Details of which will are in the relevant sections below.
+
+### Fixed responses
 
 ### Dynamic responses
 
@@ -271,11 +283,11 @@ When processing the text for mustache tags, Voodoo assembles a variety of data t
 
 * And finally, any additional data added by the endpoint definition. Note this data can override anything in the cache by simply using the same key.
 
-## Xcode integration guide
+# Xcode integration guide
 
 The initial need for something like Voodoo was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Voodoo's design.
 
-### How does it work?
+## How does it work?
 
 1. In the `setUp()` of your UI test suite you start and configure an instance of Voodoo.
 
@@ -285,7 +297,7 @@ The initial need for something like Voodoo was to support Swift UI testing throu
 
 *Note that I said "test run" in step 3. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Voodoo is using so other tests can re-use them.*
 
-### Endpoints
+## Endpoints
 
 To help with building endpoints in Swift there is an `Endpoint` type that can be created like this:
 
@@ -314,11 +326,11 @@ You can also add endpoints after starting the server using these functions:
 
 * `add(_ method: HTTPMethod, _ path: String, response handler: @escaping (HTTPRequest, Cache) async -> HTTPResponse)` - Adds a single dynamic endpoint using the passed closure. 
 
-### Swift types
+## Swift types
 
 Voodoo uses a number of types to help define responses to APIs.
 
-#### HTTPResponse (enum)
+### HTTPResponse (enum)
 
 There are two core response types you can return:
 
@@ -354,7 +366,7 @@ In addition there are a number of convenience response types for commonly used H
 
 `HeaderDictionary` is just an alias for `[String:String]`.
 
-#### HTTPResponse.Body (enum)
+### HTTPResponse.Body (enum)
 
 For each of the responses above, a `body` argument can return one of the following payload definitions:
 
@@ -375,7 +387,7 @@ For each of the responses above, a `body` argument can return one of the followi
 
 In all of the above a `templateData` parameter is for any additional data that you want to pass to the mustache engine. This is a `TemplateData` type which is an alias for `[String:Any]`.
 
-### Swift dynamic responses
+## Swift dynamic responses
 
 Here is an example of a Dynamic response:
 
@@ -392,21 +404,21 @@ server = try Voodoo {
 
 It's pretty simple, just stashes the userid in the cache and generates some dynamic data for the response.
 
-## Command line
+# Command line integration guide
 
 If you are not using Voodoo in an XCode test suite then you will need to consider the command line option. This is based on a YAML configuration with Javascript as a dynamic language.
 
 When launching Voodoo from a command line there is one required argument. **_--config_** specifies a directory or file from which the server's YAML configuration will be read. if it's a directory Voodoo will then scan it for any YAML files and read those files to build the endpoints it needs. If a reference to a file is passed then Voodoo assumes that all the endpoints are defined in that file.
 
-### Endpoint files
+## Endpoint files
 
 Each YAML configuration file can contain either a single endpoint, or a list of endpoints. 
 
-### Endpoint definitions
+## Endpoint definitions
 
 An endpoint definition can take one of 4 possible forms.
 
-#### Simple
+### Simple
 
 ```yaml
 http:
@@ -429,7 +441,7 @@ body:
   }
 ``` 
   
-#### Inline javascript
+### Inline javascript
 
 ```yaml
 http: 
@@ -465,7 +477,7 @@ javascript: |
   }
 ```
 
-#### Javascript file reference
+### Javascript file reference
   
 ```yaml
 http:
@@ -481,7 +493,7 @@ http:
 javascriptFile: get-config.js
 ```
   
-#### YAML file reference
+## YAML file reference
 
 ```yaml
 <reference-to-another-YAML-file>
@@ -495,11 +507,11 @@ Instead of a data structure with a `signature` value defining the endpoint, this
 - accounts/customer-accounts.yml
 ```
 
-### Javascript types
+## Javascript types
 
 There are a number of pre-defined types that Voodoo makes available to the dynamic javascript functions. 
 
-#### Response
+### Response
 
 `Response` is a type that has the following `static` factory methods for creating responses:
 
@@ -523,7 +535,7 @@ There are a number of pre-defined types that Voodoo makes available to the dynam
 
 * `.internalServerError(body, headers)` - Convenience for a HTTP 500 status response.
 
-#### Body
+### Body
   
 To create the body arguments you can use a number of `Body` `static` factory methods:
 
