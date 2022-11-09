@@ -106,7 +106,7 @@ public class VoodooServer {
         }
 
         print("💀 Exhausted all ports in range \(portRange)")
-        throw VoodooError.noPortAvailable
+        throw VoodooError.noPortAvailable(portRange.lowerBound, portRange.upperBound)
     }
 
     public func wait() {

@@ -33,7 +33,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
         expect {
             try VoodooServer(portRange: currentPort ... currentPort)
         }
-        .to(throwError(VoodooError.noPortAvailable))
+        .to(throwError(VoodooError.noPortAvailable(currentPort, currentPort)))
     }
 
     func testInitWithEndpoints() async throws {
@@ -74,7 +74,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testTemplateWithReferences() async throws {
 
-        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
+        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/templates"))
         server.add(.GET, "/", response: .ok(body: .template("books")))
 
         let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
@@ -90,7 +90,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testDynamicTemplateIncludesReferencedTemplates() async throws {
 
-        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/TestConfig2"))
+        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/templates"))
         server.add(.GET, "/", response: .ok(body: .json(
             #"""
             [

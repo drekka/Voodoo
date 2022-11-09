@@ -6,9 +6,9 @@ import Foundation
 import Hummingbird
 import NIOHTTP1
 
-public enum VoodooError: Error, HBHTTPResponseError {
+public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, CustomDebugStringConvertible {
 
-    case noPortAvailable
+    case noPortAvailable(Int, Int)
 
     case unexpectedError(Error)
 
@@ -51,8 +51,8 @@ public enum VoodooError: Error, HBHTTPResponseError {
         case .noGraphQLEndpoint:
             return "Request does not match any registred endpoint."
 
-        case .noPortAvailable:
-            return "All ports taken."
+        case .noPortAvailable(let lower, let upper):
+            return "No port available in range \(lower) - \(upper)"
 
         case .invalidConfigPath(let path):
             return "Invalid config path \(path)"
@@ -63,6 +63,14 @@ public enum VoodooError: Error, HBHTTPResponseError {
         case .unexpectedError(let error):
             return error.localizedDescription
         }
+    }
+
+    public var description: String {
+        localizedDescription
+    }
+
+    public var debugDescription: String {
+        localizedDescription
     }
 
     public func body(allocator _: ByteBufferAllocator) -> NIOCore.ByteBuffer? {

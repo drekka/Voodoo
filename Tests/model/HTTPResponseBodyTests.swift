@@ -21,7 +21,7 @@ class HTTPResponseBodyTests: XCTestCase {
 
     func testEmpty() throws {
         let context = MockVoodooContext()
-        let request = HBRequestWrapper.mock()
+        let request = HBRequest.mock().asHTTPRequest
         let hbBody = try HTTPResponse.Body.empty.hbBody(forRequest: request, serverContext: context)
         expect(hbBody.0) == .empty
         expect(hbBody.1) == nil
@@ -106,7 +106,7 @@ class HTTPResponseBodyTests: XCTestCase {
                 _ body: HTTPResponse.Body,
                 generates expectedBody: String,
                 contentType expectedContentType: String?) throws {
-        let request = HBRequestWrapper.mock()
+        let request = HBRequest.mock().asHTTPRequest
         let hbBody = try body.hbBody(forRequest: request, serverContext: context)
         expect(file: file, line: line, hbBody.0) == expectedBody.hbResponseBody
         expect(file: file, line: line, hbBody.1) == expectedContentType

@@ -20,7 +20,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestDetailsMinimal() throws {
 
-        let request = HBRequestWrapper.mock()
+        let request = HBRequest.mock().asHTTPRequest
         try expectRequest(request, javascript: #"""
             console.log("Path components " + request.pathComponents);
             var data = {
@@ -57,13 +57,13 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestDetails() throws {
 
-        let request = HBRequestWrapper.mock(path: "/abc/def",
-                                            pathParameters: ["pp1": "123", "pp2": "456"],
-                                            query: "q1=123&q2=123&q1=456",
-                                            headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
+        let request = HBRequest.mock(path: "/abc/def",
+                                            pathParameters: ["pp1": "p123", "pp2": "p456"],
+                                            query: "q1=q123&q2=q123&q1=q456",
+                                            headers: [("h1", "hxyz"), ("h2", "h123"), ("h2", "h456")],
                                             body: "Hello world!")
-        try expectRequest(request, javascript: #"""
-            console.log("Path components " + request.pathComponents);
+        try expectRequest(request.asHTTPRequest, javascript: #"""
+            console.log("Query parameters: " + request.queryParameters.length);
             var data = {
                 method: request.method,
                 headers: request.headers,
@@ -82,17 +82,17 @@ class JavascriptExecutorTests: XCTestCase {
             expect(results["pathComponents"] as? [String]) == ["/", "abc", "def"]
 
             let headers = results["headers"] as! [String: Any]
-            expect(headers["h1"] as? String) == "xyz"
-            expect(headers["h2"] as? [String]) == ["123", "456"]
+            expect(headers["h1"] as? String) == "hxyz"
+            expect(headers["h2"] as? [String]) == ["h123", "h456"]
 
             let pathParameters = results["pathParameters"] as! [String: Any]
-            expect(pathParameters["pp1"] as? String) == "123"
-            expect(pathParameters["pp2"] as? String) == "456"
+            expect(pathParameters["pp1"] as? String) == "p123"
+            expect(pathParameters["pp2"] as? String) == "p456"
 
-            expect(results["query"] as? String) == "q1=123&q2=123&q1=456"
+            expect(results["query"] as? String) == "q1=q123&q2=q123&q1=q456"
             let queryParameters = results["queryParameters"] as! [String: Any]
-            expect(queryParameters["q1"] as? [String]) == ["123", "456"]
-            expect(queryParameters["q2"] as? String) == "123"
+            expect(queryParameters["q1"] as? [String]) == ["q123", "q456"]
+            expect(queryParameters["q2"] as? String) == "q123"
 
             expect(results["body"] as? String) == "Hello world!"
         }
@@ -100,11 +100,11 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestFormParameters() throws {
 
-        let request = HBRequestWrapper.mock(
+        let request = HBRequest.mock(
             contentType: Header.ContentType.applicationFormData,
             body: #"formField1=Hello%20world!"#
         )
-        try expectRequest(request, javascript: #"""
+        try expectRequest(request.asHTTPRequest, javascript: #"""
             var data = {
                 formParameters: request.formParameters,
                 formField1: request.formParameters.formField1
@@ -120,11 +120,11 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestBodyJSON() throws {
 
-        let request = HBRequestWrapper.mock(
+        let request = HBRequest.mock(
             contentType: Header.ContentType.applicationJSON,
             body: #"{"abc":"def"}"#
         )
-        try expectRequest(request, javascript: #"""
+        try expectRequest(request.asHTTPRequest, javascript: #"""
             var data = {
                 body: request.bodyJSON
             };
@@ -461,7 +461,7 @@ class JavascriptExecutorTests: XCTestCase {
             function response(request, cache) {
                 \#(response)
             }
-        """#, for: HBRequestWrapper.mock(headers: headers))
+        """#, for: HBRequest.mock(headers: headers).asHTTPRequest)
         expect(result) == expectedResponse
     }
 
@@ -483,7 +483,7 @@ class JavascriptExecutorTests: XCTestCase {
                               toThrowError expectedMessage: String) {
         do {
             let executor = try JavascriptExecutor(serverContext: context)
-            _ = try executor.execute(script: script, for: HBRequestWrapper.mock())
+            _ = try executor.execute(script: script, for: HBRequest.mock().asHTTPRequest)
             fail("Expected exception not thrown executing script", file: file, line: line)
         } catch {
             if case VoodooError.javascriptError(let message) = error {
