@@ -76,7 +76,7 @@ class HTTPResponseTests: XCTestCase {
                 withHeaders expectedHeaders: [String: String]? = nil,
                 body expectedBody: String? = nil) async throws {
 
-        let request = HBRequestWrapper.mock()
+        let request = HBRequest.mock().asHTTPRequest
         let context = MockVoodooContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 

@@ -6,13 +6,17 @@ import Nimble
 import Voodoo
 import XCTest
 
+enum TestError: Error {
+    case x
+}
+
 class VoodooErrorTests: XCTestCase {
 
     func testMessages() {
         expect(VoodooError.directoryNotExists("/abc").localizedDescription) == "Missing or URL was not a directory: /abc"
         expect(VoodooError.templateRenderingFailure("xxx").localizedDescription) == "xxx"
-        expect(VoodooError.noPortAvailable.localizedDescription) == "All ports taken."
-        expect(VoodooError.unexpectedError(VoodooError.noPortAvailable).localizedDescription) == "The operation couldn’t be completed. (Voodoo.VoodooError error 7.)"
+        expect(VoodooError.noPortAvailable(8080, 8090).localizedDescription) == "No port available in range 8080 - 8090"
+        expect(VoodooError.unexpectedError(TestError.x).localizedDescription) == "The operation couldn’t be completed. (VoodooTests.TestError error 0.)"
         expect(VoodooError.javascriptError("error").localizedDescription) == "error"
         expect(VoodooError.configLoadFailure("failed").localizedDescription) == "failed"
         expect(VoodooError.invalidConfigPath("/abc").localizedDescription) == "Invalid config path /abc"
