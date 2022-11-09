@@ -54,7 +54,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         """#))
 
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 500)
-        expect(response.response?.value(forHTTPHeaderField: VoodooError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
+        expect(String(data: response.data!, encoding: .utf8)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
     }
 
     func testJavascriptIncorrectSignatureArgumentsTooFew() async {
@@ -88,7 +88,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         """#))
 
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 500)
-        expect(response.response?.value(forHTTPHeaderField: VoodooError.headerKey)) == "The javascript function failed to return a response."
+        expect(String(data: response.data!, encoding: .utf8)) == "The javascript function failed to return a response."
     }
 
     func testJavascriptResponseSetAndGetFromCache() async {

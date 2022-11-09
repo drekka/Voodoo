@@ -142,13 +142,21 @@ extension Magic {
 
         mutating func run() throws {
 
-            let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
-            let server = try VoodooServer(portRange: portRange,
-                                          useAnyAddr: useAnyAddr,
-                                          templatePath: templatePath,
-                                          filePaths: filePaths,
-                                          verbose: options.verbose) { endpoints }
-            server.wait()
+            do {
+                let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
+                let server = try VoodooServer(portRange: portRange,
+                                              useAnyAddr: useAnyAddr,
+                                              templatePath: templatePath,
+                                              filePaths: filePaths,
+                                              verbose: options.verbose) { endpoints }
+                server.wait()
+            } catch DecodingError.dataCorrupted(let context) {
+                print("💀 Decoding error: \(context.codingPath.map(\.stringValue)) - \(context.debugDescription) \(String(describing: context.underlyingError))")
+                throw ExitCode.failure
+            } catch {
+                print("💀 Error: \(error.localizedDescription)")
+                throw ExitCode.failure
+            }
         }
 
         mutating func validate() throws {

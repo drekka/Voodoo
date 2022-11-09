@@ -4,25 +4,38 @@
 
 import Foundation
 import Hummingbird
-import NIOCore
+import NIOHTTP1
 
 public enum VoodooError: Error, HBHTTPResponseError {
 
-    public static let headerKey = "Voodoo-Error"
-
-    case conversionError(String)
-    case templateRenderingFailure(String)
     case noPortAvailable
+
     case unexpectedError(Error)
-    case javascriptError(String)
+
     case configLoadFailure(String)
     case invalidConfigPath(String)
     case directoryNotExists(String)
 
-    public var status: HTTPResponseStatus { .internalServerError }
+    case noHTTPEndpoint(String)
+
+    case invalidGraphQLRequest(String)
+    case noGraphQLEndpoint
+
+    case javascriptError(String)
+    case conversionError(String)
+    case templateRenderingFailure(String)
+
+    public var status: HTTPResponseStatus {
+        switch self {
+        case .noGraphQLEndpoint, .noHTTPEndpoint:
+            return .notFound
+        default:
+            return .internalServerError
+        }
+    }
 
     public var headers: HTTPHeaders {
-        [Self.headerKey: localizedDescription]
+        [Header.contentType: Header.ContentType.textPlain]
     }
 
     public var localizedDescription: String {
@@ -30,8 +43,13 @@ public enum VoodooError: Error, HBHTTPResponseError {
         case .conversionError(let message),
              .templateRenderingFailure(let message),
              .javascriptError(let message),
-             .configLoadFailure(let message):
+             .configLoadFailure(let message),
+             .invalidGraphQLRequest(let message),
+             .noHTTPEndpoint(let message):
             return message
+
+        case .noGraphQLEndpoint:
+            return "Request does not match any registred endpoint."
 
         case .noPortAvailable:
             return "All ports taken."
@@ -47,7 +65,7 @@ public enum VoodooError: Error, HBHTTPResponseError {
         }
     }
 
-    public func body(allocator _: NIOCore.ByteBufferAllocator) -> NIOCore.ByteBuffer? {
-        ByteBuffer()
+    public func body(allocator _: ByteBufferAllocator) -> NIOCore.ByteBuffer? {
+        ByteBuffer(string: localizedDescription)
     }
 }

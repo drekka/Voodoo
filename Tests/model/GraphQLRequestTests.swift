@@ -240,6 +240,6 @@ class GraphQLRequestTests: XCTestCase {
     }
 
     func parse(request: HBRequest) throws -> GraphQLRequest {
-        try GraphQLRequest(request: request.asHTTPRequest)!
+        try GraphQLRequest(request: request.asHTTPRequest)
     }
 }

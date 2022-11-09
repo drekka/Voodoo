@@ -33,6 +33,10 @@ public struct HTTPEndpoint: Endpoint {
     public init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: EndpointKeys.self)
+        guard container.contains(.http) else {
+            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Not a HTTP request"))
+        }
+
         let methodPath = try container.methodPath()
         method = methodPath.0
         path = methodPath.1
@@ -55,7 +59,7 @@ private extension KeyedDecodingContainer where Key == HTTPEndpoint.EndpointKeys 
         let api = try selectorContainer.decode(String.self, forKey: .api)
 
         if try superDecoder(forKey: .http).verbose {
-            print("👻 \(try superDecoder(forKey: .http).configFileName), found endpoint config: \(api)")
+            print("💀 \(try superDecoder(forKey: .http).configFileName), found endpoint config: \(api)")
         }
 
         // Split the api value into the method and path.

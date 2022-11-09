@@ -9,13 +9,13 @@ import XCTest
 class VoodooErrorTests: XCTestCase {
 
     func testMessages() {
-        expect(VoodooError.directoryNotExists("/abc").headers.first(name: VoodooError.headerKey)) == "Missing or URL was not a directory: /abc"
-        expect(VoodooError.templateRenderingFailure("xxx").headers.first(name: VoodooError.headerKey)) == "xxx"
-        expect(VoodooError.noPortAvailable.headers.first(name: VoodooError.headerKey)) == "All ports taken."
-        expect(VoodooError.unexpectedError(VoodooError.noPortAvailable).headers.first(name: VoodooError.headerKey)) == "The operation couldn’t be completed. (Voodoo.VoodooError error 7.)"
-        expect(VoodooError.javascriptError("error").headers.first(name: VoodooError.headerKey)) == "error"
-        expect(VoodooError.configLoadFailure("failed").headers.first(name: VoodooError.headerKey)) == "failed"
-        expect(VoodooError.invalidConfigPath("/abc").headers.first(name: VoodooError.headerKey)) == "Invalid config path /abc"
-        expect(VoodooError.directoryNotExists("/abc").headers.first(name: VoodooError.headerKey)) == "Missing or URL was not a directory: /abc"
+        expect(VoodooError.directoryNotExists("/abc").localizedDescription) == "Missing or URL was not a directory: /abc"
+        expect(VoodooError.templateRenderingFailure("xxx").localizedDescription) == "xxx"
+        expect(VoodooError.noPortAvailable.localizedDescription) == "All ports taken."
+        expect(VoodooError.unexpectedError(VoodooError.noPortAvailable).localizedDescription) == "The operation couldn’t be completed. (Voodoo.VoodooError error 7.)"
+        expect(VoodooError.javascriptError("error").localizedDescription) == "error"
+        expect(VoodooError.configLoadFailure("failed").localizedDescription) == "failed"
+        expect(VoodooError.invalidConfigPath("/abc").localizedDescription) == "Invalid config path /abc"
+        expect(VoodooError.directoryNotExists("/abc").localizedDescription) == "Missing or URL was not a directory: /abc"
     }
 }

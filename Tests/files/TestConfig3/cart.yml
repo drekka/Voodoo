@@ -1,9 +1,11 @@
 - graphQL:
     method: post
+    operation: addToCart
   javascriptFile: addToCart.js
   
 - graphQL:
-    method get
+    method: get
+    operation: getCart
   javascript: |
     function response(request, cache) {
       return Response.ok(Body.json(cache.cart ?? {}));

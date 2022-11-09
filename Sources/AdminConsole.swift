@@ -25,7 +25,7 @@ struct AdminConsole: HBMiddleware {
         switch command {
 
         case AdminConsole.shutdown where request.method == .POST:
-            print("👻 Received shutdown request, shutting down server ...")
+            print("💀 Received shutdown request, shutting down server ...")
             request.application.stop()
             return request.success(HBResponse(status: .ok))
 

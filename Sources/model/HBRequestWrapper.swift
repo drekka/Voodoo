@@ -77,7 +77,7 @@ struct HBRequestWrapper: HTTPRequest {
 
     /// Helper for analysing the content type of a request.
     func contentType(is contentType: String) -> Bool {
-        headers[Header.contentType]?.contains(contentType) ?? false
+        headers[Header.contentType]?.lowercased().starts(with: contentType) ?? false
     }
 }
 

@@ -39,9 +39,9 @@ extension HBApplication: VoodooContext {
 
 extension HBRouter {
 
-    func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
-        on(path, method: method) {
-            try await response.hbResponse(for: $0.asHTTPRequest, inServerContext: $0.application)
+    func add(_ endpoint: HTTPEndpoint) {
+        on(endpoint.path, method: endpoint.method) {
+            try await endpoint.response.hbResponse(for: $0.asHTTPRequest, inServerContext: $0.application)
         }
     }
 }

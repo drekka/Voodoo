@@ -26,7 +26,8 @@ public class VoodooServer {
 
     private let server: HBApplication
     private let verbose: Bool
-    private let graphQLInterceptor: GraphQLInterceptor
+    private var graphQLRouter: GraphQLRouter!
+    private let graphQLPath: String
 
     public var url: URL {
         URL(string: "http://\(server.host):\(server.port)")!
@@ -43,17 +44,16 @@ public class VoodooServer {
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
 
         self.verbose = verbose
+        self.graphQLPath = graphQLPath
 
         // Setup middleware. middleware must be added before starting the server or
         // the middleware will execute after Hummingbird's ``TrieRouter``.
         // This is due to the way hummingbird wires middleware and the router together.
         // Also note the order is important.
-        graphQLInterceptor = GraphQLInterceptor(path: graphQLPath, verbose: verbose)
         let middleware: [HBMiddleware] = [
             RequestLogger(verbose: verbose),
             NoResponseFoundMiddleware(),
             AdminConsole(),
-            graphQLInterceptor,
         ]
 
         // Validate the file paths.
@@ -91,28 +91,28 @@ public class VoodooServer {
 
                 switch error {
                 case _ where error.isPortTakenError:
-                    print("👻 Port \(nextPort) busy, trying next port in range")
+                    print("💀 Port \(nextPort) busy, trying next port in range")
                     continue
 
                 case let error as VoodooError:
-                    print("👻 Unexpected error: \(error.localizedDescription)")
+                    print("💀 Unexpected error: \(error.localizedDescription)")
                     throw error
 
                 default:
-                    print("👻 Unexpected error: \(error.localizedDescription)")
+                    print("💀 Unexpected error: \(error.localizedDescription)")
                     throw VoodooError.unexpectedError(error)
                 }
             }
         }
 
-        print("👻 Exhausted all ports in range \(portRange)")
+        print("💀 Exhausted all ports in range \(portRange)")
         throw VoodooError.noPortAvailable
     }
 
     public func wait() {
         if verbose {
-            print(#"👻 CTRL+C or "curl -X "POST" \#(url.absoluteString)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
-            print(#"👻 Have a nice day 🙂"#)
+            print(#"💀 CTRL+C or "curl -X "POST" \#(url.absoluteString)/\#(AdminConsole.adminRoot)/\#(AdminConsole.shutdown)" to shutdown."#)
+            print(#"💀 Have a nice day 🙂"#)
         } else {
             print(url.absoluteString)
         }
@@ -141,9 +141,9 @@ public class VoodooServer {
     public func add(_ endpoint: Endpoint) {
         switch endpoint {
         case let endpoint as HTTPEndpoint:
-            add(endpoint.method, endpoint.path, response: endpoint.response)
+            add(endpoint)
         case let endpoint as GraphQLEndpoint:
-            add(endpoint.method, endpoint.selector, response: endpoint.response)
+            add(endpoint)
         default:
             break
         }
@@ -154,22 +154,45 @@ public class VoodooServer {
         add(method, path, response: .dynamic(handler))
     }
 
+    /// Adds a HTTP rest like endpoint.
+    public func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
+        add(HTTPEndpoint(method, path, response: response))
+    }
+
     /// Convenient function for defining a GraphQL endpoint directly.
     public func add(_ method: HTTPMethod, _ graphQLSelector: GraphQLSelector, response handler: @escaping (HTTPRequest, Cache) async -> HTTPResponse) {
         add(method, graphQLSelector, response: .dynamic(handler))
     }
 
+    /// Adds a GraphQL endpoint.
+    public func add(_ method: HTTPMethod, _ selector: GraphQLSelector, response: HTTPResponse = .ok()) {
+        add(GraphQLEndpoint(method, selector, response: response))
+    }
+
     // MARK: - Core registration
 
     /// Adds a HTTP rest like endpoint.
-    public func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
-        if verbose { print(#"👻 Adding endpoint:\#(method) \#(path)"#) }
-        server.router.add(method, path, response: response)
+    public func add(_ endpoint: HTTPEndpoint) {
+        if verbose { print("💀 Adding endpoint:\(endpoint.method) \(endpoint.path)") }
+        server.router.add(endpoint)
     }
 
     /// Adds a GraphQL endpoint.
-    public func add(_ method: HTTPMethod, _: GraphQLSelector, response _: HTTPResponse = .ok()) {
-        if verbose { print(#"👻 Adding GraphQL endpoint:\#(method)"#) }
+    public func add(_ endpoint: GraphQLEndpoint) {
+
+        // If the GraphQL router has not been setup then configure and install it.
+        if graphQLRouter == nil {
+            graphQLRouter = GraphQLRouter(verbose: verbose)
+            server.router.get(graphQLPath) { request in
+                try await self.graphQLRouter.execute(request: request)
+            }
+            server.router.post(graphQLPath) { request in
+                try await self.graphQLRouter.execute(request: request)
+            }
+        }
+
+        if verbose { print("💀 Adding GraphQL endpoint:\(endpoint.method) \(endpoint.selector)") }
+        graphQLRouter.add(endpoint)
     }
 
     // MARK: - Server functions

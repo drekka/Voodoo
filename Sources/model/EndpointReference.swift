@@ -14,7 +14,7 @@ struct EndpointReference: Decodable, EndpointSource {
         let container = try decoder.singleValueContainer()
 
         if let fileReference = try container.decodeEndpoint(String.self) {
-            if decoder.verbose { print("👻 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found file reference: \(fileReference)") }
+            if decoder.verbose { print("💀 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found file reference: \(fileReference)") }
             let subLoader = ConfigLoader(verbose: decoder.verbose)
             endpoints = try subLoader.load(from: decoder.configDirectory.appendingPathComponent(fileReference))
 

@@ -58,14 +58,14 @@ public class GraphQLRequest {
     }
 
     /// Convenience intializer for reading queries from incoming requests.
-    public convenience init?(request: HTTPRequest) throws {
+    public convenience init(request: HTTPRequest) throws {
 
         switch request.method {
 
         case .GET:
             guard let escapedQuery = request.queryParameters.query,
                   let query = escapedQuery.removingPercentEncoding else {
-                return nil
+                throw VoodooError.invalidGraphQLRequest("Missing GraphQL query argument.")
             }
             try self.init(query: query,
                           operation: request.queryParameters.operationName,
@@ -76,23 +76,23 @@ public class GraphQLRequest {
         case .POST where request.contentType(is: Header.ContentType.applicationGraphQL):
             guard let body = request.body,
                   let query = String(data: body, encoding: .utf8) else {
-                return nil
+                throw VoodooError.invalidGraphQLRequest("Missing GraphQL query argument in body of request.")
             }
-            try? self.init(query: query)
+            try self.init(query: query)
 
         // If the content type is JSON then assume the body contains a dictionary.
         // Per https://graphql.org/learn/serving-over-http/#post-request
         case .POST where request.contentType(is: Header.ContentType.applicationJSON):
             guard let body = request.body,
                   let content = try? JSONDecoder().decode(GraphQLPayload.self, from: body) else {
-                return nil
+                throw VoodooError.invalidGraphQLRequest("Missing GraphQL query argument in body of request.")
             }
-            try? self.init(query: content.query,
-                           operation: content.operationName,
-                           variables: content.variables?.value as? [String: Any])
+            try self.init(query: content.query,
+                          operation: content.operationName,
+                          variables: content.variables?.value as? [String: Any])
 
         default:
-            return nil
+            throw VoodooError.invalidGraphQLRequest("GraphQL endpoing only accepts GET and POST requests.")
         }
     }
 

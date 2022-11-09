@@ -31,6 +31,10 @@ public struct GraphQLEndpoint: Endpoint {
     public init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: EndpointKeys.self)
+        guard container.contains(.graphQL) else {
+            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Not a GraphQL request"))
+        }
+
         let selectorContainer = try container.nestedContainer(keyedBy: SelectorKeys.self, forKey: .graphQL)
 
         method = try selectorContainer.decode(HTTPMethod.self, forKey: .method)
@@ -40,10 +44,13 @@ public struct GraphQLEndpoint: Endpoint {
         } else if let query = try selectorContainer.decodeIfPresent(String.self, forKey: .selector) {
             selector = .selector(try GraphQLRequest(query: query))
         } else {
-            let context = DecodingError.Context(codingPath: container.codingPath,
-                                                debugDescription: "Expected to find '\(SelectorKeys.operation.stringValue)' or '\(SelectorKeys.selector.stringValue)'")
+            let message = "Expected to find '\(SelectorKeys.operation.stringValue)' or '\(SelectorKeys.selector.stringValue)'"
+            print("💀 Error: Reading endpoint definition at \(container.codingPath.map(\.stringValue)) - \(message)")
+            let context = DecodingError.Context(codingPath: container.codingPath, debugDescription: message)
             throw DecodingError.dataCorrupted(context)
         }
+
+        if decoder.verbose { print("💀 Found graphQL endpoint \(method) - \(selector)") }
 
         response = try decoder.decodeResponse()
     }

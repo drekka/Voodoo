@@ -181,6 +181,9 @@ extension HTTPResponse.Body {
 
         case .template(let templateName, let templateData, let contentType):
             let finalTemplateData = context.requestTemplateData(forRequest: request, adding: templateData)
+            if context.mustacheRenderer.getTemplate(named: templateName) == nil {
+                throw VoodooError.templateRenderingFailure("Mustache template '\(templateName)' not found")
+            }
             guard let payload = context.mustacheRenderer.render(finalTemplateData, withTemplate: templateName) else {
                 throw VoodooError.templateRenderingFailure("Rendering template '\(templateName)' failed.")
             }
