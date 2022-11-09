@@ -27,10 +27,18 @@ public struct ConfigLoader {
 
         case .isDirectory:
             if verbose { print("💀 Reading config from \(path.filePath)") }
+
+            #if os(macOS) || os(iOS)
+                // `.produceRelativePathURLs` does not appear to be available in the Linux version of swift.
+                let options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles, .producesRelativePathURLs]
+            #else
+                let options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles]
+            #endif
             let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
-            guard let files = FileManager.default.enumerator(at: path,
-                                                             includingPropertiesForKeys: resourceKeys,
-                                                             options: [.skipsHiddenFiles, .producesRelativePathURLs]) else { return [] }
+            guard let files = FileManager.default.enumerator(at: path, includingPropertiesForKeys: resourceKeys, options: options) else {
+                return []
+            }
+
             let resourceKeysSet = Set(resourceKeys)
             return try files.lazy
                 .compactMap { $0 as? URL }
