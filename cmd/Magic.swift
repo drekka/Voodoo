@@ -4,7 +4,7 @@
 
 import ArgumentParser
 import Foundation
-import SimulacraCore
+import Voodoo
 
 /// allows us to set a URL as an option type.
 extension URL: ExpressibleByArgument {
@@ -17,7 +17,7 @@ extension URL: ExpressibleByArgument {
 
 /// Provides a command line wrapper around the server.
 @main
-struct SimulacraCMD: ParsableCommand {
+struct Magic: ParsableCommand {
 
     struct Options: ParsableArguments {
 
@@ -27,8 +27,8 @@ struct SimulacraCMD: ParsableCommand {
 
     static var configuration: CommandConfiguration {
 
-        return CommandConfiguration(
-            commandName: "simulacra",
+        CommandConfiguration(
+            commandName: "magic",
             abstract: "A mock server that provides APIs and files for debugging, regression and continuous integration testing.",
             version: "0.1.0",
             shouldDisplay: true,
@@ -37,7 +37,7 @@ struct SimulacraCMD: ParsableCommand {
     }
 }
 
-extension SimulacraCMD {
+extension Magic {
 
     /// The main `run` subcommand.
     struct Run: ParsableCommand {
@@ -54,7 +54,7 @@ extension SimulacraCMD {
         }
 
         // Global options.
-        @OptionGroup var options: SimulacraCMD.Options
+        @OptionGroup var options: Magic.Options
 
         @Flag(
             name: [.long],
@@ -62,7 +62,7 @@ extension SimulacraCMD {
             Activates trace mode in the Hummingbird server for tracking errors.
             """
         )
-        var hummingbirdVerbose: Bool = false
+        var hummingbirdVerbose = false
 
         @Flag(
             name: .customLong("use-any-addr"),
@@ -71,7 +71,7 @@ extension SimulacraCMD {
             flag sets the server's IP to the any address (0.0.0.0). However be aware that this may cause firewalls and other security software to flag the server.
             """
         )
-        var useAnyAddr: Bool = false
+        var useAnyAddr = false
 
         @Option(
             name: .shortAndLong,
@@ -142,13 +142,21 @@ extension SimulacraCMD {
 
         mutating func run() throws {
 
-            let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
-            let server = try Simulacra(portRange: portRange,
-                                      useAnyAddr: useAnyAddr,
-                                      templatePath: templatePath,
-                                      filePaths: filePaths,
-                                      verbose: options.verbose) { endpoints }
-            server.wait()
+            do {
+                let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
+                let server = try VoodooServer(portRange: portRange,
+                                              useAnyAddr: useAnyAddr,
+                                              templatePath: templatePath,
+                                              filePaths: filePaths,
+                                              verbose: options.verbose) { endpoints }
+                server.wait()
+            } catch DecodingError.dataCorrupted(let context) {
+                print("💀 Decoding error: \(context.codingPath.map(\.stringValue)) - \(context.debugDescription) \(String(describing: context.underlyingError))")
+                throw ExitCode.failure
+            } catch {
+                print("💀 Error: \(error.localizedDescription)")
+                throw ExitCode.failure
+            }
         }
 
         mutating func validate() throws {

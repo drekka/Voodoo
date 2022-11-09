@@ -30,7 +30,7 @@ public enum HTTPResponse {
 
     // Convenience
 
-    /// Return a HTTP 200  with an optional body and headers.
+    /// Return a HTTP 200 with an optional body and headers.
     case ok(headers: HeaderDictionary? = nil, body: Body = .empty)
 
     case created(headers: HeaderDictionary? = nil, body: Body = .empty)
@@ -59,29 +59,16 @@ extension HTTPResponse: Decodable {
         case body
         case url
         case headers
-        case javascript
     }
 
     public init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        // First check for some javascript to be executed.
-        if let javascript = try container.decodeIfPresent(String.self, forKey: .javascript) {
-
-            if container.contains(.status) {
-                throw DecodingError.dataCorruptedError(forKey: .javascript, in: container, debugDescription: "Cannot have both 'status' and 'javascript'.")
-            }
-            self = .javascript(javascript)
-            return
-        }
-
         // Now look for a hard coded response.
-        guard let statusCode = try container.decodeIfPresent(Int.self, forKey: .status) else {
-            throw DecodingError.dataCorruptedError(forKey: .status, in: container, debugDescription: "Response must container either 'status' or 'javascript'.")
-        }
-
+        let statusCode = try container.decode(Int.self, forKey: .status)
         let status = HTTPResponseStatus(statusCode: statusCode)
+
         let body = try container.decodeIfPresent(HTTPResponse.Body.self, forKey: .body) ?? .empty
         let headers = try container.decodeIfPresent(HeaderDictionary.self, forKey: .headers)
 
@@ -123,7 +110,7 @@ extension HTTPResponse: Decodable {
 /// This extension creates Hummingbird responses.
 extension HTTPResponse {
 
-    func hbResponse(for request: HTTPRequest, inServerContext context: SimulacraContext) async throws -> HBResponse {
+    func hbResponse(for request: HTTPRequest, inServerContext context: VoodooContext) async throws -> HBResponse {
 
         // Captures the request and cache before generating the response.
         func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {

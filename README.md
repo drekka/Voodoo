@@ -1,6 +1,10 @@
-# Simulacra
 
-Simulacra is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
+![Untitled](assets/Untitled.png)
+
+
+
+
+Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
 
 It primary features are:
 
@@ -11,6 +15,8 @@ It primary features are:
 * Multi-port parallel test friendly.
 
 * Configurable via a Swift API, and/or YAML and Javascript.
+
+* RESTful and GraphQL query support.
 
 * Fixed and dynamically generated responses including raw text, JSON, YAML, and custom data with templating via Mustache.
 
@@ -26,38 +32,41 @@ It primary features are:
     - [Executing from the command line](#executing-from-the-command-line)
     - [Docker additional configuration](#docker-additional-configuration)
 - [Configuration](#configuration)
-    - [Templates](#templates)
-    - [File sources](#file-sources)
+  - [Templates](#templates)
+  - [File sources](#file-sources)
   - [Endpoints](#endpoints)
-    - [Endpoint path parameters](#endpoint-path-parameters)
-    - [Endpoint responses](#endpoint-responses)
+    - [HTTP endpoints](#http-endpoints)
+      - [Path parameters](#path-parameters)
+    - [GraphQL endpoints](#graphql-endpoints)
+  - [Responses](#responses)
+    - [Fixed responses](#fixed-responses)
     - [Dynamic responses](#dynamic-responses)
       - [The incoming request data](#the-incoming-request-data)
       - [The cache](#the-cache)
     - [Response bodies](#response-bodies)
     - [The mustache engine](#the-mustache-engine)
-  - [Xcode integration guide](#xcode-integration-guide)
-    - [How does it work?](#how-does-it-work)
-    - [Endpoints](#endpoints)
-    - [Swift types](#swift-types)
-      - [HTTPResponse (enum)](#httpresponse-enum)
-      - [HTTPResponse.Body (enum)](#httpresponse-body-enum)
-    - [Swift dynamic responses](#swift-dynamic-responses)
-  - [Command line](#command-line)
-    - [Endpoint files](#endpoint-files)
-    - [Endpoint definitions](#endpoint-definitions)
-      - [Simple](#simple)
-      - [Inline javascript](#inline-javascript)
-      - [Javascript file reference](#javascript-file-reference)
-      - [YAML file reference](#yaml-file-reference)
-    - [Javascript types](#javascript-types)
-      - [Response](#response)
-      - [Body](#body)
+- [Xcode integration guide](#xcode-integration-guide)
+  - [How does it work?](#how-does-it-work)
+  - [Endpoints](#endpoints)
+  - [Swift types](#swift-types)
+    - [HTTPResponse (enum)](#httpresponse-enum)
+    - [HTTPResponse.Body (enum)](#httpresponse-body-enum)
+  - [Swift dynamic responses](#swift-dynamic-responses)
+- [Command line integration guide](#command-line-integration-guide)
+  - [Endpoint files](#endpoint-files)
+  - [Endpoint definitions](#endpoint-definitions)
+    - [Simple](#simple)
+    - [Inline javascript](#inline-javascript)
+    - [Javascript file reference](#javascript-file-reference)
+  - [YAML file reference](#yaml-file-reference)
+  - [Javascript types](#javascript-types)
+    - [Response](#response)
+    - [Body](#body)
 - [FAQ](#faq)
   - [When do I need a mock server?](#when-do-i-need-a-mock-server)
   - [How do I ensure my mock server is the same as my production server?](#how-do-i-ensure-my-mock-server-is-the-same-as-my-production-server)
   - [There's a bazillion mock servers out there, why do we need another?](#there-s-a-bazillion-mock-servers-out-there-why-do-we-need-another)
-  - [What dependencies does Simulacra have?](#what-dependencies-does-Simulacra-have)
+  - [What dependencies does Voodoo have?](#what-dependencies-does-voodoo-have)
 - [Samples](#samples)
   - [XCTest suite class:](#xctest-suite-class)
   - [XCTest simple tests with shared server](#xctest-simple-tests-with-shared-server)
@@ -70,10 +79,10 @@ It primary features are:
 
 ## iOS/OSX SPM package
 
-Simulacra comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Simulacra.git` as a package to your test targets and
+Voodoo comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Voodoo.git` as a package to your test targets and
 
 ```swift
-import SimulacraCore
+import Voodoo
 ```
 
 ## Linux, Windows, Docker, etc
@@ -83,13 +92,13 @@ If you don't already have a Swift compiler on your system there is an extensive 
 Once installed, you can clone this repository:
 
 ```bash
-git clone https://github.com/drekka/Simulacra.git
+git clone https://github.com/drekka/Voodoo.git
 ```
 
 and build it:
 
 ```bash
-cd Simulacra
+cd Voodoo
 swift build -c release
 ```
 
@@ -98,7 +107,7 @@ This will download all dependencies and build the command line program. On my 10
 The finished executable will be
 
 ```bash
-.build/release/Simulacra
+.build/release/magic
 ```
 
 Which you can move anywhere you like as it's fully self contained.
@@ -108,7 +117,7 @@ Which you can move anywhere you like as it's fully self contained.
 The command line program has a number of options, but here is a minimal example:
 
 ```bash
-.build/release/Simulacra run --config Tests/files/TestConfig1 
+.build/release/magic run --config Tests/files/TestConfig1 
 ```
 
 Seeing as the command line is designed for a non-programmatic situation, at a minimum you need to give it a path to a directory or file where it can load end points from.
@@ -116,61 +125,65 @@ Seeing as the command line is designed for a non-programmatic situation, at a mi
 However a more practical example might look like this:
 
 ```bash
-.build/release/Simulacra run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
+.build/release/magic run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
 Which adds a directory of response templates and another containing general files such as images and javascript source for web pages. 
 
 ### Docker additional configuration
 
-When launching Simulacra from within a [Docker container][docker] you will need to forwards Simulacra's ports if you app is not also running within the container.
+When launching Voodoo from within a [Docker container][docker] you will need to forwards Voodoo's ports if you app is not also running within the container.
 
-Firstly you will have to tell Docker to publish the ports Simulacra will be listening on to the outside world. Usually by using something like 
+Firstly you will have to tell Docker to publish the ports Voodoo will be listening on to the outside world. Usually by using something like 
 
 ```bash
 docker run -p 8080-8090
 ```
 
-The only issue with this is that Docker appears to automatically reserve the ports you specify even though Simulacra might not being listening on them. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
+The only issue with this is that Docker appears to automatically reserve the ports you specify even though Voodoo might not being listening on them. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
 
-Finally Simulacra's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Simulacra with the **_`--use-any-addr`_** flag which tells Simulacra to listen on `0.0.0.0` instead of `127.0.0.1`.
+Finally Voodoo's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Voodoo with the **_`--use-any-addr`_** flag which tells Voodoo to listen on `0.0.0.0` instead of `127.0.0.1`.
 
 # Configuration
 
-The thing about Simulacra is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
+The thing about Voodoo is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
 
-### Templates
+## Templates
 
-Simulacra has the ability to read templates of responses stored in a directory. This is most useful when you are mocking out a server that generates a lot of response in JSON or some other textural form. By specifying a template directory when initialising the server these templates can be automatically made available as response payloads for incoming requests. Here's an example from a Swift UI test setup:
+Voodoo has the ability to read templates of responses stored in a directory. This is most useful when you are mocking out a server that generates a lot of response in JSON or some other textural form. By specifying a template directory when initialising the server these templates can be automatically made available as response payloads for incoming requests. Here's an example from a Swift UI test setup:
 
 ```swift
 let templatePath = Bundle.testBundle.resourceURL!
-server = try Simulacra(templatePath: templatePath) {
+server = try VoodooServer(templatePath: templatePath) {
     // Endpoints configured here.
 }
 ```
 
 Templates are managed by [The mustache engine](#the-mustache-engine) and keyed based on their file names excluding any extension. By default, the extension for a template is `.json` however that can be changed to anything using the `templateExtension` argument. So if there is a template file called `accounts/list-accounts.json` then it's key is `accounts/list-accounts`.
 
-### File sources
+## File sources
 
-In addition to serving responses from defined API endpoints Simulacra can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
+In addition to serving responses from defined API endpoints Voodoo can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
 
 To do this you can add the initialiser argument `filePaths: URL(string: "Tests/files")` or add the command line argument `--file-dir Tests/files`. This can be done multiple times if you have multiple directories you want to search for files.
 
 ## Endpoints
 
-In order to response to API requests Simulacra needs to be configured with *Endpoints*. An endpoint is basically a definition that Simulacra uses to define what requests response to and how. To do that it need 3 things:
+### HTTP endpoints
+
+In order to response to API requests Voodoo needs to be configured with *Endpoints*. An endpoint is basically a definition that Voodoo uses to define what requests response to and how. To do that it need 3 things:
 
 * The HTTP method of the incoming request. ie. `GET`, `POST`, etc.
 * The path of the incoming request. ie. `/login`, `/accounts/list`, etc.  
 * The response to return. ie the HTTP status code, body, etc.
 
-### Endpoint path parameters
+#### Path parameters
 
-Apart from watching for fixed paths such as `/login` and `/accounts`, Simulacra can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Simulacra will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
+Apart from watching for fixed paths such as `/login` and `/accounts`, Voodoo can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Voodoo will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
 
-### Endpoint responses
+### GraphQL endpoints
+
+## Responses
 
 Generally a response to a request contains these things:
 
@@ -180,9 +193,11 @@ Generally a response to a request contains these things:
 
 There are some basic responses common to both the YAML/javascript and Swift configurations. Responses such as `ok`, `created`, `notFound`, `unauthorised`, etc. But they also have some unique features to each. Details of which will are in the relevant sections below.
 
+### Fixed responses
+
 ### Dynamic responses
 
-Dynamic responses are one of the more useful features of Simulacra. Essentially they give you the ability to run code (Swift or Javascript) in response to an incoming request and for that code to decide how to respond.
+Dynamic responses are one of the more useful features of Voodoo. Essentially they give you the ability to run code (Swift or Javascript) in response to an incoming request and for that code to decide how to respond.
 In Swift a closure is called with this signature
 
 ```swift
@@ -243,7 +258,7 @@ Using this cache allows all sorts of hard to manufacture responses to become muc
  
 ### Response bodies
 
-The response body defines the content (if any) that will be returned in the body of a response. Simulacra has a number of options available:
+The response body defines the content (if any) that will be returned in the body of a response. Voodoo has a number of options available:
 
 * An empty body.
 
@@ -263,29 +278,29 @@ Textural, JSON, YAML and template generated response also have the added feature
 
 With response bodies that effective return text (JSON, YAML, text) the results are passed to a [mustache engine](https://hummingbird-project.github.io/hummingbird/current/hummingbird-mustache/mustache-syntax.html) before the response is returned. Mustache is a simple logic less templating system for injecting values into text. 
 
-When processing the text for mustache tags, Simulacra assembles a variety of data to pass to it for injection:
+When processing the text for mustache tags, Voodoo assembles a variety of data to pass to it for injection:
 
-* `mockServer` - The base URL of the server as sourced from the incoming request. So if the incoming request `Host` header specifies that you app had to call `192.168.0.4:8080` to reference Simulacra through a Docker container or something like that. Then this will be set as the `mockServer` value in the template data so it can be injected into response data containing server URLs. For example, URLS that reference image files.
+* `mockServer` - The base URL of the server as sourced from the incoming request. So if the incoming request `Host` header specifies that you app had to call `192.168.0.4:8080` to reference Voodoo through a Docker container or something like that. Then this will be set as the `mockServer` value in the template data so it can be injected into response data containing server URLs. For example, URLS that reference image files.
 
 * All the data currently residing in the cache. 
 
 * And finally, any additional data added by the endpoint definition. Note this data can override anything in the cache by simply using the same key.
 
-## Xcode integration guide
+# Xcode integration guide
 
-The initial need for something like Simulacra was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Simulacra's design.
+The initial need for something like Voodoo was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Voodoo's design.
 
-### How does it work?
+## How does it work?
 
-1. In the `setUp()` of your UI test suite you start and configure an instance of Simulacra.
+1. In the `setUp()` of your UI test suite you start and configure an instance of Voodoo.
 
-2. Using a launch argument, pass Simulacra's URL to your app. 
+2. Using a launch argument, pass Voodoo's URL to your app. 
 
-3. Finally in `teardown()` clear the Simulacra instance otherwise Simulacra and the port will stay allocated until the end of the test run. 
+3. Finally in `teardown()` clear the Voodoo instance otherwise Voodoo and the port will stay allocated until the end of the test run. 
 
-*Note that I said "test run" in step 3. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Simulacra is using so other tests can re-use them.*
+*Note that I said "test run" in step 3. XCTests do not deallocate until all the tests have finished so it's important to free up any ports that Voodoo is using so other tests can re-use them.*
 
-### Endpoints
+## Endpoints
 
 To help with building endpoints in Swift there is an `Endpoint` type that can be created like this:
 
@@ -293,10 +308,10 @@ To help with building endpoints in Swift there is an `Endpoint` type that can be
 let endpoint = Endpoint(.GET, "/accounts/1234", .ok(body: .template("account-details-1234")
 ```
 
-Simulacra has a variety of functions to make adding endpoints easy and flexible. The simplest however is to just pass them to the initialiser via the [Swift Result Builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) `endpoints` argument like this:
+Voodoo has a variety of functions to make adding endpoints easy and flexible. The simplest however is to just pass them to the initialiser via the [Swift Result Builder](https://docs.swift.org/swift-book/ReferenceManual/Attributes.html#ID633) `endpoints` argument like this:
 
 ```swift
-server = try Simulacra {
+server = try Voodoo {
             Endpoint(.POST, "/login")
             Endpoint(.GET, "/config", response: .ok(body: .json(["version: 1.0])))
         }
@@ -314,11 +329,11 @@ You can also add endpoints after starting the server using these functions:
 
 * `add(_ method: HTTPMethod, _ path: String, response handler: @escaping (HTTPRequest, Cache) async -> HTTPResponse)` - Adds a single dynamic endpoint using the passed closure. 
 
-### Swift types
+## Swift types
 
-Simulacra uses a number of types to help define responses to APIs.
+Voodoo uses a number of types to help define responses to APIs.
 
-#### HTTPResponse (enum)
+### HTTPResponse (enum)
 
 There are two core response types you can return:
 
@@ -354,7 +369,7 @@ In addition there are a number of convenience response types for commonly used H
 
 `HeaderDictionary` is just an alias for `[String:String]`.
 
-#### HTTPResponse.Body (enum)
+### HTTPResponse.Body (enum)
 
 For each of the responses above, a `body` argument can return one of the following payload definitions:
 
@@ -375,12 +390,12 @@ For each of the responses above, a `body` argument can return one of the followi
 
 In all of the above a `templateData` parameter is for any additional data that you want to pass to the mustache engine. This is a `TemplateData` type which is an alias for `[String:Any]`.
 
-### Swift dynamic responses
+## Swift dynamic responses
 
 Here is an example of a Dynamic response:
 
 ```swift
-server = try Simulacra {
+server = try Voodoo {
     Endpoint(.POST, "/login", response: .dynamic { request, cache in
         cache.userid = request.formParameters.userid
         return .json([
@@ -392,31 +407,33 @@ server = try Simulacra {
 
 It's pretty simple, just stashes the userid in the cache and generates some dynamic data for the response.
 
-## Command line
+# Command line integration guide
 
-If you are not using Simulacra in an XCode test suite then you will need to consider the command line option. This is based on a YAML configuration with Javascript as a dynamic language.
+If you are not using Voodoo in an XCode test suite then you will need to consider the command line option. This is based on a YAML configuration with Javascript as a dynamic language.
 
-When launching Simulacra from a command line there is one required argument. **_--config_** specifies a directory or file from which the server's YAML configuration will be read. if it's a directory Simulacra will then scan it for any YAML files and read those files to build the endpoints it needs. If a reference to a file is passed then Simulacra assumes that all the endpoints are defined in that file.
+When launching Voodoo from a command line there is one required argument. **_--config_** specifies a directory or file from which the server's YAML configuration will be read. if it's a directory Voodoo will then scan it for any YAML files and read those files to build the endpoints it needs. If a reference to a file is passed then Voodoo assumes that all the endpoints are defined in that file.
 
-### Endpoint files
+## Endpoint files
 
 Each YAML configuration file can contain either a single endpoint, or a list of endpoints. 
 
-### Endpoint definitions
+## Endpoint definitions
 
 An endpoint definition can take one of 4 possible forms.
 
-#### Simple
+### Simple
 
 ```yaml
-signature: <method> <path>
+http:
+  api: <method> <path>
 response: <response>
 ```
 
-The `signature` tells Simulacra how to match incoming requests. `response` tells it how to respond and provides the HTTP status, optional headers, and body. For example
+The `signature` tells Voodoo how to match incoming requests. `response` tells it how to respond and provides the HTTP status, optional headers, and body. For example
   
 ```yaml
-signature: get /config
+http: 
+  api: get /config
 response:
 status: 200
 headers: { config-version: 1.0 }
@@ -427,10 +444,11 @@ body:
   }
 ``` 
   
-#### Inline javascript
+### Inline javascript
 
 ```yaml
-signature: <method> <path>
+http: 
+  api:<method> <path>
 javascript: |
   function response(request, cache) {
       // generate the response here
@@ -440,7 +458,8 @@ javascript: |
 This is the simplest form of a YAML configured dynamic response. For example
 
 ```yaml  
-signature: get /config
+http:
+  api: get /config
 javascript: |
   function response(request, cache) {
       if request.headers.app-version == 1.0 {
@@ -461,21 +480,23 @@ javascript: |
   }
 ```
 
-#### Javascript file reference
+### Javascript file reference
   
 ```yaml
-signature: <method> <path>
+http:
+  api: <method> <path>
 javascriptFile: <js-file-name>
 ```
  
 Also defining a dynamic response endpoint, this form references an external javascript file instead of have the code inline. This is convenient when you have a number of endpoints listed in the YAML file, or you want to store the javascript in a file with a `js` extension so it can be easy edited.  
 
 ```yaml
-signature: get /config
+http:
+  api: get /config
 javascriptFile: get-config.js
 ```
   
-#### YAML file reference
+## YAML file reference
 
 ```yaml
 <reference-to-another-YAML-file>
@@ -489,11 +510,11 @@ Instead of a data structure with a `signature` value defining the endpoint, this
 - accounts/customer-accounts.yml
 ```
 
-### Javascript types
+## Javascript types
 
-There are a number of pre-defined types that Simulacra makes available to the dynamic javascript functions. 
+There are a number of pre-defined types that Voodoo makes available to the dynamic javascript functions. 
 
-#### Response
+### Response
 
 `Response` is a type that has the following `static` factory methods for creating responses:
 
@@ -517,7 +538,7 @@ There are a number of pre-defined types that Simulacra makes available to the dy
 
 * `.internalServerError(body, headers)` - Convenience for a HTTP 500 status response.
 
-#### Body
+### Body
   
 To create the body arguments you can use a number of `Body` `static` factory methods:
 
@@ -561,19 +582,19 @@ Simply because I've never found one that had all the featured I was looking for.
 
 * Response payload templating so we can dynamically modify what is returned.
 
-All the servers I found failed to match this list and whilst I've built a number of custom mock servers for clients over the years, they were all hard coded for their particular needs. Simulacra is designed to take all the features I could never find and make them as easy to configure as possible.
+All the servers I found failed to match this list and whilst I've built a number of custom mock servers for clients over the years, they were all hard coded for their particular needs. Voodoo is designed to take all the features I could never find and make them as easy to configure as possible.
 
-## What dependencies does Simulacra have?
+## What dependencies does Voodoo have?
 
 To build this project I used a number of 3rd party projects. However you don't need to worry about these as the build will download them as needed.
 
-* [Hummingbird][hummingbird] - A very fast and well written Swift NIO based server - This is the core that Simulacra is built around.
+* [Hummingbird][hummingbird] - A very fast and well written Swift NIO based server - This is the core that Voodoo is built around.
 
 * [Yams][yams] - An API to read YAML configuration files.
 
-* [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Simulacra can run on both platforms. 
+* [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Voodoo can run on both platforms. 
 
-* [Nimble][nimble] - Simply the best assertion framework for unit testing.
+* [Nimble][nimble] - Simply the best assertion framework for unit testing. Not a direct dependency, just used to test Voodoo.
 
 * [Swift Argument Parser][swift-argument-parser] - The API that the command line program is built on.  
 
@@ -593,18 +614,18 @@ Here are some sample files showing how various things can be done.
 
 ## XCTest suite class:
 
-Cut-n-paste this to a swift file in you UI tests. It provides the core setup needed to run Simulacra in a XCTest UI test suite.
+Cut-n-paste this to a swift file in you UI tests. It provides the core setup needed to run Voodoo in a XCTest UI test suite.
 
 ```swift
 import XCTest
-import SimulacraCore
+import Voodoo
 
 /// Simple UI test suite base class that can be used to start a mock server instance before
 /// running each test.
 open class UITestCase: XCTestCase {
 
     /// The mock server.
-    private(set) var server: Simulacra!
+    private(set) var server: Voodoo!
 
     /// Local app reference.
     private(set) var app: XCUIApplication!
@@ -627,7 +648,7 @@ open class UITestCase: XCTestCase {
     ///
     /// - parameter endpoints: The end points needed by the server.
     func launchServer(@EndpointBuilder endpoints: () -> [Endpoint]) throws {
-        server = try Simulacra(verbose: true, endpoints: endpoints)
+        server = try VoodooServer(verbose: true, endpoints: endpoints)
     }
 
     /// Launches your app, passing the common launch arguments and any additional
@@ -703,7 +724,8 @@ class IndividualUITests: UITestCase {
 Here is a simple file that returns a fixed response.
 
 ```yaml
-signature: get /config
+http:
+  api: get /config
 response:
   status: 200
   body:
@@ -719,7 +741,7 @@ This file contains a number of responses and inclusions. It's a good example of 
 
 ```yaml
 # Simple endpoint
-- signature: post /created/text
+- http:    api: post /created/text
   response:
     status: 201
     headers: ~
@@ -732,7 +754,7 @@ This file contains a number of responses and inclusions. It's a good example of 
 - TestConfig1/get-config.yml
 
 # Inline javascript dynamic response
-- signature: get /javascript/inline
+- http:    api: get /javascript/inline
   javascript: |
     function response(request, cache) {
         if request.parthParameter.accountId == "1234" {
@@ -743,7 +765,7 @@ This file contains a number of responses and inclusions. It's a good example of 
     }
     
 # Referenced javascript file
-- signature: get /javascript/file
+- http:    api: get /javascript/file
   javascriptFile: TestConfig1/login.js 
 ```
 

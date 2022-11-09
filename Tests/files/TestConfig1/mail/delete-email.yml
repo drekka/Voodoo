@@ -1,3 +1,4 @@
-signature: delete /email/:messageId
+http:
+  api: delete /email/:messageId
 response:
   status: 200

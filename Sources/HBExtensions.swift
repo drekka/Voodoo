@@ -6,9 +6,9 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 
-// Simulacra extensions to Hummingbird
+// Voodoo extensions to Hummingbird
 
-extension HBApplication: SimulacraContext {
+extension HBApplication: VoodooContext {
 
     public var port: Int {
         guard let port = configuration.address.port else {
@@ -39,9 +39,47 @@ extension HBApplication: SimulacraContext {
 
 extension HBRouter {
 
-    func add(_ method: HTTPMethod, _ path: String, response: HTTPResponse = .ok()) {
-        on(path, method: method) {
-            try await response.hbResponse(for: $0.asHTTPRequest, inServerContext: $0.application)
+    func add(_ endpoint: HTTPEndpoint) {
+        on(endpoint.path, method: endpoint.method) {
+            try await endpoint.response.hbResponse(for: $0.asHTTPRequest, inServerContext: $0.application)
         }
     }
+}
+
+extension HBRequest {
+
+    /// Convenience variable to obtain a wrapped request.
+    var asHTTPRequest: HTTPRequest {
+        HBRequestWrapper(request: self)
+    }
+}
+
+/// Applies ``KeyedValues`` to the headers.
+extension HTTPHeaders: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.name.hashValue).inserted ? $0.name : nil }
+    }
+
+    public subscript(key: String) -> String? { first(name: key) }
+
+    public subscript(dynamicMember key: String) -> String? { first(name: key) }
+
+    public subscript(dynamicMember key: String) -> [String] { self[key] }
+}
+
+/// Applies ``KeyedValues`` to Hummingbird's parameters.
+extension HBParameters: KeyedValues {
+
+    public var uniqueKeys: [String] {
+        var hashes = Set<Int>()
+        return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
+    }
+
+    public subscript(key: String) -> [String] { getAll(key) }
+
+    public subscript(dynamicMember key: String) -> String? { self[key] }
+
+    public subscript(dynamicMember key: String) -> [String] { getAll(key) }
 }

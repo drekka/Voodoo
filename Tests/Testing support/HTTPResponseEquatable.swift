@@ -1,14 +1,11 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 5/10/2022.
 //
 
 import AnyCodable
 import Foundation
 import Hummingbird
-@testable import SimulacraCore
+@testable import Voodoo
 
 // Whilst using `Equatable` isn't my preferred method for asserts, with tests in this code base it makes more sense.
 
@@ -31,7 +28,7 @@ extension HBResponseBody: Equatable {
 
 extension HTTPResponse: Equatable {
 
-    public static func == (lhs: SimulacraCore.HTTPResponse, rhs: SimulacraCore.HTTPResponse) -> Bool {
+    public static func == (lhs: Voodoo.HTTPResponse, rhs: Voodoo.HTTPResponse) -> Bool {
         switch (lhs, rhs) {
         case (.raw(let lhsStatus, let lhsHeaders, let lhsBody), .raw(let rhsStatus, let rhsHeaders, let rhsBody)):
 
@@ -80,7 +77,7 @@ extension HTTPResponse: Equatable {
 
 extension HTTPResponse.Body: Equatable {
 
-    public static func == (lhs: SimulacraCore.HTTPResponse.Body, rhs: SimulacraCore.HTTPResponse.Body) -> Bool {
+    public static func == (lhs: Voodoo.HTTPResponse.Body, rhs: Voodoo.HTTPResponse.Body) -> Bool {
 
         switch (lhs, rhs) {
 
@@ -116,7 +113,7 @@ extension HTTPResponse.Body: Equatable {
 
 // Template data comparisons.
 
-extension Optional where Wrapped == [String: AnyCodable] {
+extension [String: AnyCodable]? {
     static func == (_: Self, rhs: Self) -> Bool {
         switch (rhs, rhs) {
         case (.none, .none):

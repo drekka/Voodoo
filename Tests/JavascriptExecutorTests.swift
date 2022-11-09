@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 30/9/2022.
 //
 
@@ -10,7 +7,7 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 import JXKit
@@ -23,7 +20,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestDetailsMinimal() throws {
 
-        let request = HBRequest.mock()
+        let request = HBRequestWrapper.mock()
         try expectRequest(request, javascript: #"""
             console.log("Path components " + request.pathComponents);
             var data = {
@@ -60,10 +57,11 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestDetails() throws {
 
-        let request = HBRequest.mock(path: "/abc/def?q1=123&q2=123&q1=456",
-                                     pathParameters: ["pp1": "123", "pp2": "456"],
-                                     headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
-                                     body: "Hello world!")
+        let request = HBRequestWrapper.mock(path: "/abc/def",
+                                            pathParameters: ["pp1": "123", "pp2": "456"],
+                                            query: "q1=123&q2=123&q1=456",
+                                            headers: [("h1", "xyz"), ("h2", "123"), ("h2", "456")],
+                                            body: "Hello world!")
         try expectRequest(request, javascript: #"""
             console.log("Path components " + request.pathComponents);
             var data = {
@@ -102,7 +100,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestFormParameters() throws {
 
-        let request = HBRequest.mock(
+        let request = HBRequestWrapper.mock(
             contentType: Header.ContentType.applicationFormData,
             body: #"formField1=Hello%20world!"#
         )
@@ -122,7 +120,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testRequestBodyJSON() throws {
 
-        let request = HBRequest.mock(
+        let request = HBRequestWrapper.mock(
             contentType: Header.ContentType.applicationJSON,
             body: #"{"abc":"def"}"#
         )
@@ -137,17 +135,16 @@ class JavascriptExecutorTests: XCTestCase {
         }
     }
 
-    private func expectRequest(_ request: HBRequest,
+    private func expectRequest(_ request: HTTPRequest,
                                javascript: String,
                                toReturn validate: ([String: Any]) -> Void) throws {
-        let httpRequest = request.asHTTPRequest
-        let executor = try JavascriptExecutor(serverContext: MockSimulacraContext())
+        let executor = try JavascriptExecutor(serverContext: MockVoodooContext())
         let response = try executor.execute(script: #"""
                                                     function response(request, cache) {
                                                         \#(javascript)
                                                     }
                                             """#,
-                                            for: httpRequest)
+                                            for: request)
         guard case HTTPResponse.ok(_, let body) = response,
               case HTTPResponse.Body.json(let data, _) = body else {
             fail("Got unexpected response \(response)")
@@ -364,7 +361,7 @@ class JavascriptExecutorTests: XCTestCase {
 
         let context = JXContext()
         let keyArg = context.string("abc")
-        let result = try cache.cacheGet(context: context, object: nil, args: [ context.object(), keyArg])
+        let result = try cache.cacheGet(context: context, object: nil, args: [context.object(), keyArg])
 
         expect(result.isNull) == true
     }
@@ -377,7 +374,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheString() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = "Hello world!";
                            return Response.ok();
@@ -392,7 +389,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheInt() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = 123;
                            return Response.ok();
@@ -407,7 +404,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheJSObject() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = {
                                def: "Hello world!"
@@ -425,7 +422,7 @@ class JavascriptExecutorTests: XCTestCase {
     }
 
     func testCacheJSArray() throws {
-        let mockContext = MockSimulacraContext()
+        let mockContext = MockVoodooContext()
         try expectResponse(#"""
                            cache.abc = [
                            {
@@ -457,14 +454,14 @@ class JavascriptExecutorTests: XCTestCase {
 
     private func expectResponse(_ response: String,
                                 withHeaders headers: [(String, String)]? = nil,
-                                inContext: SimulacraContext = MockSimulacraContext(),
+                                inContext: VoodooContext = MockVoodooContext(),
                                 toReturn expectedResponse: HTTPResponse) throws {
         let executor = try JavascriptExecutor(serverContext: inContext)
         let result = try executor.execute(script: #"""
             function response(request, cache) {
                 \#(response)
             }
-        """#, for: HBRequest.mock(headers: headers).asHTTPRequest)
+        """#, for: HBRequestWrapper.mock(headers: headers))
         expect(result) == expectedResponse
     }
 
@@ -482,14 +479,14 @@ class JavascriptExecutorTests: XCTestCase {
 
     private func expectScript(file: StaticString = #file, line: UInt = #line,
                               _ script: String,
-                              inContext context: SimulacraContext = MockSimulacraContext(),
+                              inContext context: VoodooContext = MockVoodooContext(),
                               toThrowError expectedMessage: String) {
         do {
             let executor = try JavascriptExecutor(serverContext: context)
-            _ = try executor.execute(script: script, for: HBRequest.mock().asHTTPRequest)
+            _ = try executor.execute(script: script, for: HBRequestWrapper.mock())
             fail("Expected exception not thrown executing script", file: file, line: line)
         } catch {
-            if case SimulacraError.javascriptError(let message) = error {
+            if case VoodooError.javascriptError(let message) = error {
                 if message != expectedMessage {
                     fail("expected '\(expectedMessage)' got '\(message)'", file: file, line: line)
                 }

@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 19/9/2022.
 //
 
@@ -9,7 +6,7 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class HTTPResponseTests: XCTestCase {
@@ -79,8 +76,8 @@ class HTTPResponseTests: XCTestCase {
                 withHeaders expectedHeaders: [String: String]? = nil,
                 body expectedBody: String? = nil) async throws {
 
-        let request = HBRequest.mock().asHTTPRequest
-        let context = MockSimulacraContext()
+        let request = HBRequestWrapper.mock()
+        let context = MockVoodooContext()
         let hbResponse = try await response.hbResponse(for: request, inServerContext: context)
 
         expect(hbResponse.status) == expectedStatus
@@ -105,33 +102,6 @@ class HTTPResponseTests: XCTestCase {
 class HTTPResponseDecodableTests: XCTestCase {
 
     private let mockServer = "http://127.0.0.1:8080"
-
-    func testStatusAndJavascriptIsInvalid() throws {
-        try assert(#"""
-                   {
-                       "status":200,
-                       "javascript": "function response(request, cache) { return .ok(); }"
-                   }
-                   """#,
-                   failsOnPath: ["javascript"], withError: "Cannot have both 'status' and 'javascript'.")
-    }
-
-    func testNoStatusOrJavahkscriptIsInvalid() throws {
-        try assert(#"""
-                   {
-                   }
-                   """#,
-                   failsOnPath: ["status"], withError: "Response must container either 'status' or 'javascript'.")
-    }
-
-    func testDecodeJavascript() throws {
-        try assert(#"""
-                   {
-                    "javascript": "function response(request, cache) { return .ok(); }"
-                   }
-                   """#,
-                   decodesTo: .javascript(#"function response(request, cache) { return .ok(); }"#))
-    }
 
     func testDecodeOk() throws {
         try assert(#"{"status":200}"#, decodesTo: .ok())
@@ -185,7 +155,7 @@ class HTTPResponseDecodableTests: XCTestCase {
             _ = try JSONDecoder().decode(HTTPResponse.self, from: data)
             fail("Expected error not thrown")
         } catch DecodingError.dataCorrupted(let context) {
-            expect(context.codingPath.map { $0.stringValue }) == expectedPath
+            expect(context.codingPath.map(\.stringValue)) == expectedPath
             expect(context.debugDescription) == expectedError
         }
     }

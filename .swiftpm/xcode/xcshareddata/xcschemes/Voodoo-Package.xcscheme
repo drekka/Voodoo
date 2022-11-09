@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Simulacra_SimulacraTests"
-               BuildableName = "Simulacra_SimulacraTests"
-               BlueprintName = "Simulacra_SimulacraTests"
+               BlueprintIdentifier = "Voodoo_VoodooTests"
+               BuildableName = "Voodoo_VoodooTests"
+               BlueprintName = "Voodoo_VoodooTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Simulacra-core"
-               BuildableName = "Simulacra-core"
-               BlueprintName = "Simulacra-core"
+               BlueprintIdentifier = "Voodoo"
+               BuildableName = "Voodoo"
+               BlueprintName = "Voodoo"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -42,51 +42,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "simulacra"
-               BuildableName = "simulacra"
-               BlueprintName = "simulacra"
+               BlueprintIdentifier = "magic"
+               BuildableName = "magic"
+               BlueprintName = "magic"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
             buildForTesting = "YES"
-            buildForRunning = "YES"
+            buildForRunning = "NO"
             buildForProfiling = "NO"
             buildForArchiving = "NO"
-            buildForAnalyzing = "YES">
+            buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SimulacraTests"
-               BuildableName = "SimulacraTests"
-               BlueprintName = "SimulacraTests"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Simulacra-cmd"
-               BuildableName = "Simulacra-cmd"
-               BlueprintName = "Simulacra-cmd"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SimulacraCore"
-               BuildableName = "SimulacraCore"
-               BlueprintName = "SimulacraCore"
+               BlueprintIdentifier = "VoodooTests"
+               BuildableName = "VoodooTests"
+               BlueprintName = "VoodooTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -100,12 +72,14 @@
       codeCoverageEnabled = "YES">
       <Testables>
          <TestableReference
-            skipped = "NO">
+            skipped = "NO"
+            parallelizable = "YES"
+            testExecutionOrdering = "random">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SimulacraTests"
-               BuildableName = "SimulacraTests"
-               BlueprintName = "SimulacraTests"
+               BlueprintIdentifier = "VoodooTests"
+               BuildableName = "VoodooTests"
+               BlueprintName = "VoodooTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
@@ -121,15 +95,42 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "simulacra"
-            BuildableName = "simulacra"
-            BlueprintName = "simulacra"
+            BlueprintIdentifier = "magic"
+            BuildableName = "magic"
+            BlueprintName = "magic"
             ReferencedContainer = "container:">
          </BuildableReference>
-      </MacroExpansion>
+      </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "run"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--template-dir Voodoo_VoodooTests.bundle/Contents/Resources/files/templates"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--hummingbird-verbose"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--verbose"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--config Voodoo_VoodooTests.bundle/Contents/Resources/files/TestConfig3"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--config Voodoo_VoodooTests.bundle/Contents/Resources/files/TestConfig2"
+            isEnabled = "NO">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -140,9 +141,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "simulacra"
-            BuildableName = "simulacra"
-            BlueprintName = "simulacra"
+            BlueprintIdentifier = "magic"
+            BuildableName = "magic"
+            BlueprintName = "magic"
             ReferencedContainer = "container:">
          </BuildableReference>
       </MacroExpansion>

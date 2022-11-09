@@ -4,7 +4,7 @@
 
 import Foundation
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class CacheTests: XCTestCase {

@@ -5,7 +5,7 @@
 import Foundation
 import Nimble
 import NIOCore
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class NIOCoreExtensionsTests: XCTestCase {

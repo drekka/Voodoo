@@ -1,7 +1,9 @@
-- signature: put /cart
+- http:
+    api: put /cart
   javascriptFile: addToCart.js
   
-- signature: get /cart
+- http:
+    api: get /cart
   javascript: |
     function response(request, cache) {
       return Response.ok(Body.json(cache.cart ?? {}));

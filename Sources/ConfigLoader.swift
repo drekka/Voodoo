@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 8/10/2022.
 //
 
@@ -29,10 +26,11 @@ public struct ConfigLoader {
             return try readConfig(file: path)
 
         case .isDirectory:
+            if verbose { print("💀 Reading config from \(path.filePath)") }
             let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
             guard let files = FileManager.default.enumerator(at: path,
                                                              includingPropertiesForKeys: resourceKeys,
-                                                             options: .skipsHiddenFiles) else { return [] }
+                                                             options: [.skipsHiddenFiles, .producesRelativePathURLs]) else { return [] }
             let resourceKeysSet = Set(resourceKeys)
             return try files.lazy
                 .compactMap { $0 as? URL }
@@ -44,15 +42,13 @@ public struct ConfigLoader {
 
         default:
             let fileSystemPath = path.filePath
-            print("👻 Config file or directory does not exist '\(fileSystemPath)'")
-            throw SimulacraError.invalidConfigPath(fileSystemPath)
+            if verbose { print("💀 Config file or directory does not exist '\(fileSystemPath)'") }
+            throw VoodooError.invalidConfigPath(fileSystemPath)
         }
     }
 
     private func readConfig(file: URL) throws -> [Endpoint] {
-        if verbose {
-            print("👻 Reading config in \(file.filePath)")
-        }
+        if verbose { print("💀 Reading config file \(file.relativePath)") }
         let data = try Data(contentsOf: file)
         let directory = file.deletingLastPathComponent()
         return try YAMLDecoder().decode(ConfigFile.self,
@@ -61,6 +57,6 @@ public struct ConfigLoader {
                                             ConfigLoader.userInfoDirectoryKey: directory,
                                             ConfigLoader.userInfoFilenameKey: file.lastPathComponent,
                                             ConfigLoader.userInfoVerboseKey: verbose,
-                                        ]).apis
+                                        ]).endpoints
     }
 }

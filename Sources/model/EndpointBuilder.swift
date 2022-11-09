@@ -6,24 +6,28 @@ import Foundation
 
 /// Using a protocol to drive the ``EndpointBuilder`` means that a variety of types can produce API endpoints.
 public protocol EndpointSource {
-    var apis: [Endpoint] { get }
+    var endpoints: [Endpoint] { get }
 }
 
 /// Result builder for assembling end points for the server.
 @resultBuilder
 public enum EndpointBuilder {
     public static func buildOptional(_ endpoints: [Endpoint]?) -> [Endpoint] { endpoints ?? [] }
-    public static func buildEither(first source: EndpointSource) -> [Endpoint] { source.apis }
-    public static func buildEither(second source: EndpointSource) -> [Endpoint] { source.apis }
-    public static func buildBlock(_ endpoints: EndpointSource...) -> [Endpoint] { endpoints.flatMap { $0.apis } }
+    public static func buildEither(first source: EndpointSource) -> [Endpoint] { source.endpoints }
+    public static func buildEither(second source: EndpointSource) -> [Endpoint] { source.endpoints }
+    public static func buildBlock(_ endpoints: EndpointSource...) -> [Endpoint] { endpoints.flatMap(\.endpoints) }
 }
 
 // MARK: - Extensions
 
-extension Endpoint: EndpointSource {
-    public var apis: [Endpoint] { [self] }
+extension HTTPEndpoint: EndpointSource {
+    public var endpoints: [Endpoint] { [self] }
 }
 
-extension Array: EndpointSource where Element == Endpoint {
-    public var apis: [Endpoint] { self }
+extension GraphQLEndpoint: EndpointSource {
+    public var endpoints: [Endpoint] { [self] }
+}
+
+extension [Endpoint]: EndpointSource {
+    public var endpoints: [Endpoint] { self }
 }

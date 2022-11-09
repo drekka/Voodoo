@@ -56,7 +56,7 @@ class InMemoryCache: Cache {
 
     private func get(_ key: String) -> Any? { cache[key] }
     private func set(_ value: Any?, forKey key: String) {
-        if let value = value {
+        if let value {
             cache[key] = value
         } else {
             remove(key)

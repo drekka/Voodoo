@@ -28,27 +28,29 @@ struct HBRequestWrapper: HTTPRequest {
         return Dictionary(request.parameters.map { (String($0.key), String($0.value)) }) { $1 }
     }
 
-    var query: String? { request.uri.query }
+    var query: String? {
+        request.uri.query
+    }
 
     var queryParameters: KeyedValues { request.uri.queryParameters }
 
-    var body: Data? { return request.body.buffer?.data }
+    var body: Data? { request.body.buffer?.data }
 
     var bodyJSON: Any? {
-        guard request.contentType(is: Header.ContentType.applicationJSON),
+        guard contentType(is: Header.ContentType.applicationJSON),
               let buffer = request.body.buffer else { return nil }
         return try? JSONSerialization.jsonObject(with: buffer)
     }
 
     var bodyYAML: Any? {
-        guard request.contentType(is: Header.ContentType.applicationYAML),
+        guard contentType(is: Header.ContentType.applicationYAML),
               let data = request.body.buffer?.data else { return nil }
         return try? YAMLDecoder().decode(AnyDecodable.self, from: data).value
     }
 
     var formParameters: [String: String] {
 
-        guard request.contentType(is: Header.ContentType.applicationFormData),
+        guard contentType(is: Header.ContentType.applicationFormData),
               let buffer = request.body.buffer else { return [:] }
 
         // Forms come in using encoding that's the same as that used for URL query arguments.
@@ -68,7 +70,18 @@ struct HBRequestWrapper: HTTPRequest {
             return ($0.name, value)
         }) { $1 }
     }
+
+    var graphQLRequest: GraphQLRequest? {
+        try? GraphQLRequest(request: self)
+    }
+
+    /// Helper for analysing the content type of a request.
+    func contentType(is contentType: String) -> Bool {
+        headers[Header.contentType]?.lowercased().starts(with: contentType) ?? false
+    }
 }
+
+// MARK: - Supporting extensions
 
 extension String {
 
@@ -76,67 +89,4 @@ extension String {
     var urlPathComponents: [String.SubSequence] {
         ["/"] + split(separator: "/")
     }
-}
-
-extension HBRequest {
-
-    /// Convenience variable to obtain a wrapped request.
-    var asHTTPRequest: HTTPRequest {
-        HBRequestWrapper(request: self)
-    }
-
-    /// Helper for analysing the content type of a request.
-    func contentType(is contentType: String) -> Bool {
-        headers[Header.contentType].first?.contains(contentType) ?? false
-    }
-}
-
-// MARK: - Supporting extensions
-
-/// Applies ``KeyedValues`` to the headers.
-extension HTTPHeaders: KeyedValues {
-
-    public var uniqueKeys: [String] {
-        var hashes = Set<Int>()
-        return compactMap { hashes.insert($0.name.hashValue).inserted ? $0.name : nil }
-    }
-
-    public subscript(key: String) -> String? { first(name: key) }
-
-    public subscript(dynamicMember key: String) -> String? { first(name: key) }
-
-    public subscript(dynamicMember key: String) -> [String] { self[key] }
-}
-
-/// Used to apply dynamic member lookup to a dictionary.
-@dynamicMemberLookup
-public protocol DictionaryDynamicLookup {
-    associatedtype Key
-    associatedtype Value
-    subscript(_: Key) -> Value? { get }
-}
-
-/// Used to apply dynamic member lookup to a dictionary.
-public extension DictionaryDynamicLookup where Key == String {
-    subscript(dynamicMember member: String) -> Value? {
-        return self[member]
-    }
-}
-
-/// Make string dictionaries, for example the path parameters, dynamic lookup.
-extension Dictionary: DictionaryDynamicLookup where Key == String, Value == String {}
-
-/// Applies ``KeyedValues`` to Hummingbird's parameters.
-extension HBParameters: KeyedValues {
-
-    public var uniqueKeys: [String] {
-        var hashes = Set<Int>()
-        return compactMap { hashes.insert($0.key.hashValue).inserted ? String($0.key) : nil }
-    }
-
-    public subscript(key: String) -> [String] { getAll(key) }
-
-    public subscript(dynamicMember key: String) -> String? { self[key] }
-
-    public subscript(dynamicMember key: String) -> [String] { getAll(key) }
 }

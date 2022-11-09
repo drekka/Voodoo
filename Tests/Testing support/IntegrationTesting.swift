@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 30/9/2022.
 //
 
@@ -9,14 +6,14 @@ import Foundation
 import Hummingbird
 import Nimble
 import NIOHTTP1
-@testable import SimulacraCore
+@testable import Voodoo
 
 /// Add this protocol to gain access to integration testing functions.
 protocol IntegrationTesting: AnyObject {
 
     typealias ServerResponse = (data: Data?, response: HTTPURLResponse?, error: Error?)
 
-    var server: Simulacra! { get set }
+    var server: VoodooServer! { get set }
 
     func tearDownServer()
 
@@ -60,7 +57,8 @@ extension IntegrationTesting {
                         file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         let response: ServerResponse
         do {
-            let callResponse = try await URLSession.shared.data(for: request)
+            let session = URLSession(configuration: URLSessionConfiguration.ephemeral, delegate: RedirectStopper(), delegateQueue: nil)
+            let callResponse = try await session.data(for: request)
             response = ServerResponse(data: callResponse.0, response: callResponse.1 as? HTTPURLResponse, error: nil)
         } catch {
             response = ServerResponse(data: nil, response: nil, error: error)
@@ -70,5 +68,16 @@ extension IntegrationTesting {
         expect(file: file, line: line, response.error).to(beNil(), description: "Expected error to be 'nil',")
 
         return response
+    }
+}
+
+class RedirectStopper: NSObject, URLSessionTaskDelegate {
+    func urlSession(_: URLSession,
+                    task _: URLSessionTask,
+                    willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest _: URLRequest,
+                    completionHandler: @escaping @Sendable (URLRequest?) -> Void) {
+        print("Stopping redirect to \(response.url?.absoluteString ?? "")")
+        completionHandler(nil)
     }
 }

@@ -1,4 +1,5 @@
-- signature: POST /security/login
+- http:
+    api: POST /security/login
   javascript: |
     function response(request, cache) {
       let token = "1234-12345678-1234";

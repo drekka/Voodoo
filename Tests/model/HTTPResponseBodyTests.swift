@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 5/10/2022.
 //
 
@@ -9,22 +6,22 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 import Yams
 
 class HTTPResponseBodyTests: XCTestCase {
 
-    private var context: SimulacraContext!
+    private var context: VoodooContext!
 
     override func setUp() {
         super.setUp()
-        context = MockSimulacraContext()
+        context = MockVoodooContext()
     }
 
     func testEmpty() throws {
-        let context = MockSimulacraContext()
-        let request = HBRequest.mock().asHTTPRequest
+        let context = MockVoodooContext()
+        let request = HBRequestWrapper.mock()
         let hbBody = try HTTPResponse.Body.empty.hbBody(forRequest: request, serverContext: context)
         expect(hbBody.0) == .empty
         expect(hbBody.1) == nil
@@ -109,7 +106,7 @@ class HTTPResponseBodyTests: XCTestCase {
                 _ body: HTTPResponse.Body,
                 generates expectedBody: String,
                 contentType expectedContentType: String?) throws {
-        let request = HBRequest.mock().asHTTPRequest
+        let request = HBRequestWrapper.mock()
         let hbBody = try body.hbBody(forRequest: request, serverContext: context)
         expect(file: file, line: line, hbBody.0) == expectedBody.hbResponseBody
         expect(file: file, line: line, hbBody.1) == expectedContentType

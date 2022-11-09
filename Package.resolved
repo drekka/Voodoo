@@ -3,11 +3,11 @@
     "pins": [
       {
         "package": "AnyCodable",
-        "repositoryURL": "https://github.com/drekka/AnyCodable",
+        "repositoryURL": "https://github.com/Flight-School/AnyCodable",
         "state": {
-          "branch": "develop/dc-missing-string-interpolation",
-          "revision": "a6242816afc292c1daececcf46ae8b5b98123805",
-          "version": null
+          "branch": null,
+          "revision": "862808b2070cd908cb04f9aafe7de83d35f81b05",
+          "version": "0.6.7"
         }
       },
       {
@@ -29,11 +29,20 @@
         }
       },
       {
+        "package": "GraphQL",
+        "repositoryURL": "https://github.com/GraphQLSwift/GraphQL",
+        "state": {
+          "branch": null,
+          "revision": "dda63e412745832adaa4b4248501bebd9133a699",
+          "version": "2.4.2"
+        }
+      },
+      {
         "package": "hummingbird",
         "repositoryURL": "https://github.com/hummingbird-project/hummingbird",
         "state": {
           "branch": "main",
-          "revision": "564f63f0944828b041a85a539186cf6b6a667406",
+          "revision": "954e80803f62ceea4af837feba072ea959b4f83c",
           "version": null
         }
       },
@@ -159,8 +168,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
-          "revision": "ba7c0d7f82affc518147ea61d240330bf7f7ea9b",
-          "version": "2.22.1"
+          "revision": "4fb7ead803e38949eb1d6fabb849206a72c580f3",
+          "version": "2.23.0"
         }
       },
       {
@@ -168,8 +177,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-transport-services.git",
         "state": {
           "branch": null,
-          "revision": "b6e37a0d442745760d6ed0195d8f283d3ce0414a",
-          "version": "1.14.1"
+          "revision": "c0d9a144cfaec8d3d596aadde3039286a266c15c",
+          "version": "1.15.0"
         }
       },
       {

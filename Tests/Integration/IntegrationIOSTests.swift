@@ -5,17 +5,17 @@
 import Hummingbird
 import Nimble
 import NIOHTTP1
-import SimulacraCore
+import Voodoo
 import XCTest
 
 class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
-    var server: Simulacra!
+    var server: VoodooServer!
     var resourcesUrl: URL = Bundle.testBundle.resourceURL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        server = try Simulacra(templatePath: resourcesUrl)
+        server = try VoodooServer(templatePath: resourcesUrl)
     }
 
     override func tearDown() {
@@ -26,14 +26,14 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     // MARK: - Adding APIs
 
     func testAddingEndpoint() async {
-        server.add(Endpoint(.GET, "/abc"))
+        server.add(HTTPEndpoint(.GET, "/abc"))
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
     }
 
     func testAddingEndpointsViaArray() async throws {
         server.add([
-            Endpoint(.GET, "/abc"),
-            Endpoint(.GET, "/def", response: .created()),
+            HTTPEndpoint(.GET, "/abc"),
+            HTTPEndpoint(.GET, "/def", response: .created()),
         ])
         await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         await executeAPICall(.GET, "/def", andExpectStatusCode: 201)
@@ -54,19 +54,19 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         @EndpointBuilder
         func otherEndpoints(inc: Bool) -> [Endpoint] {
             if inc {
-                Endpoint(.GET, "/aaa", response: .accepted())
+                HTTPEndpoint(.GET, "/aaa", response: .accepted())
             } else {
-                Endpoint(.GET, "/bbb")
+                HTTPEndpoint(.GET, "/bbb")
             }
         }
 
         server.add {
-            Endpoint(.GET, "/abc")
-            Endpoint(.GET, "/def", response: .created())
+            HTTPEndpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/def", response: .created())
             otherEndpoints(inc: true)
             otherEndpoints(inc: false)
             if true {
-                Endpoint(.GET, "/ccc")
+                HTTPEndpoint(.GET, "/ccc")
             }
         }
 
@@ -97,7 +97,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(httpResponse?.allHeaderFields.count) == 6
         expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
         expect(httpResponse?.value(forHTTPHeaderField: "abc")) == "def"
-        expect(httpResponse?.value(forHTTPHeaderField: "server")) == "Simulacra API simulator"
+        expect(httpResponse?.value(forHTTPHeaderField: "server")) == "Voodoo API simulator"
     }
 
     func testResponseDynamic() async {

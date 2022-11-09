@@ -1,4 +1,5 @@
-signature: get /app/config
+http:
+  api: get /app/config
 response:
   status: 200
   body:

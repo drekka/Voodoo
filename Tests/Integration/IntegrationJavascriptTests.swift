@@ -5,16 +5,16 @@
 import Hummingbird
 import Nimble
 import NIOHTTP1
-import SimulacraCore
+import Voodoo
 import XCTest
 
 class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
 
-    var server: Simulacra!
+    var server: VoodooServer!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        server = try Simulacra()
+        server = try VoodooServer()
     }
 
     override func tearDown() {
@@ -30,7 +30,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         }
         """#))
 
-        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode:  200)
+        let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"
         expect(response.response?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
     }
@@ -54,7 +54,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         """#))
 
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 500)
-        expect(response.response?.value(forHTTPHeaderField: SimulacraError.headerKey)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
+        expect(String(data: response.data!, encoding: .utf8)) == "The executed javascript does not contain a function with the signature 'response(request, cache)'."
     }
 
     func testJavascriptIncorrectSignatureArgumentsTooFew() async {
@@ -88,7 +88,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         """#))
 
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 500)
-        expect(response.response?.value(forHTTPHeaderField: SimulacraError.headerKey)) == "The javascript function failed to return a response."
+        expect(String(data: response.data!, encoding: .utf8)) == "The javascript function failed to return a response."
     }
 
     func testJavascriptResponseSetAndGetFromCache() async {

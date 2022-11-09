@@ -1,4 +1,5 @@
-- signature: get /books
+- http:
+    api: get /books
   response:
     status: 200
     body: 
@@ -6,7 +7,8 @@
       name: books
       contentType: application/json
       
-- signature: get /book/:bookId
+- http:
+    api: get /book/:bookId
   javascript: |
     function response(request, cache) {
       console.log("Book " + request.pathParameters.bookId + " requested");

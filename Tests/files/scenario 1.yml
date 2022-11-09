@@ -1,4 +1,5 @@
-- signature: post /created/text
+- http:
+    api: post /created/text
   response:
     status: 201
     headers: ~
@@ -9,7 +10,8 @@
 
 - TestConfig1/get-config.yml
 
-- signature: get /javascript/inline
+- http:
+    api: get /javascript/inline
   javascript: |
     function response(request, cache) {
         if request.parthParameter.accountId == "1234" {
@@ -19,6 +21,7 @@
         }
     }
      
-- signature: get /javascript/file
+- http:
+    api: get /javascript/file
   javascriptFile: TestConfig1/login.js 
 

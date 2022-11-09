@@ -4,69 +4,69 @@
 
 import Foundation
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
 class EndpointBuilderTests: XCTestCase {
 
     func testSimpleEndpoints() {
         @EndpointBuilder func endpoints() -> [Endpoint] {
-            Endpoint(.GET, "/abc")
-            Endpoint(.GET, "/def")
+            HTTPEndpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/def")
         }
-        expect(endpoints().map { $0.path }) == ["/abc", "/def"]
+        expect(endpoints().map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def"]
     }
 
     func testIfEndpoints() {
         @EndpointBuilder func endpoints(addDef: Bool) -> [Endpoint] {
-            Endpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/abc")
             if addDef {
-                Endpoint(.GET, "/def")
+                HTTPEndpoint(.GET, "/def")
             }
-            Endpoint(.GET, "/ghi")
+            HTTPEndpoint(.GET, "/ghi")
         }
-        expect(endpoints(addDef: true).map { $0.path }) == ["/abc", "/def", "/ghi"]
-        expect(endpoints(addDef: false).map { $0.path }) == ["/abc", "/ghi"]
+        expect(endpoints(addDef: true).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def", "/ghi"]
+        expect(endpoints(addDef: false).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/ghi"]
     }
 
     func testIfIfEndpoints() {
         @EndpointBuilder func endpoints(addDef: Bool, addGhi: Bool) -> [Endpoint] {
-            Endpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/abc")
             if addDef {
-                Endpoint(.GET, "/def")
+                HTTPEndpoint(.GET, "/def")
                 if addGhi {
-                    Endpoint(.GET, "/ghi")
+                    HTTPEndpoint(.GET, "/ghi")
                 }
             }
         }
-        expect(endpoints(addDef: true, addGhi: true).map { $0.path }) == ["/abc", "/def", "/ghi"]
-        expect(endpoints(addDef: true, addGhi: false).map { $0.path }) == ["/abc", "/def"]
-        expect(endpoints(addDef: false, addGhi: false).map { $0.path }) == ["/abc"]
+        expect(endpoints(addDef: true, addGhi: true).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def", "/ghi"]
+        expect(endpoints(addDef: true, addGhi: false).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def"]
+        expect(endpoints(addDef: false, addGhi: false).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc"]
     }
 
     func testIfElseEndpoints() {
         @EndpointBuilder func endpoints(addDef: Bool) -> [Endpoint] {
-            Endpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/abc")
             if addDef {
-                Endpoint(.GET, "/def")
+                HTTPEndpoint(.GET, "/def")
             } else {
-                Endpoint(.GET, "/ghi")
+                HTTPEndpoint(.GET, "/ghi")
             }
         }
-        expect(endpoints(addDef: true).map { $0.path }) == ["/abc", "/def"]
-        expect(endpoints(addDef: false).map { $0.path }) == ["/abc", "/ghi"]
+        expect(endpoints(addDef: true).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def"]
+        expect(endpoints(addDef: false).map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/ghi"]
     }
 
     func testIncludingFunctionResults() {
         @EndpointBuilder func endpoints() -> [Endpoint] {
-            Endpoint(.GET, "/abc")
+            HTTPEndpoint(.GET, "/abc")
             endpoints2()
         }
 
         @EndpointBuilder func endpoints2() -> [Endpoint] {
-            Endpoint(.GET, "/def")
+            HTTPEndpoint(.GET, "/def")
         }
 
-        expect(endpoints().map { $0.path }) == ["/abc", "/def"]
+        expect(endpoints().map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def"]
     }
 }

@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 29/9/2022.
 //
 
@@ -14,9 +11,9 @@ import NIOCore
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
-    let serverCtx: SimulacraContext
+    let serverCtx: VoodooContext
 
-    init(serverContext: SimulacraContext) throws {
+    init(serverContext: VoodooContext) throws {
 
         serverCtx = serverContext
 
@@ -33,13 +30,13 @@ struct JavascriptExecutor {
         do {
             try jsCtx.eval(script)
         } catch {
-            throw SimulacraError.javascriptError("Error evaluating javascript: \(error)")
+            throw VoodooError.javascriptError("Error evaluating javascript: \(error)")
         }
 
         // Extract the function.
         let responseFunction = try jsCtx.global["response"]
         guard responseFunction.isFunction else {
-            throw SimulacraError.javascriptError("The executed javascript does not contain a function with the signature 'response(request, cache)'.")
+            throw VoodooError.javascriptError("The executed javascript does not contain a function with the signature 'response(request, cache)'.")
         }
 
         // Proxy the javascript cache to the server cache so it handles dynamic lookup style property access.
@@ -54,17 +51,17 @@ struct JavascriptExecutor {
                 proxy,
             ])
         } catch {
-            throw SimulacraError.javascriptError("Javascript execution failed. Error: \(error)")
+            throw VoodooError.javascriptError("Javascript execution failed. Error: \(error)")
         }
 
         if rawResponse.isUndefined {
-            throw SimulacraError.javascriptError("The javascript function failed to return a response.")
+            throw VoodooError.javascriptError("The javascript function failed to return a response.")
         }
 
         do {
             return try rawResponse.toDecodable(ofType: HTTPResponse.self) as HTTPResponse
         } catch {
-            throw SimulacraError.javascriptError("The javascript function returned an unexpected response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
+            throw VoodooError.javascriptError("The javascript function returned an unexpected response. Make sure you are using the 'Response' object to generate a response. Returned error: \(error)")
         }
     }
 
@@ -161,8 +158,7 @@ extension Cache {
         // Index 0 is target javascript object, index 1 is the key of the property being requested.
         let key = try args[1].string
 
-        let value: Any? = self[key]
-        guard let value else {
+        guard let value = self[key] else {
             return context.null()
         }
 

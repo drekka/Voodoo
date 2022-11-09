@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "simulacra"
-               BuildableName = "simulacra"
-               BlueprintName = "simulacra"
+               BlueprintIdentifier = "magic"
+               BuildableName = "magic"
+               BlueprintName = "magic"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SimulacraTests"
-               BuildableName = "SimulacraTests"
-               BlueprintName = "SimulacraTests"
+               BlueprintIdentifier = "VoodooTests"
+               BuildableName = "VoodooTests"
+               BlueprintName = "VoodooTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,9 +46,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SimulacraTests"
-               BuildableName = "SimulacraTests"
-               BlueprintName = "SimulacraTests"
+               BlueprintIdentifier = "VoodooTests"
+               BuildableName = "VoodooTests"
+               BlueprintName = "VoodooTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
@@ -69,9 +69,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "simulacra"
-            BuildableName = "simulacra"
-            BlueprintName = "simulacra"
+            BlueprintIdentifier = "magic"
+            BuildableName = "magic"
+            BlueprintName = "magic"
             ReferencedContainer = "container:">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -86,9 +86,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "simulacra"
-            BuildableName = "simulacra"
-            BlueprintName = "simulacra"
+            BlueprintIdentifier = "magic"
+            BuildableName = "magic"
+            BlueprintName = "magic"
             ReferencedContainer = "container:">
          </BuildableReference>
       </BuildableProductRunnable>

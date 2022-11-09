@@ -6,23 +6,23 @@ import AnyCodable
 import Foundation
 import Hummingbird
 import Nimble
-@testable import SimulacraCore
+@testable import Voodoo
 import XCTest
 
-class SimulacraContextTests: XCTestCase {
+class VoodooContextTests: XCTestCase {
 
-    var context: MockSimulacraContext!
+    var context: MockVoodooContext!
 
     private let host = "127.0.0.1:8080"
 
     override func setUp() {
-        context = MockSimulacraContext()
+        context = MockVoodooContext()
     }
 
     func testRequestTemplateDataWithNil() {
 
         context.cache["abc"] = "def"
-        let request = HBRequest.mock().asHTTPRequest
+        let request = HBRequestWrapper.mock()
         let templateData = context.requestTemplateData(forRequest: request, adding: nil)
 
         expect(templateData.count) == 2
@@ -33,7 +33,7 @@ class SimulacraContextTests: XCTestCase {
     func testRequestTemplateData() {
 
         context.cache["abc"] = "def"
-        let request = HBRequest.mock().asHTTPRequest
+        let request = HBRequestWrapper.mock()
         let templateData = context.requestTemplateData(forRequest: request, adding: ["xyz": 123])
 
         expect(templateData.count) == 3
@@ -44,7 +44,7 @@ class SimulacraContextTests: XCTestCase {
 
     func testRequestTemplateDataOverridesMockServer() {
 
-        let request = HBRequest.mock().asHTTPRequest
+        let request = HBRequestWrapper.mock()
         let templateData = context.requestTemplateData(forRequest: request, adding: ["mockServer": "http://127.0.0.1:9999"])
 
         expect(templateData.count) == 1
@@ -54,7 +54,7 @@ class SimulacraContextTests: XCTestCase {
     func testRequestTemplateDataUpdatesWhenSameKey() {
 
         context.cache["abc"] = "def"
-        let request = HBRequest.mock().asHTTPRequest
+        let request = HBRequestWrapper.mock()
         let templateData = context.requestTemplateData(forRequest: request, adding: ["abc": 123])
 
         expect(templateData.count) == 2

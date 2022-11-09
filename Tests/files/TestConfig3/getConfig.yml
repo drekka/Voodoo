@@ -1,0 +1,10 @@
+graphQL:
+  method: get
+  operation: getConfig
+response:
+  status: 200
+  body:
+    type: json
+    data:
+      version: 1
+      featureFlag: true
