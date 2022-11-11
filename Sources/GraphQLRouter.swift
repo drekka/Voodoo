@@ -15,7 +15,7 @@ public enum GraphQLSelector {
     ///
     /// If this request "matches", ie returns `true` from the ``Matchable.matches(...)``
     /// function then the response is returned.
-    case selector(GraphQLRequest)
+    case query(GraphQLRequest)
 }
 
 /// Intercepts GraphQL requests before the get to the try router.
@@ -59,7 +59,7 @@ public class GraphQLRouter {
             case .operationName(let operationName):
                 return graphQLRequest.operations.keys.contains(operationName)
 
-            case .selector(let graphQLSelector):
+            case .query(let graphQLSelector):
                 return graphQLSelector.matches(graphQLRequest)
             }
         }

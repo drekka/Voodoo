@@ -1,6 +1,6 @@
 - graphQL:
     method: get
-    selector: |
+    query: |
       query {
         books
       }

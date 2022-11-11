@@ -10,7 +10,7 @@ extension GraphQLSelector: Equatable {
         switch (lhs, rhs) {
         case (.operationName(let lhsOperationName), .operationName(let rhsOperationName)):
             return lhsOperationName == rhsOperationName
-        case (.selector(let lhsSelector), .selector(let rhsSelector)):
+        case (.query(let lhsSelector), .query(let rhsSelector)):
             return lhsSelector == rhsSelector
         default:
             return false

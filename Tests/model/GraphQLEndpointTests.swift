@@ -38,7 +38,7 @@ class GraphQLEndpointTests: XCTestCase {
         let yaml = #"""
         graphQL:
           method: get
-          selector: query { book }
+          query: query { book }
         response:
           status: 200
         """#
@@ -46,7 +46,7 @@ class GraphQLEndpointTests: XCTestCase {
         let endpoint = try YAMLDecoder().decode(GraphQLEndpoint.self, from: yaml, userInfo: userInfo())
 
         expect(endpoint.method) == .GET
-        expect(endpoint.selector) == .selector(try GraphQLRequest(query: "query { book }"))
+        expect(endpoint.selector) == .query(try GraphQLRequest(query: "query { book }"))
         expect(endpoint.response) == .ok()
     }
 

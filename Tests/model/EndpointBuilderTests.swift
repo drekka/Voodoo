@@ -17,6 +17,16 @@ class EndpointBuilderTests: XCTestCase {
         expect(endpoints().map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def"]
     }
 
+    func testSimpleEndpointArray() {
+        @EndpointBuilder func endpoints() -> [Endpoint] {
+            [
+                HTTPEndpoint(.GET, "/abc"),
+                HTTPEndpoint(.GET, "/def"),
+            ] as [Endpoint]
+        }
+        expect(endpoints().map { ($0 as? HTTPEndpoint)?.path }) == ["/abc", "/def"]
+    }
+
     func testIfEndpoints() {
         @EndpointBuilder func endpoints(addDef: Bool) -> [Endpoint] {
             HTTPEndpoint(.GET, "/abc")
