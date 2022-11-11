@@ -20,6 +20,6 @@ jobs:
     - name: Run tests
       run: swift test --enable-code-coverage
       
-    - name: Convert coverage to lcov
+    # - name: Convert coverage to lcov
       # run: xcrun llvm-cov export -instr-profile .build/debug/codecov/default.profdata -format="lcov" .build/debug/VoodooPackageTests.xctest/Contents/MacOS/VoodooPackageTests  > coverage.lcov
 
