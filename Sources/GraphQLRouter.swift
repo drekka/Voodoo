@@ -5,19 +5,6 @@
 import Foundation
 import Hummingbird
 
-/// The available ways a response can be selected for a GraphQL request.
-public enum GraphQLSelector {
-
-    /// By matching an operation name in the request.
-    case operationName(String)
-
-    /// By matching this graphQL request against the incoming request.
-    ///
-    /// If this request "matches", ie returns `true` from the ``Matchable.matches(...)``
-    /// function then the response is returned.
-    case query(GraphQLRequest)
-}
-
 /// Intercepts GraphQL requests before the get to the try router.
 public class GraphQLRouter {
 
@@ -56,8 +43,8 @@ public class GraphQLRouter {
             // Then check using the endpoint selector to see if it matches the incoming request.
             switch endpoint.selector {
 
-            case .operationName(let operationName):
-                return graphQLRequest.operations.keys.contains(operationName)
+            case .operations(let operations):
+                return operations.allSatisfy { graphQLRequest.operations.keys.contains($0) }
 
             case .query(let graphQLSelector):
                 return graphQLSelector.matches(graphQLRequest)

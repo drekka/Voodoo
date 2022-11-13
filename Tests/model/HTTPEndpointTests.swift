@@ -33,6 +33,15 @@ class HTTPEndpointTests: XCTestCase {
         expect(endpoint.response) == .ok()
     }
 
+    func testDecodeNonHTTPContent() throws {
+        try expectYML(#"""
+                      xyz:
+                        api: "post/abc"
+                      response: "ok"
+                      """#,
+                      toFailWithTypeMissMatch: "Not a HTTP request")
+    }
+
     func testDecodeWithInvalidSignature() throws {
         try expectYML(#"""
                       http:
@@ -51,6 +60,19 @@ class HTTPEndpointTests: XCTestCase {
     }
 
     // MARK: - Support
+
+    private func expectYML(file: StaticString = #file, line: UInt = #line, _ yml: String, toFailWithTypeMissMatch expectedMessage: String) throws {
+        do {
+            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
+            fail("Error not thrown", file: file, line: line)
+        } catch {
+            guard case DecodingError.typeMismatch(_, let context) = error else {
+                fail("Incorrect exception \(error)", file: file, line: line)
+                return
+            }
+            expect(file: file, line: line, context.debugDescription) == expectedMessage
+        }
+    }
 
     private func expectYML(file: StaticString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
         do {

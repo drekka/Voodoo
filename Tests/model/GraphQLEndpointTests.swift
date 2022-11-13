@@ -12,9 +12,9 @@ import Yams
 class GraphQLEndpointTests: XCTestCase {
 
     func testInitWithArgs() {
-        let endpoint = GraphQLEndpoint(.GET, .operationName("abc"), response: .ok(body: .json([:])))
+        let endpoint = GraphQLEndpoint(.GET, .operations("abc"), response: .ok(body: .json([:])))
         expect(endpoint.method) == .GET
-        expect(endpoint.selector) == .operationName("abc")
+        expect(endpoint.selector) == .operations("abc")
         expect(endpoint.response) == .ok(body: .json([:]))
     }
 
@@ -22,7 +22,7 @@ class GraphQLEndpointTests: XCTestCase {
         let yaml = #"""
         graphQL:
           method: get
-          operation: getConfig
+          operations: getConfig
         response:
           status: 200
         """#
@@ -30,7 +30,7 @@ class GraphQLEndpointTests: XCTestCase {
         let endpoint = try YAMLDecoder().decode(GraphQLEndpoint.self, from: yaml, userInfo: userInfo())
 
         expect(endpoint.method) == .GET
-        expect(endpoint.selector) == .operationName("getConfig")
+        expect(endpoint.selector) == .operations("getConfig")
         expect(endpoint.response) == .ok()
     }
 
@@ -57,14 +57,14 @@ class GraphQLEndpointTests: XCTestCase {
                       response:
                         status: 200
                       """#,
-                      toFailWithDataCorrupt: "Expected to find 'operation' or 'selector'")
+                      toFailWithDataCorrupt: "Expected to find 'operations' or 'query'")
     }
 
     func testDecodeWithNoResponse() throws {
         try expectYML(#"""
                       graphQL:
                         method: get
-                        operation: getConfig
+                        operations: getConfig
                       """#,
                       toFailWithDataCorrupt: "Expected to find 'response', 'javascript' or 'javascriptFile'")
     }

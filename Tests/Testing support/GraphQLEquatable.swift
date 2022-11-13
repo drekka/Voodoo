@@ -8,8 +8,8 @@ import Foundation
 extension GraphQLSelector: Equatable {
     public static func == (lhs: GraphQLSelector, rhs: GraphQLSelector) -> Bool {
         switch (lhs, rhs) {
-        case (.operationName(let lhsOperationName), .operationName(let rhsOperationName)):
-            return lhsOperationName == rhsOperationName
+        case (.operations(let lhsOperations), .operations(let rhsOperations)):
+            return lhsOperations == rhsOperations
         case (.query(let lhsSelector), .query(let rhsSelector)):
             return lhsSelector == rhsSelector
         default:

@@ -18,7 +18,7 @@ public struct GraphQLEndpoint: Endpoint {
 
     private enum SelectorKeys: String, CodingKey {
         case method
-        case operation
+        case operations
         case query
     }
 
@@ -39,12 +39,14 @@ public struct GraphQLEndpoint: Endpoint {
 
         method = try selectorContainer.decode(HTTPMethod.self, forKey: .method)
 
-        if let operationName = try selectorContainer.decodeIfPresent(String.self, forKey: .operation) {
-            selector = .operationName(operationName)
+        if let operation = try selectorContainer.decodeIfPresent(String.self, forKey: .operations) {
+            selector = .operations(operation)
+        } else if let operations = try selectorContainer.decodeIfPresent([String].self, forKey: .operations) {
+                selector = .operations(operations)
         } else if let query = try selectorContainer.decodeIfPresent(String.self, forKey: .query) {
             selector = .query(try GraphQLRequest(query: query))
         } else {
-            let message = "Expected to find '\(SelectorKeys.operation.stringValue)' or '\(SelectorKeys.query.stringValue)'"
+            let message = "Expected to find '\(SelectorKeys.operations.stringValue)' or '\(SelectorKeys.query.stringValue)'"
             print("💀 Error: Reading endpoint definition at \(container.codingPath.map(\.stringValue)) - \(message)")
             let context = DecodingError.Context(codingPath: container.codingPath, debugDescription: message)
             throw DecodingError.dataCorrupted(context)
