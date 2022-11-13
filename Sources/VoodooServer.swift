@@ -27,7 +27,8 @@ public class VoodooServer {
     private let server: HBApplication
     private let verbose: Bool
     private var graphQLRouter: GraphQLRouter!
-    private let graphQLPath: String
+
+    public let graphQLPath: String
 
     public var url: URL {
         URL(string: "http://\(server.host):\(server.port)")!
