@@ -11,19 +11,31 @@ struct EndpointReference: Decodable, EndpointSource {
     let endpoints: [Endpoint]
 
     init(from decoder: Decoder) throws {
+
         let container = try decoder.singleValueContainer()
 
+        // A string is expected to be a file reference
         if let fileReference = try container.decodeEndpoint(String.self) {
             if decoder.verbose { print("💀 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found file reference: \(fileReference)") }
             let subLoader = ConfigLoader(verbose: decoder.verbose)
             endpoints = try subLoader.load(from: decoder.configDirectory.appendingPathComponent(fileReference))
+            return
+        }
 
-        } else if let httpEndpoint = try container.decodeEndpoint(HTTPEndpoint.self) {
+        // We attempt to decode a HTTPEndpoint.
+        if let httpEndpoint = try container.decodeEndpoint(HTTPEndpoint.self) {
             endpoints = [httpEndpoint]
+            return
+        }
 
-        } else if let graphQLEndpoint = try container.decodeEndpoint(GraphQLEndpoint.self) {
+        // We next attempt to decode a GraphQLEndpoint.
+        if let graphQLEndpoint = try container.decodeEndpoint(GraphQLEndpoint.self) {
             endpoints = [graphQLEndpoint]
-        } else {
+            return
+        }
+
+        // If none of those then we don't know what this is so throw an error.
+        else {
             throw VoodooError.configLoadFailure("Failure decoding end points in \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] ?? "[Unknown]")")
         }
     }

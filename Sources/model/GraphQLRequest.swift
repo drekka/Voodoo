@@ -10,7 +10,7 @@ import Hummingbird
 /// Used to decode a incoming request.
 struct GraphQLPayload: Codable {
     let query: String
-    let operationName: String?
+    let operation: String?
     let variables: AnyCodable?
 }
 
@@ -88,7 +88,7 @@ public class GraphQLRequest {
                 throw VoodooError.invalidGraphQLRequest("Missing GraphQL query argument in body of request.")
             }
             try self.init(query: content.query,
-                          operation: content.operationName,
+                          operation: content.operation,
                           variables: content.variables?.value as? [String: Any])
 
         default:

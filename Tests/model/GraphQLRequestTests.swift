@@ -134,7 +134,7 @@ class GraphQLRequestTests: XCTestCase {
 
     func testPostJSON() throws {
         let query = "query {hero{name}}"
-        let payload = GraphQLPayload(query: query, operationName: nil, variables: nil)
+        let payload = GraphQLPayload(query: query, operation: nil, variables: nil)
         let body = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
         let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationJSON)],
                                        body: body)
