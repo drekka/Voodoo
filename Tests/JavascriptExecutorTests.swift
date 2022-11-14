@@ -292,7 +292,7 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testResponseBodyFile() throws {
         try expectResponse(#"return Response.ok(Body.file("/dir/file.dat", "text/plain"));"#,
-                           toReturn: .ok(body: .file(URL(string: "/dir/file.dat")!, contentType: Header.ContentType.textPlain)))
+                           toReturn: .ok(body: .file(URL(fileURLWithPath: "/dir/file.dat"), contentType: Header.ContentType.textPlain)))
     }
 
     func testResponseBodyTemplate() throws {

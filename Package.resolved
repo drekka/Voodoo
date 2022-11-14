@@ -41,9 +41,9 @@
         "package": "hummingbird",
         "repositoryURL": "https://github.com/hummingbird-project/hummingbird",
         "state": {
-          "branch": "main",
-          "revision": "954e80803f62ceea4af837feba072ea959b4f83c",
-          "version": null
+          "branch": null,
+          "revision": "8a117a1b757a455f8804afa94371cda8850f6d6c",
+          "version": "0.16.3"
         }
       },
       {
@@ -66,11 +66,11 @@
       },
       {
         "package": "JXKit",
-        "repositoryURL": "https://github.com/drekka/JXKit.git",
+        "repositoryURL": "https://github.com/jectivex/JXKit.git",
         "state": {
-          "branch": "feature/decoding-urls",
-          "revision": "af2e4c951204581ae5cae537f66dd043327b4cd5",
-          "version": null
+          "branch": null,
+          "revision": "9880ed92586c082c6238db520c7422cba56f09d7",
+          "version": "3.2.3"
         }
       },
       {
@@ -87,8 +87,8 @@
         "repositoryURL": "https://github.com/apple/swift-argument-parser",
         "state": {
           "branch": null,
-          "revision": "9f39744e025c7d377987f30b03770805dcb0bcd1",
-          "version": "1.1.4"
+          "revision": "fddd1c00396eed152c45a46bea9f47b98e59301d",
+          "version": "1.2.0"
         }
       },
       {
@@ -141,8 +141,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "bc4c55b9f9584f09eb971d67d956e28d08caa9d0",
-          "version": "2.43.1"
+          "revision": "edfceecba13d68c1c993382806e72f7e96feaa86",
+          "version": "2.44.0"
         }
       },
       {
@@ -150,8 +150,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-extras.git",
         "state": {
           "branch": null,
-          "revision": "6c84d247754ad77487a6f0694273b89b83efd056",
-          "version": "1.14.0"
+          "revision": "91dd2d61fb772e1311bb5f13b59266b579d77e42",
+          "version": "1.15.0"
         }
       },
       {
@@ -159,8 +159,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-http2.git",
         "state": {
           "branch": null,
-          "revision": "00576e6f1efa5c46dca2ca3081dc56dd233b402d",
-          "version": "1.23.0"
+          "revision": "d6656967f33ed8b368b38e4b198631fc7c484a40",
+          "version": "1.23.1"
         }
       },
       {
@@ -168,8 +168,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
-          "revision": "ba7c0d7f82affc518147ea61d240330bf7f7ea9b",
-          "version": "2.22.1"
+          "revision": "4fb7ead803e38949eb1d6fabb849206a72c580f3",
+          "version": "2.23.0"
         }
       },
       {
@@ -177,8 +177,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-transport-services.git",
         "state": {
           "branch": null,
-          "revision": "b6e37a0d442745760d6ed0195d8f283d3ce0414a",
-          "version": "1.14.1"
+          "revision": "c0d9a144cfaec8d3d596aadde3039286a266c15c",
+          "version": "1.15.0"
         }
       },
       {
