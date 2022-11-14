@@ -15,7 +15,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "10.0.0")),
-        .package(url: "https://github.com/hummingbird-project/hummingbird", .upToNextMajor(from: "0.0.0")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird", .upToNextMajor(from: "0.16.0")),
         .package(url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/jectivex/JXKit.git", .upToNextMajor(from: "3.0.0")),
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
