@@ -9,72 +9,24 @@ Voodoo is a mock server specifically designed to support debugging and automated
 
 It primary features are:
 
-* Designed to support direct integration into XCode test suites or run as a stand alone server (for Android or other non-Xcode environments) with seperate or shared configurations.
+* Fast checkout and build via the Swift Package Manager. 
+
+* Direct integration into XCode test suites or to be run as a stand alone server (for Android or other non-Xcode environments).
  
-* Fast startup via a Swift API or shell command.
+* Fast startup. Typically < 1sec.
 
-* Multi-port parallel test friendly.
+* Parallel test friendly via port ranges.
 
-* Configurable via a Swift API, and/or YAML and Javascript.
+* Configurable via a Swift API (for XCTest), and/or YAML and Javascript (for command line).
 
 * RESTful and GraphQL query support.
 
-* Fixed and dynamically generated responses including raw text, JSON, YAML, and custom data with templating via Mustache.
+* Fixed and dynamically generated responses including raw text, JSON, YAML, and custom data with templating via {{mustache}} and a pan-query cache for shared data.
 
 * General file serving of non-API resources.
 
-* In-memory cache for sharing data between requests. 
+***Note: as this document is becoming too large to be practical because of all the features that Voodoo offers, it is being migrated/re-written into [Voodoo's Github Wiki](https://github.com/drekka/Voodoo/wiki), please refer there for updated information.***
 
-# Index
-
-- [Installation](#installation)
-  - [iOS/OSX SPM package](#iososx-spm-package)
-  - [Linux, Windows, Docker, etc](#linux-windows-docker-etc)
-    - [Executing from the command line](#executing-from-the-command-line)
-    - [Docker additional configuration](#docker-additional-configuration)
-- [Configuration](#configuration)
-  - [Templates](#templates)
-  - [File sources](#file-sources)
-  - [Endpoints](#endpoints)
-    - [HTTP endpoints](#http-endpoints)
-      - [Path parameters](#path-parameters)
-    - [GraphQL endpoints](#graphql-endpoints)
-  - [Responses](#responses)
-    - [Fixed responses](#fixed-responses)
-    - [Dynamic responses](#dynamic-responses)
-      - [The incoming request data](#the-incoming-request-data)
-      - [The cache](#the-cache)
-    - [Response bodies](#response-bodies)
-    - [The mustache engine](#the-mustache-engine)
-- [Xcode integration guide](#xcode-integration-guide)
-  - [How does it work?](#how-does-it-work)
-  - [Endpoints](#endpoints)
-  - [Swift types](#swift-types)
-    - [HTTPResponse (enum)](#httpresponse-enum)
-    - [HTTPResponse.Body (enum)](#httpresponse-body-enum)
-  - [Swift dynamic responses](#swift-dynamic-responses)
-- [Command line integration guide](#command-line-integration-guide)
-  - [Endpoint files](#endpoint-files)
-  - [Endpoint definitions](#endpoint-definitions)
-    - [Simple](#simple)
-    - [Inline javascript](#inline-javascript)
-    - [Javascript file reference](#javascript-file-reference)
-  - [YAML file reference](#yaml-file-reference)
-  - [Javascript types](#javascript-types)
-    - [Response](#response)
-    - [Body](#body)
-- [FAQ](#faq)
-  - [When do I need a mock server?](#when-do-i-need-a-mock-server)
-  - [How do I ensure my mock server is the same as my production server?](#how-do-i-ensure-my-mock-server-is-the-same-as-my-production-server)
-  - [There's a bazillion mock servers out there, why do we need another?](#there-s-a-bazillion-mock-servers-out-there-why-do-we-need-another)
-  - [What dependencies does Voodoo have?](#what-dependencies-does-voodoo-have)
-- [Samples](#samples)
-  - [XCTest suite class:](#xctest-suite-class)
-  - [XCTest simple tests with shared server](#xctest-simple-tests-with-shared-server)
-  - [XCTest individual test setup](#xctest-individual-test-setup)
-  - [Simple YAML endpoint file](#simple-yaml-endpoint-file)
-  - [YAML endpoint file with various inclusions](#yaml-endpoint-file-with-various-inclusions)
-  - [Javascript response file](#javascript-response-file)
 
 # Installation
 
@@ -102,8 +54,6 @@ and build it:
 cd Voodoo
 swift build -c release
 ```
-
-This will download all dependencies and build the command line program. On my 10 core M1Pro it takes around a minute to do the build.
 
 The finished executable will be
 
@@ -334,62 +284,6 @@ You can also add endpoints after starting the server using these functions:
 
 Voodoo uses a number of types to help define responses to APIs.
 
-### HTTPResponse (enum)
-
-There are two core response types you can return:
-
-* `.raw(_: HTTPResponseStatus, headers: HeaderDictionary? = nil, body: Body = .empty)` - which allows you to fully configure the response.
-
-* `.dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)` - which dynamically generates a response. See [Dynamic responses](#dynamic-responses) for more details.
-
-In addition there are a number of convenience response types for commonly used HTTP Status codes (more will be added over time). These mostly just call `.raw(...)` with the matching HTTP status code:
-
-* `.ok(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-* `.created(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-* `.accepted(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-* `.movedPermanently(_ url: String)`
-
-* `.temporaryRedirect(_ url: String)`
-
-* `.badRequest(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-* `.unauthorised(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-* `.forbidden(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-* `.notFound`
-
-* `.notAcceptable`
-
-* `.tooManyRequests`
-
-* `.internalServerError(headers: HeaderDictionary? = nil, body: Body = .empty)`
-
-`HeaderDictionary` is just an alias for `[String:String]`.
-
-### HTTPResponse.Body (enum)
-
-For each of the responses above, a `body` argument can return one of the following payload definitions:
-
-* `.empty` - The empty payload.
-
-* `.template(_ templateName: String, templateData: TemplateData? = nil, contentType: String = ContentType.applicationJSON)` - Searches the template directory for a template matching the passed name. This excludes the extension which defaults to `json`. However that can be overridden using the `templateExtension` argument when launching the server if you want to use a different extension name. 
-
-* `.json(_ payload: Any, templateData: TemplateData? = nil)` - Encodes the passed payload as JSON before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
-
-* `.yaml(_ payload: Any, templateData: TemplateData? = nil)` - Encodes the passed payload as YAML before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
-
-* `.text(_ text: String, templateData: TemplateData? = nil)` - Encodes the passed payload as plain text before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
-
-* `.file(_ url: URL, contentType: String)` - Reads the contents of the passed file and returns it with the specified content type. This is not passed to the mustache engine.
-
-* `.data(_ data: Data, contentType: String)`- Returns the passed `Data` with the specified content type.
-
-
-In all of the above a `templateData` parameter is for any additional data that you want to pass to the mustache engine. This is a `TemplateData` type which is an alias for `[String:Any]`.
 
 ## Swift dynamic responses
 
@@ -513,101 +407,7 @@ Instead of a data structure with a `signature` value defining the endpoint, this
 
 ## Javascript types
 
-There are a number of pre-defined types that Voodoo makes available to the dynamic javascript functions. 
 
-### Response
-
-`Response` is a type that has the following `static` factory methods for creating responses:
-
-* `.raw(code, body, headers)` - The base response that most of the others drive. `code` is the HTTP status code, `body` is the body of the response as per below and `headers` is an object containing the headers to be returned.
-
-* `.ok(body, headers)` - Convenience for a HTTP 200 status response.
-
-* `.created(body, headers)` - Convenience for a HTTP 201 status response.
-
-* `.accepted(body, headers)` - Convenience for a HTTP 202 status response.
-
-* `.movedPermanently(url)` - Convenience for a HTTP 301 status response.
-
-* `.temporaryRedirect(url)` - Convenience for a HTTP 307 status response.
-
-* `.notFound()` - Convenience for a HTTP 404 status response.
-
-* `.notAcceptable()` - Convenience for a HTTP 406 status response.
-
-* `.tooManyRequests()` - Convenience for a HTTP 429 status response.
-
-* `.internalServerError(body, headers)` - Convenience for a HTTP 500 status response.
-
-### Body
-  
-To create the body arguments you can use a number of `Body` `static` factory methods:
-
-* `.empty()` - Returns an empty body.
-
-* `.text(text, templateData)` - Returns the passed text as the body of the request after passing it through the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
-
-* `.json(data, templateData)` - Encodes the passed data as JSON before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
-
-* `.yaml(data, templateData)` - Encodes the passed data as YAML before passing it to the mustache engine for data injection. This automatically adds the correct `Content-Type` header to the response.
-
-* `.file(url, contentType)` - Reads the contents of the passed file and returns it with the specified content type.
-
-* `.template(name, contentType, templateData)` - Searches the template directory for a template matching the passed name. This excludes the extension which defaults to `json`. However that can be overridden using the `templateExtension` argument when launching the server if you want to use a different extension name. 
-
-# FAQ
-
-## When do I need a mock server?
-
-Whether you need a mock server or not very much comes down to the app you are testing, the networking code you have written and your individual testing philosophies. When you have networking code that's easy to inject into and aren't too worried about the networking code working or perhaps have a 3rd party API there, it may be simpler just to inject mocks which can pretend to talk to a server and avoid networking at all. But sometime's the code's old, or written by someone who hasn't considered testing, or you want the assurity that it works right out to the server.
-
-Another scenario where a mock server becomes useful is when UI and integration testing. many people start out writing tests against development, QA and even production servers. But there are a number of issues with that such as reliabilily, repeatability, limited scope to create data scenarios and not to mention, other people and code interfering with the server. Any of these can make a stand alone mock server an attractive proposition.
-
-## How do I ensure my mock server is the same as my production server?
-
-You can't. Any mock server is only going to be as good as the setup you give it and that will only change when you change it. So taking on a mock server does mean an on-going tech debt in terms of maintaining it and it's configuration.
-
-## There's a bazillion mock servers out there, why do we need another?
-
-Simply because I've never found one that had all the featured I was looking for. Namely:
-
-* That it's local so the test suites don't need internet access and there's no risk of other processes or people interfering with it.
-
-* Ability to dynamically set a port so multiple parallel instances can be run for iOS suites.
-
-* Fast to start so running a fresh instance for each test is not an issue.
-
-* Easy to configure without having to recompile using simple files and languages that are commonly known.
-
-* Able to serve files, fixed and dynamic responses with the ability to extract information from incoming requests and store it for subsequent requests.
-
-* Response payload templating so we can dynamically modify what is returned.
-
-All the servers I found failed to match this list and whilst I've built a number of custom mock servers for clients over the years, they were all hard coded for their particular needs. Voodoo is designed to take all the features I could never find and make them as easy to configure as possible.
-
-## What dependencies does Voodoo have?
-
-To build this project I used a number of 3rd party projects. However you don't need to worry about these as the build will download them as needed.
-
-* [Hummingbird][hummingbird] - A very fast and well written Swift NIO based server - This is the core that Voodoo is built around.
-
-* [Yams][yams] - An API to read YAML configuration files.
-
-* [JXKit][jxkit] - A facade to Swift's JavascriptCore and it's Linux equivalent so that Voodoo can run on both platforms. 
-
-* [Nimble][nimble] - Simply the best assertion framework for unit testing. Not a direct dependency, just used to test Voodoo.
-
-* [Swift Argument Parser][swift-argument-parser] - The API that the command line program is built on.  
-
-* [AnyCodable][any-codable] - Allows `Any` to be `Codable`. Used extensively to handle response payloads. 
-  
-[hummingbird]: https://github.com/hummingbird-project/hummingbird
-[yams]: https://github.com/jpsim/Yams
-[jxkit]: https://github.com/jectivex/JXKit
-[nimble]: https://github.com/Quick/Nimble
-[swift-argument-parser]: https://github.com/apple/swift-argument-parser
-[any-codable]: https://github.com/Flight-School/AnyCodable
-[docker]: https://www.docker.com
   
 # Samples
 

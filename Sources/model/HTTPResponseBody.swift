@@ -105,7 +105,8 @@ extension HTTPResponse.Body: Decodable {
             self = .yaml(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
 
         case "file":
-            let fileURL = try container.decode(URL.self, forKey: .url)
+            let filePath = try container.decode(String.self, forKey: .url)
+            let fileURL = URL(fileURLWithPath: filePath)
             let contentType = try container.decode(String.self, forKey: .contentType)
             self = .file(fileURL, contentType: contentType)
 

@@ -4,6 +4,7 @@
 
 import Foundation
 @testable import Hummingbird
+import NIOHTTP1
 @testable import Voodoo
 
 extension HBRequest {

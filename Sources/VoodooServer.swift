@@ -6,6 +6,7 @@ import Foundation
 import Hummingbird
 import HummingbirdFoundation
 import HummingbirdMustache
+import NIOCore
 
 #if os(macOS) || os(iOS)
     import Network
