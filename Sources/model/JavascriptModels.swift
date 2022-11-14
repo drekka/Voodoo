@@ -50,12 +50,20 @@ enum JavascriptModels {
                 return { status: 308, url: url };
             }
 
-            static notFound() {
-                return this.raw(404);
+            static badRequest(body, headers) {
+                return this.raw(400, body, headers);
             }
 
             static unauthorised(body, headers) {
+                return this.raw(401, body, headers);
+            }
+
+            static forbidden(body, headers) {
                 return this.raw(403, body, headers);
+            }
+
+            static notFound() {
+                return this.raw(404);
             }
 
             static notAcceptable() {

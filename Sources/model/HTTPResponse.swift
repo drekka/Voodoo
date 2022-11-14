@@ -91,6 +91,9 @@ extension HTTPResponse: Decodable {
         case .permanentRedirect:
             self = .permanentRedirect(try container.decode(String.self, forKey: .url))
 
+        case .badRequest:
+            self = .badRequest(headers: headers, body: body)
+
         case .notFound:
             self = .notFound
         case .notAcceptable:
