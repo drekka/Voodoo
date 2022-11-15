@@ -92,7 +92,7 @@ server = try VoodooServer {
 
 ```
 
-And here is an example YAML file with the same endpoints, (see the [YAML configuration guide](drekka/Voodoo/wiki/YAML-configuration-guide)) for details:
+And here is an example YAML file with the same endpoints, (see the [YAML configuration guide](/drekka/Voodoo/wiki/YAML-configuration-guide)) for details:
 
 ```yaml
 - http:
