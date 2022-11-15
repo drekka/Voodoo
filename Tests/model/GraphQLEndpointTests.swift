@@ -50,6 +50,25 @@ class GraphQLEndpointTests: XCTestCase {
         expect(endpoint.response) == .ok()
     }
 
+    func testDecodeNonGraphQLContent() throws {
+        do {
+            let yml = #"""
+            xyz:
+              api: "post/abc"
+            response: "ok"
+            """#
+            _ = try YAMLDecoder().decode(GraphQLEndpoint.self, from: yml, userInfo: userInfo())
+            fail("Error not thrown")
+        } catch {
+            guard case DecodingError.dataCorrupted(let context) = error,
+                  let underlyingError = context.underlyingError,
+                  case VoodooError.wrongEndpointType = underlyingError else {
+                fail("Incorrect exception \(error)")
+                return
+            }
+        }
+    }
+
     func testDecodeMissingSelector() throws {
         try expectYML(#"""
                       graphQL:

@@ -34,12 +34,22 @@ class HTTPEndpointTests: XCTestCase {
     }
 
     func testDecodeNonHTTPContent() throws {
-        try expectYML(#"""
-                      xyz:
-                        api: "post/abc"
-                      response: "ok"
-                      """#,
-                      toFailWithTypeMissMatch: "Not a HTTP request")
+        do {
+            let yml = #"""
+            xyz:
+              api: "post/abc"
+            response: "ok"
+            """#
+            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
+            fail("Error not thrown")
+        } catch {
+            guard case DecodingError.dataCorrupted(let context) = error,
+                  let underlyingError = context.underlyingError,
+                  case VoodooError.wrongEndpointType = underlyingError else {
+                fail("Incorrect exception \(error)")
+                return
+            }
+        }
     }
 
     func testDecodeWithInvalidSignature() throws {

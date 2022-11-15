@@ -32,7 +32,7 @@ public struct GraphQLEndpoint: Endpoint {
 
         let container = try decoder.container(keyedBy: EndpointKeys.self)
         guard container.contains(.graphQL) else {
-            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Not a GraphQL request"))
+            throw VoodooError.wrongEndpointType
         }
 
         let selectorContainer = try container.nestedContainer(keyedBy: SelectorKeys.self, forKey: .graphQL)

@@ -34,7 +34,7 @@ public struct HTTPEndpoint: Endpoint {
 
         let container = try decoder.container(keyedBy: EndpointKeys.self)
         guard container.contains(.http) else {
-            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Not a HTTP request"))
+            throw VoodooError.wrongEndpointType
         }
 
         let methodPath = try container.methodPath()

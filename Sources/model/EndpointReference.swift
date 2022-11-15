@@ -15,8 +15,8 @@ struct EndpointReference: Decodable, EndpointSource {
         let container = try decoder.singleValueContainer()
 
         // A string is expected to be a file reference
-        if let fileReference = try container.decodeEndpoint(String.self) {
-            if decoder.verbose { print("💀 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found file reference: \(fileReference)") }
+        if let fileReference = try? container.decode(String.self) {
+            if decoder.verbose { print("💀 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found potential file reference: \(fileReference)") }
             let subLoader = ConfigLoader(verbose: decoder.verbose)
             endpoints = try subLoader.load(from: decoder.configDirectory.appendingPathComponent(fileReference))
             return
@@ -35,9 +35,7 @@ struct EndpointReference: Decodable, EndpointSource {
         }
 
         // If none of those then we don't know what this is so throw an error.
-        else {
-            throw VoodooError.configLoadFailure("Failure decoding end points in \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] ?? "[Unknown]")")
-        }
+        throw VoodooError.configLoadFailure("Failure decoding end points in \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] ?? "[Unknown]")")
     }
 }
 
@@ -46,7 +44,7 @@ extension SingleValueDecodingContainer {
     func decodeEndpoint<T>(_ type: T.Type) throws -> T? where T: Decodable {
         do {
             return try decode(type)
-        } catch DecodingError.typeMismatch {
+        } catch VoodooError.wrongEndpointType {
             // Type miss match becomes a nil return.
             return nil
         }
