@@ -32,7 +32,7 @@ It primary features are:
 
 ## iOS/OSX SPM package
 
-Voodoo comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Voodoo.git` as a package to your test targets and
+Voodoo comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Voodoo.git` as a package to your test targets and...
 
 ```swift
 import Voodoo
@@ -49,59 +49,77 @@ cd Voodoo
 swift build -c release
 ```
 
-... and the finished executable will be
+... which will build the `magic` command line executable here
 
 ```bash
 .build/release/magic
 ```
 
-### Executing from the command line
-
-The command line program has a number of options, heres an example:
+`magic` has a variety of options for starting Voodoo. Here's an example:
 
 ```bash
 .build/release/magic run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
-Seeing as the command line is designed for a non-programmatic situation, at a minimum you do need to give it the path to a directory or file where it can load end point configurations from.
+At a minimum you do need to give it the path to a directory or file where it can load end point configurations from, but the rest is optional.
 
 ## Endpoints
 
 Voodoo uses the concept of **Endpoint** to configure how it will respond to incoming requests. Each endpoint is defined by two things, a way to identify an incoming request and the response to return.  
 
-### HTTP endpoints
+In an XCTest endpoints can be passed as part of Voodoo's initialiser or they can be added later. With `magic` on the command line endpoints are configured in YAML files.
 
-[HTTP RESTful style endpoints](wiki/HTTP-Endpoints) need
+Here is an example of an XCTest starting the server with some endpoints:
 
-* The HTTP method of the incoming request. ie. `GET`, `POST`, etc.
-* The path of the incoming request. ie. `/login`, `/accounts/list`, etc.  
-* The response to return. ie the HTTP status code, body, etc.
+```swift
+server = try VoodooServer {
 
-### GraphQL endpoints
+            HTTPEndpoint(.GET, "/config", response: .json(["featureFlag": true])
 
-[Graph QL endpoints](wiki/GraphQL-Endpoints) are slightly different in that the path selector is replaced with a GraphQL operations or query selector.
+            HTTPEndpoint(.POST, "/login", response: .dynamic { request, cache in
+                cache.loggedIn = true
+                cache.username = request.formParameters.username
+                return .ok()
+            })
 
-## Responses
+            HTTPEndpoint(.GET, "/profile", response: .dynamic { request, cache in
+                if cache.loggedIn ?? false {
+                    return .unauthorised()
+                }
+                return .ok(body: .json(["username": cache.username]))
+            })
+        }
 
-Generally a response to a request contains these things:
+```
 
-* The response status code.
-* Additional headers.
-* The body.
+And here is an example YAML file with the same endpoints, (see the [YAML configuration guide](drekka/Voodoo/wiki/YAML-configuration-guide)) for details:
 
-### Fixed responses
-
-Fixed responses are hard coded
-
-### Dynamic responses
-
-Dynamic responses are one of the more useful features of Voodoo. Essentially they give you the ability to run code (Swift or Javascript) in response to an incoming request and for that code to decide how to respond.
-In Swift a closure is called with this signature
-
-# Samples
-
-Here are some sample files showing how various things can be done.
-
-
-## Simple YAML endpoint file
-
+```yaml
+- http:
+    api: get /config
+    response:
+      type: json
+      data:
+        featureFlag: true
+      
+- http:
+    api: post /login
+    javascript: |
+      function response(request, cache) {
+          cache.loggedIn = true;
+          cache.username = request.formParameters.username;
+          return Response.ok();
+      }
+      
+- http:
+    api: get /profile
+    javascript: |
+      function response(request, cache) {
+          if cache.loggedIn ?? false {
+              return Response.unauthorised();
+          }
+          return Response.ok(Body.json({
+              username: cache.username 
+          }));
+      }          
+``` 
