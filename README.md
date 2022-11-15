@@ -5,6 +5,9 @@
 [![GitHub license](https://img.shields.io/github/license/drekka/Voodoo.svg)](https://github.com/drekka/Voodoo/blob/master/LICENSE)
 [![GitHub tag](https://img.shields.io/github/tag/drekka/Voodoo.svg)](https://GitHub.com/drekka/Voodoo/tags/)
 
+***Note: This document is intended as a quick introduction to Voodoo. Please refer to the [Voodoo's Github Wiki](https://github.com/drekka/Voodoo/wiki) for more details.***
+
+
 Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
 
 It primary features are:
@@ -25,9 +28,6 @@ It primary features are:
 
 * General file serving of non-API resources.
 
-***Note: as this document is becoming too large to be practical because of all the features that Voodoo offers, it is being migrated/re-written into [Voodoo's Github Wiki](https://github.com/drekka/Voodoo/wiki), please refer there for updated information.***
-
-
 # Installation
 
 ## iOS/OSX SPM package
@@ -40,99 +40,46 @@ import Voodoo
 
 ## Linux, Windows, Docker, etc
 
-If you don't already have a Swift compiler on your system there is an extensive installation guide to downloading and installing Swift on the [Swift org download page.](https://www.swift.org/download/)
+Note that there is a more [detailed install for other platforms here](wiki/Building-Voodoo).
 
-Once installed, you can clone this repository:
-
-```bash
-git clone https://github.com/drekka/Voodoo.git
-```
-
-and build it:
+Once cloned you can build Voodoo using this command:
 
 ```bash
 cd Voodoo
 swift build -c release
 ```
 
-The finished executable will be
+... and the finished executable will be
 
 ```bash
 .build/release/magic
 ```
 
-Which you can move anywhere you like as it's fully self contained.
-
 ### Executing from the command line
 
-The command line program has a number of options, but here is a minimal example:
-
-```bash
-.build/release/magic run --config Tests/files/TestConfig1 
-```
-
-Seeing as the command line is designed for a non-programmatic situation, at a minimum you need to give it a path to a directory or file where it can load end points from.
-
-However a more practical example might look like this:
+The command line program has a number of options, heres an example:
 
 ```bash
 .build/release/magic run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
-Which adds a directory of response templates and another containing general files such as images and javascript source for web pages. 
-
-### Docker additional configuration
-
-When launching Voodoo from within a [Docker container][docker] you will need to forwards Voodoo's ports if you app is not also running within the container.
-
-Firstly you will have to tell Docker to publish the ports Voodoo will be listening on to the outside world. Usually by using something like 
-
-```bash
-docker run -p 8080-8090
-```
-
-The only issue with this is that Docker appears to automatically reserve the ports you specify even though Voodoo might not being listening on them. Details on container networking can be found here: [https://docs.docker.com/config/containers/container-networking/](https://docs.docker.com/config/containers/container-networking/).
-
-Finally Voodoo's default IP of `127.0.0.1` isn't accessible from outside the container, so you need to tell it to listen to all IP addresses. To do this, launch Voodoo with the **_`--use-any-addr`_** flag which tells Voodoo to listen on `0.0.0.0` instead of `127.0.0.1`.
-
-# Configuration
-
-The thing about Voodoo is that you have a variety of ways to configure the server which you can mix and match to suite your needs. For example an iOS only team might just programmatically set it up, where as a mixed team might use a YAML/Javascript setup. You could even do a bit of both.
-
-## Templates
-
-Voodoo has the ability to read templates of responses stored in a directory. This is most useful when you are mocking out a server that generates a lot of response in JSON or some other textural form. By specifying a template directory when initialising the server these templates can be automatically made available as response payloads for incoming requests. Here's an example from a Swift UI test setup:
-
-```swift
-let templatePath = Bundle.testBundle.resourceURL!
-server = try VoodooServer(templatePath: templatePath) {
-    // Endpoints configured here.
-}
-```
-
-Templates are managed by [The mustache engine](#the-mustache-engine) and keyed based on their file names excluding any extension. By default, the extension for a template is `.json` however that can be changed to anything using the `templateExtension` argument. So if there is a template file called `accounts/list-accounts.json` then it's key is `accounts/list-accounts`.
-
-## File sources
-
-In addition to serving responses from defined API endpoints Voodoo can also serve files from a directory based on the path. This is most useful for things like image files where the path of the incoming request can be directly mapped onto the directory structure. For example, `http://127.0.0.1/8080/images/company/logo.jpg` can be mapped to a file in `Tests/files/images/company/logo.jpg`. 
-
-To do this you can add the initialiser argument `filePaths: URL(string: "Tests/files")` or add the command line argument `--file-dir Tests/files`. This can be done multiple times if you have multiple directories you want to search for files.
+Seeing as the command line is designed for a non-programmatic situation, at a minimum you do need to give it the path to a directory or file where it can load end point configurations from.
 
 ## Endpoints
 
+Voodoo uses the concept of **Endpoint** to configure how it will respond to incoming requests. Each endpoint is defined by two things, a way to identify an incoming request and the response to return.  
+
 ### HTTP endpoints
 
-In order to response to API requests Voodoo needs to be configured with *Endpoints*. An endpoint is basically a definition that Voodoo uses to define what requests response to and how. To do that it need 3 things:
+[HTTP RESTful style endpoints](wiki/HTTP-Endpoints) need
 
 * The HTTP method of the incoming request. ie. `GET`, `POST`, etc.
 * The path of the incoming request. ie. `/login`, `/accounts/list`, etc.  
 * The response to return. ie the HTTP status code, body, etc.
 
-#### Path parameters
-
-Apart from watching for fixed paths such as `/login` and `/accounts`, Voodoo can also extract arguments from REST like paths. For example, if you want to query user's account using `/accounts/users/1234` where `1234` is the user's employee ID, then you can specify the path as `/accounts/users/:employeeId` and Voodoo will automatically map incoming `/accounts/users/*` path, extracting the employee ID into a field which is then made available to the code that generates the response.
-
 ### GraphQL endpoints
+
+[Graph QL endpoints](wiki/GraphQL-Endpoints) are slightly different in that the path selector is replaced with a GraphQL operations or query selector.
 
 ## Responses
 
@@ -142,9 +89,9 @@ Generally a response to a request contains these things:
 * Additional headers.
 * The body.
 
-There are some basic responses common to both the YAML/javascript and Swift configurations. Responses such as `ok`, `created`, `notFound`, `unauthorised`, etc. But they also have some unique features to each. Details of which will are in the relevant sections below.
-
 ### Fixed responses
+
+Fixed responses are hard coded
 
 ### Dynamic responses
 
@@ -162,30 +109,6 @@ function response(request, cache) { ... }
 ``` 
 
 Both of these are passed two special objects when they are called. 
-
-#### The incoming request data
-
-The first argument is a reference to the incoming request. This reference contains the following data:
-
-* `method: HTTPMethod` - The HTTP method.
- 
-* `headers: Dictionary/Map<String, String>` - The incoming request headers.
-
-* `path: String` - The path part of the incoming URL. ie. `/accounts/user`
-
-* `pathComponents: Array<String>` - The path in components form. ie. `/`, `accounts`, `user`. This is most useful when functionality is layered in RESTful style APIs and you want to make decisions based on various path components. Note that the first component (`/`) is the root indicator as opposed to the component separator used for the rest of a path.
-
-* `pathParameters: Dictionary/Map<String, String>` - Any parameters extracted from the path. For example, if the endpoint path is `/accounts/:user` and an incoming request has the path `/accounts/1234` then this map contains `["user":"1234"]`.
-
-* `query: String?` - The untouched query string from the incoming URL. For example `?firstname=Derek&lastname=Clarkson`.
-
-* `queryParameters: Dictionary/Map<String, String>` - The query parameters extracted into a map. The above example would map into `["firstname":"Derek", "lastname":"Clarkson"]`. Note that it is possible for query parameters to repeat with different values. For example `?search=books&search=airplanes`. If present, duplicates are mapped into a single array with all the value in the order specified. ie. `["search":["books","airplanes"]]`.
-
-* `body: Data?` - The body in a raw `Data` form.
-
-* `bodyJSON: Any?` - If the `Content-Type` header specifies a payload of JSON, this will attempt to deserialise the body into it and return the resulting object. That object will usually be either a single value, array or dictionary/map. 
-
-* `formParameters: Dictionary/Map<String, String>` -  - If the `Content-Type` header specifies that the body contains form data, this will attempt to deserialise it into a dictionary/map and return it. 
 
 #### The cache
 
@@ -207,36 +130,6 @@ let payload = [
 
 Using this cache allows all sorts of hard to manufacture responses to become much easier. One example is to place a simple array in the cache to simulate a shopping cart. That could reduce the number of endpoints required where as a non-cache setup would required many more to simulate all the different states.
  
-### Response bodies
-
-The response body defines the content (if any) that will be returned in the body of a response. Voodoo has a number of options available:
-
-* An empty body.
-
-* Text.
-
-* Hard coded JSON or YAML formatted content.
-
-* Content generated from a template file.
-
-* Content from some other file.
-
-* Raw binary data.
-
-Textural, JSON, YAML and template generated response also have the added feature of being run through a mustache templating engine which allows additional dynamic data to be injected. 
-
-### The mustache engine
-
-With response bodies that effective return text (JSON, YAML, text) the results are passed to a [mustache engine](https://hummingbird-project.github.io/hummingbird/current/hummingbird-mustache/mustache-syntax.html) before the response is returned. Mustache is a simple logic less templating system for injecting values into text. 
-
-When processing the text for mustache tags, Voodoo assembles a variety of data to pass to it for injection:
-
-* `mockServer` - The base URL of the server as sourced from the incoming request. So if the incoming request `Host` header specifies that you app had to call `192.168.0.4:8080` to reference Voodoo through a Docker container or something like that. Then this will be set as the `mockServer` value in the template data so it can be injected into response data containing server URLs. For example, URLS that reference image files.
-
-* All the data currently residing in the cache. 
-
-* And finally, any additional data added by the endpoint definition. Note this data can override anything in the cache by simply using the same key.
-
 # Xcode integration guide
 
 The initial need for something like Voodoo was to support Swift UI testing through a local server instead of an unreliable development or QA server. This drove a lot of Voodoo's design.

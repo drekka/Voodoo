@@ -13,7 +13,7 @@
       
 - graphQL:
     method: get
-    operation: getBook
+    operations: getBook
   javascript: |
     function response(request, cache) {
       console.log("Book " + request.graphQL.bookId + " requested");
