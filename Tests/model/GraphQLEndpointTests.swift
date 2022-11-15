@@ -18,6 +18,24 @@ class GraphQLEndpointTests: XCTestCase {
         expect(endpoint.response) == .ok(body: .json([:]))
     }
 
+    func testCanDecode() throws {
+
+        let goodYaml = "graphQL: ~"
+        let badYaml = "xxx: ~"
+
+        struct Container: Decodable {
+            let canDecode: Bool
+            init(from decoder: Decoder) throws {
+                canDecode = try GraphQLEndpoint.canDecode(from: decoder)
+            }
+        }
+
+        let container1 = try YAMLDecoder().decode(Container.self, from: goodYaml)
+        expect(container1.canDecode) == true
+        let container2 = try YAMLDecoder().decode(Container.self, from: badYaml)
+        expect(container2.canDecode) == false
+    }
+
     func testDecodeOperationSelector() throws {
         let yaml = #"""
         graphQL:
@@ -48,25 +66,6 @@ class GraphQLEndpointTests: XCTestCase {
         expect(endpoint.method) == .GET
         expect(endpoint.selector) == .query(try GraphQLRequest(query: "query { book }"))
         expect(endpoint.response) == .ok()
-    }
-
-    func testDecodeNonGraphQLContent() throws {
-        do {
-            let yml = #"""
-            xyz:
-              api: "post/abc"
-            response: "ok"
-            """#
-            _ = try YAMLDecoder().decode(GraphQLEndpoint.self, from: yml, userInfo: userInfo())
-            fail("Error not thrown")
-        } catch {
-            guard case DecodingError.dataCorrupted(let context) = error,
-                  let underlyingError = context.underlyingError,
-                  case VoodooError.wrongEndpointType = underlyingError else {
-                fail("Incorrect exception \(error)")
-                return
-            }
-        }
     }
 
     func testDecodeMissingSelector() throws {

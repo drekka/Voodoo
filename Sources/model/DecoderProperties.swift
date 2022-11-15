@@ -7,10 +7,10 @@
 
 import Foundation
 
-/// Extensions for accessing user info data previously stored in the decoder.
+/// Extensions for code completeting user info data from the decoder.
 extension Decoder {
 
-    /// Returns the base directory for the config.
+    /// The config directory as passed to Voodoo.
     var configDirectory: URL {
         guard let directory = userInfo[ConfigLoader.userInfoDirectoryKey] as? URL else {
             preconditionFailure("User info incomplete (developer error).")
@@ -18,6 +18,7 @@ extension Decoder {
         return directory
     }
 
+    /// The name of the current file being decoded.
     var configFileName: String {
         guard let filename = userInfo[ConfigLoader.userInfoFilenameKey] as? String else {
             preconditionFailure("User info incomplete (developer error).")
@@ -25,7 +26,7 @@ extension Decoder {
         return filename
     }
 
-    /// Returns the server's verbose setting.
+    /// The server's verbose setting.
     var verbose: Bool {
         userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false
     }
