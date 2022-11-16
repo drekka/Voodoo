@@ -5,7 +5,7 @@
 [![GitHub license](https://img.shields.io/github/license/drekka/Voodoo.svg)](https://github.com/drekka/Voodoo/blob/master/LICENSE)
 [![GitHub tag](https://img.shields.io/github/tag/drekka/Voodoo.svg)](https://GitHub.com/drekka/Voodoo/tags/)
 
-***Note: This document is intended as a quick introduction to Voodoo. Please refer to the [Voodoo's Github Wiki](https://github.com/drekka/Voodoo/wiki) for more details.***
+***Note: This document is intended as a quick introduction to Voodoo. Please refer to the [Voodoo's Github Wiki](../../wiki) for more details.***
 
 
 Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
