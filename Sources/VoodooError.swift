@@ -25,6 +25,11 @@ public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, Cu
     case conversionError(String)
     case templateRenderingFailure(String)
 
+    /// Thrown internally by the decoding of YAML end points to indicate the endpoint is not the expected type.
+    ///
+    /// ie. We've been asked to decode a HTTP end point and didn't find the `http` node.
+    case wrongEndpointType
+
     public var status: HTTPResponseStatus {
         switch self {
         case .noGraphQLEndpoint, .noHTTPEndpoint:
@@ -62,6 +67,10 @@ public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, Cu
 
         case .unexpectedError(let error):
             return error.localizedDescription
+
+        case .wrongEndpointType:
+            return "Unexpected type \(type(of: self))"
+            
         }
     }
 

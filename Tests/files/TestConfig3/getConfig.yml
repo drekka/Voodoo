@@ -1,6 +1,6 @@
 graphQL:
   method: get
-  operation: getConfig
+  operations: getConfig
 response:
   status: 200
   body:

@@ -6,6 +6,8 @@ import Foundation
 
 /// Using a protocol to drive the ``EndpointBuilder`` means that a variety of types can produce API endpoints.
 public protocol EndpointSource {
+
+    /// Returns a list of endpoints.
     var endpoints: [Endpoint] { get }
 }
 
@@ -20,14 +22,17 @@ public enum EndpointBuilder {
 
 // MARK: - Extensions
 
+/// Allows a ``HTTPEndpoint`` to generate itself as an ``EndpointSource`` list.
 extension HTTPEndpoint: EndpointSource {
     public var endpoints: [Endpoint] { [self] }
 }
 
+/// Allows a ``GraphQLEndpoint`` to generate itself as an ``EndpointSource``.
 extension GraphQLEndpoint: EndpointSource {
     public var endpoints: [Endpoint] { [self] }
 }
 
+/// Allows an array of ``Endpoint``s to return itself as an ``EndpointSource``.
 extension [Endpoint]: EndpointSource {
     public var endpoints: [Endpoint] { self }
 }

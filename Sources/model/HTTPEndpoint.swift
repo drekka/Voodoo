@@ -6,7 +6,7 @@ import Foundation
 import NIOHTTP1
 
 /// The definition of a mocked endpoint.
-public struct HTTPEndpoint: Endpoint {
+public struct HTTPEndpoint {
 
     let method: HTTPMethod
     let path: String
@@ -25,6 +25,14 @@ public struct HTTPEndpoint: Endpoint {
         self.path = path
         self.response = response
     }
+}
+
+extension HTTPEndpoint: Endpoint {
+
+    public static func canDecode(from decoder: Decoder) throws -> Bool {
+        let container = try decoder.container(keyedBy: EndpointKeys.self)
+        return container.contains(.http)
+    }
 
     enum EndpointKeys: CodingKey {
         case http
@@ -33,10 +41,6 @@ public struct HTTPEndpoint: Endpoint {
     public init(from decoder: Decoder) throws {
 
         let container = try decoder.container(keyedBy: EndpointKeys.self)
-        guard container.contains(.http) else {
-            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Not a HTTP request"))
-        }
-
         let methodPath = try container.methodPath()
         method = methodPath.0
         path = methodPath.1

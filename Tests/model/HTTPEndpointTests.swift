@@ -18,6 +18,25 @@ class HTTPEndpointTests: XCTestCase {
         expect(endpoint.response) == .ok()
     }
 
+    func testCanDecode() throws {
+
+        let goodHttp = "http: ~"
+        let badHttp = "xxx: ~"
+
+        struct Container: Decodable {
+            let canDecode: Bool
+            init(from decoder: Decoder) throws {
+                canDecode = try HTTPEndpoint.canDecode(from: decoder)
+            }
+        }
+
+        let container1 = try YAMLDecoder().decode(Container.self, from: goodHttp)
+        expect(container1.canDecode) == true
+        let container2 = try YAMLDecoder().decode(Container.self, from: badHttp)
+        expect(container2.canDecode) == false
+    }
+
+
     func testDecodeWithResponse() throws {
         let yaml = #"""
         http:
@@ -31,15 +50,6 @@ class HTTPEndpointTests: XCTestCase {
         expect(endpoint.method) == .POST
         expect(endpoint.path) == "/abc"
         expect(endpoint.response) == .ok()
-    }
-
-    func testDecodeNonHTTPContent() throws {
-        try expectYML(#"""
-                      xyz:
-                        api: "post/abc"
-                      response: "ok"
-                      """#,
-                      toFailWithTypeMissMatch: "Not a HTTP request")
     }
 
     func testDecodeWithInvalidSignature() throws {

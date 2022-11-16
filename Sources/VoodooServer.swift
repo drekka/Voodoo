@@ -35,6 +35,18 @@ public class VoodooServer {
         URL(string: "http://\(server.host):\(server.port)")!
     }
 
+    /// Default initialiser for Voodoo.
+    ///
+    /// - parameters:
+    ///     - portRange: The range of ports to launch on.
+    ///     - graphQLPath: The request path that the GraphQL responder will observe for incoming GraphQL requests.
+    ///     - useAnyAddr: If set to true, changes the IP of the server from 127.0.0.1 to 0.0.0.0. This is for use in
+    ///     docker and other situations where the default home address will not work.
+    ///     - templatePath: The path to the template folder where template will be loaded from.
+    ///     - filePaths: A list of paths to directories where file will be searched for if there is no matching API endpoint found.
+    ///     - verbose: When true, tells Voodoo to print more information about it's setup and the incoming requests.
+    ///     - hummingbirdVerbose: Enables verbose mode on the internal Hummingbird server.
+    ///     - endpoints: An optional list of endpoint to setup.
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 graphQLPath: String = "/graphql",
                 useAnyAddr: Bool = false,
