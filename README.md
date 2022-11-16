@@ -5,7 +5,7 @@
 [![GitHub license](https://img.shields.io/github/license/drekka/Voodoo.svg)](https://github.com/drekka/Voodoo/blob/master/LICENSE)
 [![GitHub tag](https://img.shields.io/github/tag/drekka/Voodoo.svg)](https://GitHub.com/drekka/Voodoo/tags/)
 
-***Note: This document is intended as a quick introduction to Voodoo. Please refer to the [Voodoo's Github Wiki](https://github.com/drekka/Voodoo/wiki) for more details.***
+***Note: This document is intended as a quick introduction to Voodoo. Please refer to the [Voodoo's Github Wiki](../../wiki) for more details.***
 
 
 Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
@@ -69,7 +69,7 @@ Voodoo uses the concept of **Endpoint** to configure how it will respond to inco
 
 In an XCTest endpoints can be passed as part of Voodoo's initialiser or they can be added later. With `magic` on the command line endpoints are configured in YAML files.
 
-Here is an example of an XCTest starting the server with some endpoints:
+Here is an example of an XCTest starting the server with some endpoints *(see the [Xcode configuration guide](../../wiki/XCode-configuration-guide))* for more details:
 
 ```swift
 server = try VoodooServer {
@@ -92,8 +92,9 @@ server = try VoodooServer {
 
 ```
 
-And here is an example YAML file with the same endpoints, (see the [YAML configuration guide](/drekka/Voodoo/wiki/YAML-configuration-guide)) for details:
+And here is an example YAML file with the same endpoints, *(see the [YAML configuration guide](../../wiki/YAML-configuration-guide))* for details:
 
+*Sample.yml*
 ```yaml
 - http:
     api: get /config
@@ -123,3 +124,12 @@ And here is an example YAML file with the same endpoints, (see the [YAML configu
           }));
       }          
 ``` 
+
+Which can then be configure via `magic`:
+
+```bash
+$ magic -c Sample.yml
+```
+
+`magic` has a variety of options and there are many ways to setup the YAML configuration files. *See {YAML endpoint setup}(../../wiki/YAML-endpoint-setup) for details.*  
+
