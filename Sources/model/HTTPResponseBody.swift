@@ -72,7 +72,7 @@ extension HTTPResponse.Body: Decodable {
     enum CodingKeys: String, CodingKey {
         case type
         case text
-        case url
+        case file
         case data
         case name
         case contentType
@@ -95,25 +95,22 @@ extension HTTPResponse.Body: Decodable {
 
         case "data":
             let data = try container.decode(Data.self, forKey: .data)
-            let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .data(data, contentType: contentType)
+            self = .data(data, contentType: try container.contentType)
 
         case "json":
-            self = .json(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
+            self = .json(try container.data, templateData: try container.templateData)
 
         case "yaml":
-            self = .yaml(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
+            self = .yaml(try container.data, templateData: try container.templateData)
 
         case "file":
-            let filePath = try container.decode(String.self, forKey: .url)
+            let filePath = try container.decode(String.self, forKey: .file)
             let fileURL = URL(fileURLWithPath: filePath)
-            let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .file(fileURL, contentType: contentType)
+            self = .file(fileURL, contentType: try container.contentType)
 
         case "template":
             let name = try container.decode(String.self, forKey: .name)
-            let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .template(name, templateData: try container.templateData, contentType: contentType)
+            self = .template(name, templateData: try container.templateData, contentType: try container.contentType)
 
         default:
             throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown value '\(type)'")
@@ -122,6 +119,19 @@ extension HTTPResponse.Body: Decodable {
 }
 
 extension KeyedDecodingContainer where Key == HTTPResponse.Body.CodingKeys {
+
+    var contentType: String {
+        get throws {
+            try decodeIfPresent(String.self, forKey: .contentType) ?? Header.ContentType.applicationJSON
+        }
+    }
+
+    var data:Any {
+        get throws {
+            try decode(AnyCodable.self, forKey: .data).value
+        }
+    }
+
     var templateData: [String: Any]? {
         get throws {
             try decodeIfPresent(AnyCodable.self, forKey: .templateData)?.value as? [String: Any]

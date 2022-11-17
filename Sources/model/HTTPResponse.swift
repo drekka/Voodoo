@@ -94,6 +94,12 @@ extension HTTPResponse: Decodable {
         case .badRequest:
             self = .badRequest(headers: headers, body: body)
 
+        case .unauthorized:
+            self = .unauthorised(headers: headers, body: body)
+
+        case .forbidden:
+            self = .forbidden(headers: headers, body: body)
+
         case .notFound:
             self = .notFound
         case .notAcceptable:

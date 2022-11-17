@@ -105,7 +105,7 @@ public class VoodooServer {
 
                 switch error {
                 case _ where error.isPortTakenError:
-                    print("💀 Port \(nextPort) busy, trying next port in range")
+                    if verbose { print("💀 Port \(nextPort) busy, trying next port in range") }
                     continue
 
                 case let error as VoodooError:
@@ -230,7 +230,7 @@ extension HBApplication {
         let configuration = HBApplication.Configuration(
             address: .hostname(useAnyAddr ? "0.0.0.0" : "127.0.0.1", port: port),
             serverName: "Voodoo API simulator",
-            logLevel: hummingbirdVerbose ? .trace : .error
+            logLevel: hummingbirdVerbose ? .trace : .critical
         )
 
         let server = HBApplication(configuration: configuration)

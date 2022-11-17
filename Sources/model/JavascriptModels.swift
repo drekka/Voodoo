@@ -99,8 +99,8 @@ enum JavascriptModels {
                 return { type: "yaml", data: data, templateData: templateData };
             }
 
-            static file(url, contentType) {
-                return { type: "file", url: url, contentType: contentType };
+            static file(file, contentType) {
+                return { type: "file", file: file, contentType: contentType };
             }
 
             static template(name, contentType, templateData) {
