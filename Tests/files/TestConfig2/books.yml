@@ -3,8 +3,7 @@
   response:
     status: 200
     body: 
-      type: template
-      name: books
+      template: books
       contentType: application/json
       
 - http:

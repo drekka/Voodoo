@@ -23,7 +23,7 @@ enum JavascriptModels {
         class Response {
 
             static raw(code, body, headers) {
-                return { status: code, body: body ?? Body.empty(), headers: headers };
+                return { status: code, body: body, headers: headers };
             }
 
             static ok(body, headers) {
@@ -83,31 +83,27 @@ enum JavascriptModels {
     static let responseBodyType = #"""
         class Body {
 
-            static empty() {
-                return { type: "empty" };
-            }
-
             static text(text, templateData) {
-                return { type: "text", text: text, templateData: templateData };
+                return { text: text, templateData: templateData };
             }
 
             static json(data, templateData) {
-                return { type: "json", data: data, templateData: templateData };
+                return { json: data, templateData: templateData };
             }
 
             static yaml(data, templateData) {
-                return { type: "yaml", data: data, templateData: templateData };
+                return { yaml: data, templateData: templateData };
             }
 
             static file(file, contentType) {
-                return { type: "file", file: file, contentType: contentType };
+                return { file: file, contentType: contentType };
             }
 
             static template(name, contentType, templateData) {
                 if (contentType == undefined) {
                     throw "Body.template(name, contentType, templateData) requires 'contentType' to be passed.";
                 }
-                return { type: "template", name: name, templateData: templateData, contentType: contentType };
+                return { template: name, templateData: templateData, contentType: contentType };
             }
         }
     """#

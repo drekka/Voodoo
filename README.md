@@ -95,8 +95,7 @@ On the command line `magic` loads the endpoints from YAML files. For example, he
 - http:
     api: get /config
     response:
-      type: json
-      data:
+      json:
         featureFlag: true
       
 - http:

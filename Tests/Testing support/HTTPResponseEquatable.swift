@@ -29,13 +29,13 @@ extension HBResponseBody: Equatable {
 extension HTTPResponse: Equatable {
 
     public static func == (lhs: Voodoo.HTTPResponse, rhs: Voodoo.HTTPResponse) -> Bool {
-        switch (lhs, rhs) {
-        case (.raw(let lhsStatus, let lhsHeaders, let lhsBody), .raw(let rhsStatus, let rhsHeaders, let rhsBody)):
 
+        switch (lhs, rhs) {
+
+        case (.raw(let lhsStatus, let lhsHeaders, let lhsBody), .raw(let rhsStatus, let rhsHeaders, let rhsBody)):
             guard lhsHeaders?.count == rhsHeaders?.count else {
                 return false
             }
-
             return lhsStatus == rhsStatus && lhsHeaders == rhsHeaders && lhsBody == rhsBody
 
         case (.javascript(let lhsScript), .javascript(let rhsScript)):
@@ -43,12 +43,14 @@ extension HTTPResponse: Equatable {
 
         case (.ok(let lhsHeaders, let lhsBody), .ok(let rhsHeaders, let rhsBody)),
              (.created(let lhsHeaders, let lhsBody), .created(let rhsHeaders, let rhsBody)),
-             (.accepted(let lhsHeaders, let lhsBody), .accepted(let rhsHeaders, let rhsBody)):
-
+             (.accepted(let lhsHeaders, let lhsBody), .accepted(let rhsHeaders, let rhsBody)),
+             (.badRequest(let lhsHeaders, let lhsBody), .badRequest(let rhsHeaders, let rhsBody)),
+             (.unauthorised(let lhsHeaders, let lhsBody), .unauthorised(let rhsHeaders, let rhsBody)),
+             (.forbidden(let lhsHeaders, let lhsBody), .forbidden(let rhsHeaders, let rhsBody)),
+             (.internalServerError(let lhsHeaders, let lhsBody), .internalServerError(let rhsHeaders, let rhsBody)):
             guard lhsHeaders?.count == rhsHeaders?.count else {
                 return false
             }
-
             return lhsHeaders == rhsHeaders && lhsBody == rhsBody
 
         case (.movedPermanently(let lhsURL), .movedPermanently(let rhsURL)),
@@ -60,14 +62,6 @@ extension HTTPResponse: Equatable {
              (.notAcceptable, .notAcceptable),
              (.tooManyRequests, .tooManyRequests):
             return true
-
-        case (.internalServerError(let lhsHeaders, let lhsBody), .internalServerError(let rhsHeaders, let rhsBody)):
-
-            guard lhsHeaders?.count == rhsHeaders?.count else {
-                return false
-            }
-
-            return lhsHeaders == rhsHeaders && lhsBody == rhsBody
 
         default:
             return false

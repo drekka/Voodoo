@@ -19,6 +19,8 @@ class HTTPResponseBodyTests: XCTestCase {
         context = MockVoodooContext()
     }
 
+    // MARK: - Response body generation
+
     func testEmpty() throws {
         let context = MockVoodooContext()
         let request = HBRequest.mock().asHTTPRequest
@@ -113,61 +115,82 @@ class HTTPResponseBodyTests: XCTestCase {
     }
 }
 
-class HTTPREsponseBodyDecodableTests: XCTestCase {
-
-    func testDecodeEmpty() throws {
-        try assert(#"{"type":"empty"}"#, decodesTo: .empty)
-    }
+class HTTPResponseBodyDecodableTests: XCTestCase {
 
     func testDecodeText() throws {
-        try assert(#"{"type":"text","text":"abc"}"#, decodesTo: .text("abc"))
-    }
-
-    func testDecodeData() throws {
-        let data = "abc".data(using: .utf8)!
-        try assert(#"{"type":"data","data":"\#(data.base64EncodedString())","contentType":"ct"}"#,
-                   decodesTo: .data(data, contentType: "ct"))
+        try assert(#"""
+                   text: abc
+                   """#,
+                   decodesTo: .text("abc"))
     }
 
     func testDecodeJSON() throws {
         try assert(#"""
-        {
-            "type":"json",
-            "data":{
-                "abc":"xyz"
-            }
-        }
-        """#, decodesTo: .json(["abc": "xyz"]))
+                   json:
+                     abc: xyz
+                   """#,
+                   decodesTo: .json(["abc": "xyz"]))
     }
 
     func testDecodeYAML() throws {
         try assert(#"""
-        {
-            "type":"yaml",
-            "data":{
-                "abc":"xyz"
-            }
-        }
-        """#, decodesTo: .yaml(["abc": "xyz"]))
+                   yaml:
+                     abc: xyz
+                   """#,
+                   decodesTo: .yaml(["abc": "xyz"]))
+    }
+
+    func testDecodeFile() throws {
+        try assert(#"""
+                   file: abc/def.md
+                   contentType: application/markdown
+                   """#,
+                   decodesTo: .file(URL(filePath: "abc/def.md"), contentType: "application/markdown"))
+    }
+
+    func testDecodeFileWithoutContentType() throws {
+        try assert(#"""
+                   file: abc/def.json
+                   """#,
+                   decodesTo: .file(URL(filePath: "abc/def.json"), contentType: "application/json"))
+    }
+
+    func testDecodeTemplate() throws {
+        try assert(#"""
+                   template: books
+                   contentType: application/json
+                   """#,
+                   decodesTo: .template("books", contentType: "application/json"))
+    }
+
+    func testDecodeTemplateWithoutContentType() throws {
+        try assert(#"""
+                   template: books
+                   """#,
+                   decodesTo: .template("books", contentType: "application/json"))
     }
 
     func testUnknownError() throws {
-        let data = #"{"type":"xxxx"}"#.data(using: .utf8)!
+        let data = #"""
+        abc: 123
+        templateData: ~
+        """#
+        .data(using: .utf8)!
         do {
-            _ = try JSONDecoder().decode(HTTPResponse.Body.self, from: data)
+            _ = try YAMLDecoder().decode(HTTPResponse.Body.self, from: data)
             fail("Error not thrown")
         } catch DecodingError.dataCorrupted(let context) {
-            expect(context.codingPath.count) == 1
-            expect(context.codingPath[0].stringValue) == "type"
-            expect(context.debugDescription) == "Unknown value 'xxxx'"
+            expect(context.codingPath.count) == 0
+            expect(context.debugDescription) == "Unable to determine response body. Possibly incorrect or invalid keys."
         }
     }
 
     // MARK: - Support functions
 
-    func assert(_ json: String, decodesTo expectedBody: HTTPResponse.Body) throws {
-        let data = json.data(using: .utf8)!
-        let body = try JSONDecoder().decode(HTTPResponse.Body.self, from: data)
-        expect(body) == expectedBody
+    func assert(_ yml: String,
+                decodesTo expectedBody: HTTPResponse.Body,
+                file: StaticString = #file, line: UInt = #line) throws {
+        let body = try YAMLDecoder().decode(HTTPResponse.Body.self, from: yml.data(using: .utf8)!)
+        expect(file: file, line: line, body) == expectedBody
     }
 }
