@@ -6,8 +6,9 @@ import Foundation
 import Hummingbird
 import NIOHTTP1
 
-public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, CustomDebugStringConvertible {
+public enum VoodooError: Error, CustomStringConvertible, CustomDebugStringConvertible {
 
+    /// Thrown when the server cannot find a free port.
     case noPortAvailable(Int, Int)
 
     case unexpectedError(Error)
@@ -25,32 +26,14 @@ public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, Cu
     case conversionError(String)
     case templateRenderingFailure(String)
 
-    /// Thrown internally by the decoding of YAML end points to indicate the endpoint is not the expected type.
-    ///
-    /// ie. We've been asked to decode a HTTP end point and didn't find the `http` node.
-    case wrongEndpointType
-
-    public var status: HTTPResponseStatus {
-        switch self {
-        case .noGraphQLEndpoint, .noHTTPEndpoint:
-            return .notFound
-        default:
-            return .internalServerError
-        }
-    }
-
-    public var headers: HTTPHeaders {
-        [Header.contentType: Header.ContentType.textPlain]
-    }
-
     public var localizedDescription: String {
         switch self {
         case .conversionError(let message),
-             .templateRenderingFailure(let message),
-             .javascriptError(let message),
-             .configLoadFailure(let message),
-             .invalidGraphQLRequest(let message),
-             .noHTTPEndpoint(let message):
+                .templateRenderingFailure(let message),
+                .javascriptError(let message),
+                .configLoadFailure(let message),
+                .invalidGraphQLRequest(let message),
+                .noHTTPEndpoint(let message):
             return message
 
         case .noGraphQLEndpoint:
@@ -68,9 +51,6 @@ public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, Cu
         case .unexpectedError(let error):
             return error.localizedDescription
 
-        case .wrongEndpointType:
-            return "Unexpected type \(type(of: self))"
-            
         }
     }
 
@@ -80,6 +60,23 @@ public enum VoodooError: Error, HBHTTPResponseError, CustomStringConvertible, Cu
 
     public var debugDescription: String {
         localizedDescription
+    }
+}
+
+/// Extension to turn a ``VoodooError`` into a Hummingbird error.
+extension VoodooError: HBHTTPResponseError {
+
+    public var status: HTTPResponseStatus {
+        switch self {
+        case .noGraphQLEndpoint, .noHTTPEndpoint:
+            return .notFound
+        default:
+            return .internalServerError
+        }
+    }
+
+    public var headers: HTTPHeaders {
+        [Header.contentType: Header.ContentType.textPlain]
     }
 
     public func body(allocator _: ByteBufferAllocator) -> NIOCore.ByteBuffer? {

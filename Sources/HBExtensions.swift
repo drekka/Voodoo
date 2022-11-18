@@ -6,7 +6,7 @@ import Foundation
 import Hummingbird
 import HummingbirdMustache
 
-// Voodoo extensions to Hummingbird
+// Voodoo extensions to Hummingbird.
 
 extension HBApplication: VoodooContext {
 
@@ -15,6 +15,12 @@ extension HBApplication: VoodooContext {
             fatalError("💥💥💥 No port set on server 💥💥💥")
         }
         return port
+    }
+
+    /// Sets and retrieves the current delay setting.
+    public var delay: Double {
+        get { extensions.get(\.delay) }
+        set { extensions.set(\.delay, value: newValue) }
     }
 
     public var host: String {

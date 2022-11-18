@@ -28,6 +28,7 @@ extension HBRequest {
 
         let head = HTTPRequestHead(version: .http1_1, method: method, uri: components.url!.absoluteString, headers: hbHeaders)
         let application = HBApplication()
+        application.delay = 0.0
         let context = MockHBRequestContext()
         var hbRequest = HBRequest(head: head, body: body.hbRequestBody, application: application, context: context)
 

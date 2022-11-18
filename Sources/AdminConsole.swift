@@ -5,32 +5,32 @@
 import Foundation
 import Hummingbird
 
-struct AdminConsole: HBMiddleware {
+extension VoodooServer {
 
-    static let adminRoot = "_admin"
-    static let shutdown = "shutdown"
+    private static let adminRoot = "_admin"
+    static let adminShutdown = "/\(adminRoot)/shutdown"
+    static let adminDelay = "/\(adminRoot)/delay"
 
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    func addAdminConsole() {
 
-        var adminPath = request.uri.path.urlPathComponents.dropFirst(1)
-
-        // Bail if the path is not the admin path or there is no command.
-        guard let admin = adminPath.popFirst(),
-              admin == AdminConsole.adminRoot,
-              let command = adminPath.popFirst()
-        else {
-            return next.respond(to: request)
+        add(.POST, VoodooServer.adminShutdown) { request, _ in
+            print("💀 Received shutdown request, shutting down server ...")
+            self.stop()
+            return .ok()
         }
 
-        switch command {
+        add(.PUT, VoodooServer.adminDelay + "/:delay") { [weak self] request, _ in
 
-        case AdminConsole.shutdown where request.method == .POST:
-            print("💀 Received shutdown request, shutting down server ...")
-            request.application.stop()
-            return request.success(HBResponse(status: .ok))
+            guard let self else { return .ok() }
 
-        default:
-            return request.success(HBResponse(status: .notFound))
+            if let rawDelay = request.pathParameters.delay,
+               let delay = Double(rawDelay) {
+                if self.verbose { print("💀 Setting new request delay \(delay, decimalPlaces: 2) seconds") }
+                self.delay = delay
+                return .ok()
+            }
+
+            return .badRequest()
         }
     }
 }

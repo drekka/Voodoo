@@ -5,7 +5,7 @@
 import Foundation
 import Yams
 
-/// Loads a configuration from a directory of YAML files.
+/// Loads all the endpoints found in a YAML file, or a directory of YAML files.
 public struct ConfigLoader {
 
     static let userInfoDirectoryKey = CodingUserInfoKey(rawValue: "directory")!
@@ -18,6 +18,9 @@ public struct ConfigLoader {
         self.verbose = verbose
     }
 
+    /// Loads all the endpoints found in a YAML file, or a directory of YAML files.
+    ///
+    /// - parameter path: A file URL that references either a file or directory.
     public func load(from path: URL) throws -> [Endpoint] {
 
         switch path.fileSystemStatus {

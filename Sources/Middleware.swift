@@ -8,17 +8,18 @@ import Hummingbird
 
 /// Logs all incoming requests.
 struct RequestLogger: HBMiddleware {
+
     let verbose: Bool
+
     func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        if verbose {
-            print("💀 Received \(request.method) \(request.uri)")
-        }
+        if verbose { print("💀 Received \(request.method) \(request.uri)") }
         return next.respond(to: request)
     }
 }
 
-/// Logs an error when no response is found for a request.
+/// Logs errors coming back from the routers.
 public struct NoResponseFoundMiddleware: HBMiddleware {
+
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         next.respond(to: request)
             .flatMapError { error in

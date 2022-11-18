@@ -121,6 +121,10 @@ extension HTTPResponse {
 
     func hbResponse(for request: HTTPRequest, inServerContext context: VoodooContext) async throws -> HBResponse {
 
+        if context.delay > 0.0 {
+            try await Task.sleep(for: .milliseconds(context.delay * 1000))
+        }
+
         // Captures the request and cache before generating the response.
         func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {
 
