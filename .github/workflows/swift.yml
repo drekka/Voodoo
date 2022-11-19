@@ -14,6 +14,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
+    - uses: AutoModality/action-clean@v1
     - uses: actions/checkout@v3
     - uses: maxim-lobanov/setup-xcode@v1
       with:
