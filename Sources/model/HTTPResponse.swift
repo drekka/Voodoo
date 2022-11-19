@@ -126,7 +126,7 @@ extension HTTPResponse {
                 try await Task.sleep(for: .milliseconds(context.delay * 1000))
             #else
                 // Linux doesn't have the same function for sleeping.
-                try await Task.sleep(context.delay * 1_000_000)
+            try await Task.sleep(UInt64(context.delay * 1_000_000.0))
             #endif
         }
 
