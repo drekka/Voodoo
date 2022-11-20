@@ -49,10 +49,13 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
         await executeAPICall(.POST, VoodooServer.adminShutdown, andExpectStatusCode: 200)
         let response = await executeAPICall(.GET, "/abc")
         if let error = response.error as? URLError {
-            expect(error.errorCode) == -1005
-            expect(error.localizedDescription) == "The network connection was lost."
-//            expect(error.errorCode) == -1004
-//            expect(error.localizedDescription) == "Could not connect to the server."
+            if #available(macOS 13, *) {
+                expect(error.errorCode) == -1005
+                expect(error.localizedDescription) == "The network connection was lost."
+            } else {
+                expect(error.errorCode) == -1004
+                expect(error.localizedDescription) == "Could not connect to the server."
+            }
         } else {
             fail("Unexpected error \(response.error?.localizedDescription ?? "")")
         }
