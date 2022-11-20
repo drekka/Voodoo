@@ -125,12 +125,16 @@ extension HTTPResponse {
         if context.delay > 0.0 {
             let start = Date().timeIntervalSinceReferenceDate
             print("Starting delay \(start)")
-            if #available(macOS 13, *) {
-                // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
-                try await Task.sleep(for: .milliseconds(context.delay * 1000))
-            } else {
-                try await Task.sleep(nanoseconds: UInt64(context.delay * 1_000_000.0))
+           let task = Task {
+                if #available(macOS 13, *) {
+                    // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
+                    try await Task.sleep(for: .milliseconds(context.delay * 1000))
+                } else {
+                    try await Task.sleep(nanoseconds: UInt64(context.delay * 1_000_000.0))
+                }
             }
+            _ = await task.result
+
             let end = Date().timeIntervalSinceReferenceDate
             print("Ending delay \(end)")
             print("Duration \(end - start)")
