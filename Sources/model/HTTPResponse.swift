@@ -124,7 +124,11 @@ extension HTTPResponse {
         if context.delay > 0.0 {
             if #available(macOS 13, *) {
                 // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
-                try await Task.sleep(for: .milliseconds(context.delay * 1000))
+                #if os(macOS) || os(iOS)
+                    try await Task.sleep(for: .milliseconds(context.delay * 1000))
+                #else
+                    try await Task.sleep(.milliseconds(context.delay * 1000))
+                #endif
             } else {
                 try await Task.sleep(nanoseconds: UInt64(context.delay * 1_000_000_000.0))
             }
