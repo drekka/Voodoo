@@ -67,7 +67,7 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
             let started = Date().timeIntervalSinceReferenceDate
             await block()
             let ended = Date().timeIntervalSinceReferenceDate
-            return (ended - started) * 1000
+            return ended - started
         }
     }
 }
