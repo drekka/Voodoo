@@ -7,7 +7,7 @@ let package = Package(
     name: "Voodoo",
     platforms: [
         .iOS(.v15),
-        .macOS(.v13),
+        .macOS(.v12),
     ],
     products: [
         //.executable(name: "voodoo", targets: ["Voodoo-CMD"]),

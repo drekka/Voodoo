@@ -122,9 +122,12 @@ extension HTTPResponse {
     func hbResponse(for request: HTTPRequest, inServerContext context: VoodooContext) async throws -> HBResponse {
 
         if context.delay > 0.0 {
-            // This form of sleep is only available sinse iOS16 and Mac13, not in Linux as yet.
-            // try await Task.sleep(for: .milliseconds(context.delay * 1000))
-            try await Task.sleep(nanoseconds: UInt64(context.delay * 1_000_000.0))
+            // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
+            if #available(macOS 13, *) {
+                 try await Task.sleep(for: .milliseconds(context.delay * 1000))
+            } else {
+                try await Task.sleep(nanoseconds: UInt64(context.delay * 1_000_000.0))
+            }
         }
 
         // Captures the request and cache before generating the response.

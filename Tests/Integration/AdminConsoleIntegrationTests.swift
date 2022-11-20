@@ -28,11 +28,10 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
         server.add(.GET, "/abc", response: .ok())
 
         // Check a basic request executes < 0.5 sec.
-        let clock = ContinuousClock()
-        let elapsed =  await clock.measure {
+        let elapsed = await measureDuration {
             await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         }
-        expect(elapsed.seconds) < 0.5
+        expect(elapsed) < 0.5
 
         // now set a delay.
         expect(self.server.delay) == 0.0
@@ -40,30 +39,37 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
         expect(self.server.delay) == 0.5
 
         // Check a basic request executes > 0.5 sec.
-        let clock2 = ContinuousClock()
-        let elapsed2 =  await clock2.measure {
+        let elapsed2 = await measureDuration {
             await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         }
-        expect(elapsed2.seconds) > 0.5
+        expect(elapsed2) > 0.5
     }
 
     func testShutdown() async {
         await executeAPICall(.POST, VoodooServer.adminShutdown, andExpectStatusCode: 200)
         let response = await executeAPICall(.GET, "/abc")
         if let error = response.error as? URLError {
-            expect(error.errorCode) == -1004
-            expect(error.localizedDescription) == "Could not connect to the server."
+            expect(error.errorCode) == -1005
+            expect(error.localizedDescription) == "The network connection was lost."
+//            expect(error.errorCode) == -1004
+//            expect(error.localizedDescription) == "Could not connect to the server."
         } else {
             fail("Unexpected error \(response.error?.localizedDescription ?? "")")
         }
-
     }
-}
 
-
-
-extension Duration {
-    var seconds: Double {
-        Double(components.seconds) + Double(components.attoseconds) / 1000_000_000_000_000_000.0
+    func measureDuration(of block: () async -> Void) async -> Double {
+        if #available(macOS 13, *) {
+            let clock = ContinuousClock()
+            let elapsed = await clock.measure {
+                await block()
+            }
+            return Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1_000_000_000_000_000_000.0
+        } else {
+            let started = Date().timeIntervalSinceReferenceDate
+            await block()
+            let ended = Date().timeIntervalSinceReferenceDate
+            return (ended - started) * 1000
+        }
     }
 }

@@ -145,14 +145,14 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
                    file: abc/def.md
                    contentType: application/markdown
                    """#,
-                   decodesTo: .file(URL(filePath: "abc/def.md"), contentType: "application/markdown"))
+                   decodesTo: .file(fileURL(forPath: "abc/def.md"), contentType: "application/markdown"))
     }
 
     func testDecodeFileWithoutContentType() throws {
         try assert(#"""
                    file: abc/def.json
                    """#,
-                   decodesTo: .file(URL(filePath: "abc/def.json"), contentType: "application/json"))
+                   decodesTo: .file(fileURL(forPath: "abc/def.json"), contentType: "application/json"))
     }
 
     func testDecodeTemplate() throws {
@@ -192,5 +192,13 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
                 file: StaticString = #file, line: UInt = #line) throws {
         let body = try YAMLDecoder().decode(HTTPResponse.Body.self, from: yml.data(using: .utf8)!)
         expect(file: file, line: line, body) == expectedBody
+    }
+
+    func fileURL(forPath path: String) -> URL {
+        if #available(macOS 13, *) {
+            return URL(filePath: path)
+        } else {
+            return URL(fileURLWithPath: path)
+        }
     }
 }
