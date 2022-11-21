@@ -64,4 +64,11 @@ public protocol HTTPRequest {
     ///
     /// Note that this does a contains to allow for extra parameters added to a content type such as encoding.
     func contentType(is contentType: String) -> Bool
+
+    /// Decodes the incoming JSON body as the expected type.
+    ///
+    /// - parameter type: The decodable type we are expecting to find in the request body.
+    /// - returns: An instant of `type` if the decode succeeds. `nil` otherwise.
+    func decodeBodyJSON<T>(as type: T.Type) -> T? where T: Decodable
+
 }

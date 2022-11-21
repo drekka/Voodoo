@@ -111,4 +111,18 @@ class HBRequestWrapperTests: XCTestCase {
         expect(wrapper.formParameters.formField2).to(beNil())
         expect(wrapper.formParameters.formField3) == "Goodbye!"
     }
+
+    func testDecodingJSONBody() {
+
+        struct Payload: Decodable {
+            let x: Int
+            let y: String
+        }
+
+        let wrapper = HBRequest.mock(contentType: Header.ContentType.applicationJSON,
+                                     body: #"{"x":123, "y":"Hello"}"#).asHTTPRequest
+        let payload = wrapper.decodeBodyJSON(as: Payload.self)!
+        expect(payload.x) == 123
+        expect(payload.y) == "Hello"
+    }
 }

@@ -75,9 +75,14 @@ struct HBRequestWrapper: HTTPRequest {
         try? GraphQLRequest(request: self)
     }
 
-    /// Helper for analysing the content type of a request.
     func contentType(is contentType: String) -> Bool {
         headers[Header.contentType]?.lowercased().starts(with: contentType) ?? false
+    }
+
+    func decodeBodyJSON<T>(as type: T.Type) -> T? where T: Decodable {
+        guard contentType(is: Header.ContentType.applicationJSON),
+              let buffer = request.body.buffer else { return nil }
+        return try? JSONDecoder().decode(type, from: buffer)
     }
 }
 
