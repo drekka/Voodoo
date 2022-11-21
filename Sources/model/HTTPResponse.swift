@@ -199,11 +199,13 @@ extension HTTPResponse {
             return
         }
 
-        if #available(macOS 13, *) {
-            // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
-            try await Task.sleep(for: .milliseconds(delay * 1000))
-            return
-        }
+        #if os(macOS) || os(iOS)
+            if #available(macOS 13, *) {
+                // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
+                try await Task.sleep(for: .milliseconds(delay * 1000))
+                return
+            }
+        #endif
 
         // Older versions of Mac and Linux.
         try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000.0))
