@@ -94,6 +94,12 @@ extension HTTPResponse: Decodable {
         case .badRequest:
             self = .badRequest(headers: headers, body: body)
 
+        case .unauthorized:
+            self = .unauthorised(headers: headers, body: body)
+
+        case .forbidden:
+            self = .forbidden(headers: headers, body: body)
+
         case .notFound:
             self = .notFound
         case .notAcceptable:
@@ -114,6 +120,8 @@ extension HTTPResponse: Decodable {
 extension HTTPResponse {
 
     func hbResponse(for request: HTTPRequest, inServerContext context: VoodooContext) async throws -> HBResponse {
+
+        try await sleepIfRequired(for: context.delay)
 
         // Captures the request and cache before generating the response.
         func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {
@@ -184,6 +192,23 @@ extension HTTPResponse {
         case .internalServerError(headers: let headers, body: let body):
             return try hbResponse(.internalServerError, headers: headers, body: body)
         }
+    }
+
+    private func sleepIfRequired(for delay: Double) async throws {
+        guard delay > 0.0 else {
+            return
+        }
+
+        #if os(macOS) || os(iOS)
+            if #available(macOS 13, *) {
+                // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
+                try await Task.sleep(for: .milliseconds(delay * 1000))
+                return
+            }
+        #endif
+
+        // Older versions of Mac and Linux.
+        try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000.0))
     }
 }
 

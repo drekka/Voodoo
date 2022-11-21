@@ -8,6 +8,7 @@ import HummingbirdMustache
 import Nimble
 @testable import Voodoo
 import XCTest
+import Yams
 
 class HTTPResponseTests: XCTestCase {
 
@@ -103,66 +104,148 @@ class HTTPResponseDecodableTests: XCTestCase {
 
     private let mockServer = "http://127.0.0.1:8080"
 
+    func testDecodeFailsWhenInvalidContent() throws {
+        try assert(#"""
+                   xxxxxx: 200
+                   """#,
+                   failsOnPath: [], forKey: "status")
+    }
+
     func testDecodeOk() throws {
-        try assert(#"{"status":200}"#, decodesTo: .ok())
+        try assert(#"""
+                   status: 200
+                   """#,
+                   decodesTo: .ok(body: .empty))
+    }
+
+    func testDecodeOkWithEmptyBody() throws {
+        try assert(#"""
+                   status: 200
+                   body:
+                   """#,
+                   decodesTo: .ok(body: .empty))
+    }
+
+    func testDecodeOkWithBody() throws {
+        try assert(#"""
+                   status: 200
+                   body:
+                     text: Hello
+                   """#,
+                   decodesTo: .ok(body: .text("Hello")))
     }
 
     func testDecodeCreated() throws {
-        try assert(#"{"status":201}"#, decodesTo: .created())
+        try assert(#"""
+                   status: 201
+                   """#,
+                   decodesTo: .created())
     }
 
     func testDecodeAccepted() throws {
-        try assert(#"{"status":202}"#, decodesTo: .accepted())
+        try assert(#"""
+                   status: 202
+                   """#,
+                   decodesTo: .accepted())
     }
 
     func testDecodeMovedPermanenty() throws {
-        try assert(#"{"status": 301,"url":"\#(mockServer)"}"#, decodesTo: .movedPermanently(mockServer))
+        try assert(#"""
+                   status: 301
+                   url: \#(mockServer)
+                   """#,
+                   decodesTo: .movedPermanently(mockServer))
     }
 
     func testDecodeTemporaryRedirect() throws {
-        try assert(#"{"status": 307,"url":"\#(mockServer)"}"#, decodesTo: .temporaryRedirect(mockServer))
+        try assert(#"""
+                   status: 307
+                   url: \#(mockServer)
+                   """#,
+                   decodesTo: .temporaryRedirect(mockServer))
     }
 
     func testDecodePermanentRedirect() throws {
-        try assert(#"{"status": 308,"url":"\#(mockServer)"}"#, decodesTo: .permanentRedirect(mockServer))
+        try assert(#"""
+                   status: 308
+                   url: \#(mockServer)
+                   """#,
+                   decodesTo: .permanentRedirect(mockServer))
+    }
+
+    func testDecodeBadRequest() throws {
+        try assert(#"""
+                   status: 400
+                   """#,
+                   decodesTo: .badRequest())
+    }
+
+    func testDecodeUnauthorised() throws {
+        try assert(#"""
+                   status: 401
+                   """#,
+                   decodesTo: .unauthorised())
+    }
+
+    func testDecodeForbidden() throws {
+        try assert(#"""
+                   status: 403
+                   """#,
+                   decodesTo: .forbidden())
     }
 
     func testDecodeNotFound() throws {
-        try assert(#"{"status":404}"#, decodesTo: .notFound)
+        try assert(#"""
+                   status: 404
+                   """#,
+                   decodesTo: .notFound)
     }
 
     func testDecodeNotAcceptable() throws {
-        try assert(#"{"status":406}"#, decodesTo: .notAcceptable)
+        try assert(#"""
+                   status : 406
+                   """#,
+                   decodesTo: .notAcceptable)
     }
 
     func testDecodeTooManyRequests() throws {
-        try assert(#"{"status":429}"#, decodesTo: .tooManyRequests)
+        try assert(#"""
+                   status : 429
+                   """#,
+                   decodesTo: .tooManyRequests)
     }
 
     func testDecodeInternalServerError() throws {
-        try assert(#"{"status":500}"#, decodesTo: .internalServerError())
+        try assert(#"""
+                   status: 500
+                   """#,
+                   decodesTo: .internalServerError())
     }
 
     func testDecodeOther() throws {
-        try assert(#"{"status":999}"#, decodesTo: .raw(.custom(code: 999, reasonPhrase: "")))
+        try assert(#"""
+                   status: 999
+                   """#,
+                   decodesTo: .raw(.custom(code: 999, reasonPhrase: "")))
     }
 
     // MARK: - Helpers
 
-    func assert(_ json: String, failsOnPath expectedPath: [String], withError expectedError: String) throws {
+    func assert(_ yml: String,
+                failsOnPath expectedPath: [String],
+                forKey expectedKey: String,
+                file: StaticString = #file, line: UInt = #line) throws {
         do {
-            let data = json.data(using: .utf8)!
-            _ = try JSONDecoder().decode(HTTPResponse.self, from: data)
+            _ = try YAMLDecoder().decode(HTTPResponse.self, from: yml.data(using: .utf8)!)
             fail("Expected error not thrown")
-        } catch DecodingError.dataCorrupted(let context) {
-            expect(context.codingPath.map(\.stringValue)) == expectedPath
-            expect(context.debugDescription) == expectedError
+        } catch DecodingError.keyNotFound(let key, let context) {
+            expect(file: file, line: line, key.stringValue) == expectedKey
+            expect(file: file, line: line, context.codingPath.map(\.stringValue)) == expectedPath
         }
     }
 
-    func assert(_ json: String, decodesTo expectedResponse: HTTPResponse) throws {
-        let data = json.data(using: .utf8)!
-        let response = try JSONDecoder().decode(HTTPResponse.self, from: data)
-        expect(response) == expectedResponse
+    func assert(_ yml: String, decodesTo expectedResponse: HTTPResponse, file: StaticString = #file, line: UInt = #line) throws {
+        let response = try YAMLDecoder().decode(HTTPResponse.self, from: yml.data(using: .utf8)!)
+        expect(file: file, line: line, response) == expectedResponse
     }
 }

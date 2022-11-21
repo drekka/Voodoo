@@ -70,11 +70,15 @@ public extension HTTPResponse {
 extension HTTPResponse.Body: Decodable {
 
     enum CodingKeys: String, CodingKey {
-        case type
+
+        // Types
         case text
-        case url
-        case data
-        case name
+        case file
+        case json
+        case yaml
+        case template
+
+        // Optional extra data
         case contentType
         case templateData
     }
@@ -83,45 +87,45 @@ extension HTTPResponse.Body: Decodable {
 
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        let type = try container.decode(String.self, forKey: .type)
-        switch type {
-
-        case "empty":
-            self = .empty
-
-        case "text":
-            let text = try container.decode(String.self, forKey: .text)
+        if let text = try container.decodeIfPresent(String.self, forKey: .text) {
             self = .text(text, templateData: try container.templateData)
-
-        case "data":
-            let data = try container.decode(Data.self, forKey: .data)
-            let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .data(data, contentType: contentType)
-
-        case "json":
-            self = .json(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
-
-        case "yaml":
-            self = .yaml(try container.decode(AnyCodable.self, forKey: .data).value, templateData: try container.templateData)
-
-        case "file":
-            let filePath = try container.decode(String.self, forKey: .url)
-            let fileURL = URL(fileURLWithPath: filePath)
-            let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .file(fileURL, contentType: contentType)
-
-        case "template":
-            let name = try container.decode(String.self, forKey: .name)
-            let contentType = try container.decode(String.self, forKey: .contentType)
-            self = .template(name, templateData: try container.templateData, contentType: contentType)
-
-        default:
-            throw DecodingError.dataCorruptedError(forKey: .type, in: container, debugDescription: "Unknown value '\(type)'")
+            return
         }
+
+        if let json = try container.decodeIfPresent(AnyCodable.self, forKey: .json)?.value {
+            self = .json(json, templateData: try container.templateData)
+            return
+        }
+
+        if let yml = try container.decodeIfPresent(AnyCodable.self, forKey: .yaml)?.value {
+            self = .yaml(yml, templateData: try container.templateData)
+            return
+        }
+
+        if let filePath = try container.decodeIfPresent(String.self, forKey: .file) {
+            let fileURL = URL(fileURLWithPath: filePath)
+            self = .file(fileURL, contentType: try container.contentType)
+            return
+        }
+
+        if let name = try container.decodeIfPresent(String.self, forKey: .template) {
+            self = .template(name, templateData: try container.templateData, contentType: try container.contentType)
+            return
+        }
+
+        let context = DecodingError.Context(codingPath: decoder.codingPath, debugDescription: "Unable to determine response body. Possibly incorrect or invalid keys.")
+        throw DecodingError.dataCorrupted(context)
     }
 }
 
 extension KeyedDecodingContainer where Key == HTTPResponse.Body.CodingKeys {
+
+    var contentType: String {
+        get throws {
+            try decodeIfPresent(String.self, forKey: .contentType) ?? Header.ContentType.applicationJSON
+        }
+    }
+
     var templateData: [String: Any]? {
         get throws {
             try decodeIfPresent(AnyCodable.self, forKey: .templateData)?.value as? [String: Any]

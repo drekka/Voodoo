@@ -4,7 +4,6 @@
     status: 201
     headers: ~
     body:
-      type: text
       text: Hello world!
       templateData: ~
 

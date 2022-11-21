@@ -3,7 +3,6 @@ http:
 response:
   status: 200
   body:
-    type: json
-    data: {
+    json: {
       version: 1.0
     }

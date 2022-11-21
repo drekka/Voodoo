@@ -8,7 +8,7 @@ import NIOHTTP1
 
 extension ByteBuffer {
 
-    /// Convenience property for accessing all the bytes in the buffer.
+    /// Convenience property for returning the contents of the buffer as `Data`.
     var data: Data? {
         getData(at: 0, length: readableBytes)
     }
@@ -17,6 +17,7 @@ extension ByteBuffer {
 /// Make the HTTP method decodable from YAML files.
 extension HTTPMethod: Decodable {
 
+    /// Decodes a `HTTPMethod` from a coder in a case-insensitive manner.
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawMethod = try container.decode(String.self)

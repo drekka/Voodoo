@@ -4,7 +4,6 @@ graphQL:
 response:
   status: 200
   body:
-    type: json
-    data:
+    json:
       version: 1
       featureFlag: true

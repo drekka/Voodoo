@@ -5,8 +5,10 @@
 [![GitHub license](https://img.shields.io/github/license/drekka/Voodoo.svg)](https://github.com/drekka/Voodoo/blob/master/LICENSE)
 [![GitHub tag](https://img.shields.io/github/tag/drekka/Voodoo.svg)](https://GitHub.com/drekka/Voodoo/tags/)
 
-***Note: This document is intended as a quick introduction to Voodoo. Please refer to the [Voodoo's Github Wiki](../../wiki) for more details.***
+***Note: This document is intended as a quick introduction to Voodoo. As Voodoo has a large number of features, please refer to [Voodoo's Github Wiki](../../wiki) for detailed information on how to use Voodoo.***
 
+
+# Intro
 
 Voodoo is a mock server specifically designed to support debugging and automated testing of applications with a particular emphasis on being run as part of a regression or automated UI test suite.
 
@@ -24,7 +26,9 @@ It primary features are:
 
 * RESTful and GraphQL query support.
 
-* Fixed and dynamically generated responses including raw text, JSON, YAML, and custom data with templating via {{mustache}} and a pan-query cache for shared data.
+* Fixed and dynamic response definitions that can return raw text, JSON, YAML, or custom data.
+
+* Response templating via {{mustache}} with a pan-query cache for sharing data between endpoints.
 
 * General file serving of non-API resources.
 
@@ -32,7 +36,7 @@ It primary features are:
 
 ## iOS/OSX SPM package
 
-Voodoo comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add `https://github.com/drekka/Voodoo.git` as a package to your test targets and...
+Voodoo comes as an SPM module which can be added using Xcode to add it as a package to your UI test targets. Simply add [`https://github.com/drekka/Voodoo`](https://github.com/drekka/Voodoo) as a package to your test targets and...
 
 ```swift
 import Voodoo
@@ -40,36 +44,28 @@ import Voodoo
 
 ## Linux, Windows, Docker, etc
 
-Note that there is a more [detailed install for other platforms here](wiki/Building-Voodoo).
+Note that there is a more [detailed install guide for other platforms here](../../wiki/Building-Voodoo).
 
-Once cloned you can build Voodoo using this command:
+You will need to have a working Swift environment. Then clone [`https://github.com/drekka/Voodoo`](https://github.com/drekka/Voodoo) and build Voodoo:
 
 ```bash
 cd Voodoo
 swift build -c release
 ```
 
-... which will build the `magic` command line executable here
-
-```bash
-.build/release/magic
-```
-
-`magic` has a variety of options for starting Voodoo. Here's an example:
+Once finished you will find the `magic` command line executable in `.build/release/magic` which has a variety of options for starting Voodoo. For example:
 
 ```bash
 .build/release/magic run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
-At a minimum you do need to give it the path to a directory or file where it can load end point configurations from, but the rest is optional.
+At a minimum you have to specify the `run` and `--config` arguments so Voodoo knows which directory or YAML file to load the endpoint configurations from, but the rest is optional.
 
 ## Endpoints
 
 Voodoo uses the concept of **Endpoint** to configure how it will respond to incoming requests. Each endpoint is defined by two things, a way to identify an incoming request and the response to return.  
 
-In an XCTest endpoints can be passed as part of Voodoo's initialiser or they can be added later. With `magic` on the command line endpoints are configured in YAML files.
-
-Here is an example of an XCTest starting the server with some endpoints *(see the [Xcode configuration guide](../../wiki/XCode-configuration-guide))* for more details:
+In a XCTest suite endpoints can be passed as part of the `VoodooServer` initialiser. They can also be added later. Here is a Swift example of starting Voodoo with some endpoints *(see the [Xcode configuration guide](../../wiki/XCode-configuration-guide))* for more details:
 
 ```swift
 server = try VoodooServer {
@@ -92,15 +88,14 @@ server = try VoodooServer {
 
 ```
 
-And here is an example YAML file with the same endpoints, *(see the [YAML configuration guide](../../wiki/YAML-configuration-guide))* for details:
+On the command line `magic` loads the endpoints from YAML files. For example, here is a YAML file with the same endpoints, *(see the [YAML configuration guide](../../wiki/YAML-configuration-guide))* for details:
 
 *Sample.yml*
 ```yaml
 - http:
     api: get /config
     response:
-      type: json
-      data:
+      json:
         featureFlag: true
       
 - http:
@@ -125,11 +120,25 @@ And here is an example YAML file with the same endpoints, *(see the [YAML config
       }          
 ``` 
 
-Which can then be configure via `magic`:
+And here is how we would start Voodoo via `magic`:
 
 ```bash
 $ magic -c Sample.yml
 ```
 
-`magic` has a variety of options and there are many ways to setup the YAML configuration files. *See {YAML endpoint setup}(../../wiki/YAML-endpoint-setup) for details.*  
+`magic` has a variety of options and there are many ways to setup the YAML configuration files. *See the [YAML endpoint setup](../../wiki/YAML-endpoint-setup) guide for details.*  
 
+# Getting the URL
+
+On starting Voodoo will automatically scan the configured port range for a free port (8080...8090 by default). When it finds an unused port it starts the server on it. 
+
+To get the URL (including the port) of the server in Swift:
+
+```
+server.url.absoluteString
+```
+
+On the command line, `magic` outputs the server URL which means you can do something like this:
+
+```bash
+export VOODOO=`magic -c Sample.yml`

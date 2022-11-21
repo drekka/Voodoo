@@ -7,7 +7,7 @@ import Hummingbird
 import JXKit
 import NIOCore
 
-/// Wraps up the initialisation an execution of javascript based API responses.
+/// Wraps up the initialisation and execution of javascript based API responses.
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
@@ -24,6 +24,7 @@ struct JavascriptExecutor {
         try jsCtx.eval(JavascriptModels.responseType)
     }
 
+    /// Executes the passed javascript.
     func execute(script: String, for request: HTTPRequest) throws -> HTTPResponse {
 
         // Load the script into the context then retrieve the function.
@@ -41,14 +42,14 @@ struct JavascriptExecutor {
 
         // Proxy the javascript cache to the server cache so it handles dynamic lookup style property access.
         let cache = jsCtx.object()
-        let proxy = try cache.proxy(get: serverCtx.cache.cacheGet, set: serverCtx.cache.cacheSet)
+        let cacheProxy = try cache.proxy(get: serverCtx.cache.cacheGet, set: serverCtx.cache.cacheSet)
 
         // Call it.
         let rawResponse: JXValue
         do {
             rawResponse = try responseFunction.call(withArguments: [
                 request.asJavascriptObject(in: jsCtx),
-                proxy,
+                cacheProxy,
             ])
         } catch {
             throw VoodooError.javascriptError("Javascript execution failed. Error: \(error)")
@@ -112,7 +113,7 @@ extension HTTPRequest {
 
 extension JXValue {
 
-    /// Wraps up some boiler plate for JXKit.
+    /// Wraps up some boiler plate for defining a JX object property.
     public func defineProperty(_ property: String, getter: @escaping (JXValue) throws -> JXValue) throws {
         try defineProperty(context.string(property), JXProperty(getter: getter, enumerable: true))
     }

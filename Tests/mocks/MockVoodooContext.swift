@@ -8,6 +8,8 @@ import HummingbirdMustache
 
 struct MockVoodooContext: VoodooContext {
 
+    var delay: Double = 0.0
+
     let port = 8080
 
     let mustacheRenderer = HBMustacheLibrary()

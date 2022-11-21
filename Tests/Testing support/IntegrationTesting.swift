@@ -16,18 +16,6 @@ protocol IntegrationTesting: AnyObject {
     var server: VoodooServer! { get set }
 
     func tearDownServer()
-
-    @discardableResult
-    func executeAPICall(_ method: HTTPMethod,
-                        _ path: String,
-                        withHeaders headers: [String: String]?,
-                        andExpectStatusCode expectedStatusCode: Int,
-                        file: StaticString, line: UInt) async -> ServerResponse
-
-    @discardableResult
-    func executeAPICall(_ request: URLRequest,
-                        andExpectStatusCode expectedStatusCode: Int,
-                        file: StaticString, line: UInt) async -> ServerResponse
 }
 
 extension IntegrationTesting {
@@ -41,7 +29,7 @@ extension IntegrationTesting {
     func executeAPICall(_ method: HTTPMethod,
                         _ path: String,
                         withHeaders headers: [String: String]? = nil,
-                        andExpectStatusCode expectedStatusCode: Int,
+                        andExpectStatusCode expectedStatusCode: Int? = nil,
                         file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
@@ -53,7 +41,7 @@ extension IntegrationTesting {
 
     @discardableResult
     func executeAPICall(_ request: URLRequest,
-                        andExpectStatusCode expectedStatusCode: Int,
+                        andExpectStatusCode expectedStatusCode: Int? = nil,
                         file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         let response: ServerResponse
         do {
@@ -64,11 +52,14 @@ extension IntegrationTesting {
             response = ServerResponse(data: nil, response: nil, error: error)
         }
 
-        expect(file: file, line: line, response.response!.statusCode).to(equal(expectedStatusCode), description: "HTTP status code incorrect,")
-        expect(file: file, line: line, response.error).to(beNil(), description: "Expected error to be 'nil',")
+        if let expectedStatusCode {
+            expect(file: file, line: line, response.response!.statusCode).to(equal(expectedStatusCode), description: "HTTP status code incorrect,")
+            expect(file: file, line: line, response.error).to(beNil(), description: "Expected error to be 'nil',")
+        }
 
         return response
     }
+
 }
 
 class RedirectStopper: NSObject, URLSessionTaskDelegate {

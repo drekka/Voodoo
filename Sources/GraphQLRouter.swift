@@ -5,7 +5,7 @@
 import Foundation
 import Hummingbird
 
-/// Intercepts GraphQL requests before the get to the try router.
+/// Router for GraphQL requests.
 public class GraphQLRouter {
 
     private let verbose: Bool
@@ -20,6 +20,9 @@ public class GraphQLRouter {
         mockGraphQLResponses.append(endpoint)
     }
 
+    /// Executes for an incoming request.
+    ///
+    /// This loops through the stored GraphQL endpoints to find a match and execute it for a response.
     public func execute(request: HBRequest) async throws -> HBResponse {
         if self.verbose { print("💀 Intercepting GraphQL request") }
         let httpRequest = request.asHTTPRequest
