@@ -29,10 +29,12 @@ extension IntegrationTesting {
     func executeAPICall(_ method: HTTPMethod,
                         _ path: String,
                         withHeaders headers: [String: String]? = nil,
+                        body: Data? = nil,
                         andExpectStatusCode expectedStatusCode: Int? = nil,
                         file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
         var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
+        request.httpBody = body
         headers?.forEach {
             request.addValue($1, forHTTPHeaderField: $0)
         }
