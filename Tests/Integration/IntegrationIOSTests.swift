@@ -79,6 +79,25 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
     // MARK: - Request details
 
+    func testRequestJSONBody() async {
+
+        server.add(.POST, "/abc") { request, _ in
+            guard let body = request.bodyJSON as? [String: Any],
+                  let bodyX = body["x"] as? Int,
+                  bodyX == 123,
+                  let bodyY = body["y"] as? String,
+                  bodyY == "Hello" else {
+                return .badRequest()
+            }
+            return .ok()
+        }
+
+        await executeAPICall(.POST, "/abc",
+                             withHeaders: [Header.contentType: Header.ContentType.applicationJSON],
+                             body: #"{"x":123, "y":"Hello"}"#.data(using: .utf8),
+                             andExpectStatusCode: 200)
+    }
+
     func testRequestDecodingJSONBody() async {
 
         struct Payload: Decodable {
