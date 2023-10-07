@@ -53,10 +53,10 @@ cd Voodoo
 swift build -c release
 ```
 
-Once finished you will find the `magic` command line executable in `.build/release/magic` which has a variety of options for starting Voodoo. For example:
+Once finished you will find the `voodoo` command line executable in `.build/release/voodoo` which has a variety of options for starting Voodoo. For example:
 
 ```bash
-.build/release/magic run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
+.build/release/voodoo run --config Tests/files/TestConfig1 --template-dir tests/templates --file-dir tests/files
 ```
 
 At a minimum you have to specify the `run` and `--config` arguments so Voodoo knows which directory or YAML file to load the endpoint configurations from, but the rest is optional.
@@ -88,7 +88,7 @@ server = try VoodooServer {
 
 ```
 
-On the command line `magic` loads the endpoints from YAML files. For example, here is a YAML file with the same endpoints, *(see the [YAML configuration guide](../../wiki/YAML-configuration-guide))* for details:
+On the command line `voodoo` loads the endpoints from YAML files. For example, here is a YAML file with the same endpoints, *(see the [YAML configuration guide](../../wiki/YAML-configuration-guide))* for details:
 
 *Sample.yml*
 ```yaml
@@ -120,13 +120,13 @@ On the command line `magic` loads the endpoints from YAML files. For example, he
       }          
 ``` 
 
-And here is how we would start Voodoo via `magic`:
+And here is how we would start Voodoo via `voodoo`:
 
 ```bash
-$ magic -c Sample.yml
+$ voodoo -c Sample.yml
 ```
 
-`magic` has a variety of options and there are many ways to setup the YAML configuration files. *See the [YAML endpoint setup](../../wiki/YAML-endpoint-setup) guide for details.*  
+`voodoo` has a variety of options and there are many ways to setup the YAML configuration files. *See the [YAML endpoint setup](../../wiki/YAML-endpoint-setup) guide for details.*  
 
 # Getting the URL
 
@@ -138,7 +138,7 @@ To get the URL (including the port) of the server in Swift:
 server.url.absoluteString
 ```
 
-On the command line, `magic` outputs the server URL which means you can do something like this:
+On the command line, `voodoo` outputs the server URL which means you can do something like this:
 
 ```bash
-export VOODOO=`magic -c Sample.yml`
+export VOODOO=`voodoo -c Sample.yml`
