@@ -17,7 +17,7 @@ extension URL: ExpressibleByArgument {
 
 /// Provides a command line wrapper around the server.
 @main
-struct Magic: ParsableCommand {
+struct Voodoo: ParsableCommand {
 
     struct Options: ParsableArguments {
 
@@ -28,7 +28,7 @@ struct Magic: ParsableCommand {
     static var configuration: CommandConfiguration {
 
         CommandConfiguration(
-            commandName: "magic",
+            commandName: "voodoo",
             abstract: "A mock server that provides APIs and files for debugging, regression and continuous integration testing.",
             version: "0.1.0",
             shouldDisplay: true,
@@ -37,7 +37,7 @@ struct Magic: ParsableCommand {
     }
 }
 
-extension Magic {
+extension Voodoo {
 
     /// The main `run` subcommand.
     struct Run: ParsableCommand {
@@ -54,7 +54,7 @@ extension Magic {
         }
 
         // Global options.
-        @OptionGroup var options: Magic.Options
+        @OptionGroup var options: Voodoo.Options
 
         @Flag(
             name: [.long],
