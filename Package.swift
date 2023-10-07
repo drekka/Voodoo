@@ -11,7 +11,6 @@ let package = Package(
     ],
     products: [
         .executable(name: "voodoo", targets: ["Voodoo-CMD"]),
-//        .executable(name: "magic", targets: ["Voodoo-CMD"]),
         .library(name: "Voodoo", targets: ["Voodoo"]),
     ],
     dependencies: [
