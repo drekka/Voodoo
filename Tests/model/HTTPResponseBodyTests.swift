@@ -104,7 +104,7 @@ class HTTPResponseBodyTests: XCTestCase {
 
     // MARK: - Support functions
 
-    func assert(file: StaticString = #file, line: UInt = #line,
+    func assert(file: FileString = #file, line: UInt = #line,
                 _ body: HTTPResponse.Body,
                 generates expectedBody: String,
                 contentType expectedContentType: String?) throws {
@@ -179,7 +179,7 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
         do {
             _ = try YAMLDecoder().decode(HTTPResponse.Body.self, from: data)
             fail("Error not thrown")
-        } catch DecodingError.dataCorrupted(let context) {
+        } catch let DecodingError.dataCorrupted(context) {
             expect(context.codingPath.count) == 0
             expect(context.debugDescription) == "Unable to determine response body. Possibly incorrect or invalid keys."
         }
@@ -189,13 +189,13 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
 
     func assert(_ yml: String,
                 decodesTo expectedBody: HTTPResponse.Body,
-                file: StaticString = #file, line: UInt = #line) throws {
+                file: FileString = #file, line: UInt = #line) throws {
         let body = try YAMLDecoder().decode(HTTPResponse.Body.self, from: yml.data(using: .utf8)!)
         expect(file: file, line: line, body) == expectedBody
     }
 
     func fileURL(forPath path: String) -> URL {
-        if #available(macOS 13, *) {
+        if #available(macOS 13, iOS 16, *) {
             return URL(filePath: path)
         } else {
             return URL(fileURLWithPath: path)

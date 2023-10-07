@@ -76,7 +76,7 @@ class ConfigLoaderTests: XCTestCase {
 
     // MARK: - Support
 
-    private func expectHTTPEndpoint(file: StaticString = #file, line: UInt = #line, _ endpoint: Endpoint, mapsTo method: HTTPMethod, _ path: String, returning response: HTTPResponse) {
+    private func expectHTTPEndpoint(file: FileString = #file, line: UInt = #line, _ endpoint: Endpoint, mapsTo method: HTTPMethod, _ path: String, returning response: HTTPResponse) {
         guard let httpEndpoint = endpoint as? HTTPEndpoint else {
             fail("End point is not a HTTPEndpoint", file: file, line: line)
             return

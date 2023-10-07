@@ -465,7 +465,7 @@ class JavascriptExecutorTests: XCTestCase {
         expect(result) == expectedResponse
     }
 
-    private func expectResponse(file: StaticString = #file, line: UInt = #line,
+    private func expectResponse(file: FileString = #file, line: UInt = #line,
                                 _ response: String,
                                 toThrowError expectedMessage: String) {
         expectScript(file: file, line: line,
@@ -477,7 +477,7 @@ class JavascriptExecutorTests: XCTestCase {
                      toThrowError: expectedMessage)
     }
 
-    private func expectScript(file: StaticString = #file, line: UInt = #line,
+    private func expectScript(file: FileString = #file, line: UInt = #line,
                               _ script: String,
                               inContext context: VoodooContext = MockVoodooContext(),
                               toThrowError expectedMessage: String) {

@@ -12,20 +12,23 @@ import XCTest
 class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
 
     var server: VoodooServer!
+    private var shutdownServer = true
 
     override func setUp() async throws {
         try await super.setUp()
+        shutdownServer = true
         server = try VoodooServer(verbose: true)
+        server.add(.GET, "/abc", response: .ok())
     }
 
     override func tearDown() {
-        tearDownServer()
+        if shutdownServer {
+            tearDownServer()
+        }
         super.tearDown()
     }
 
     func testSettingDelay() async throws {
-
-        server.add(.GET, "/abc", response: .ok())
 
         // Check a basic request executes < 0.5 sec.
         let elapsed = await measureDuration {
@@ -46,9 +49,16 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
     }
 
     func testShutdown() async {
+
+        // We are going to manually shut the server down.
+        shutdownServer = false
+
         await executeAPICall(.POST, VoodooServer.adminShutdown, andExpectStatusCode: 200)
+
+        // Validate shutdown by waiting for a call to timeout.
         let response = await executeAPICall(.GET, "/abc")
         if let error = response.error as? URLError {
+            // Standard timeout error
             expect(error.errorCode) == -1004
             expect(error.localizedDescription) == "Could not connect to the server."
         } else {
@@ -56,19 +66,25 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
         }
     }
 
-    func measureDuration(of block: () async -> Void) async -> Double {
-        if #available(macOS 13, *) {
+    private func measureDuration(of block: () async -> Void) async -> Double {
+        if #available(macOS 13, iOS 16, *) {
             let clock = ContinuousClock()
             let elapsed = await clock.measure {
                 await block()
             }
-            return Double(elapsed.components.seconds) + Double(elapsed.components.attoseconds) / 1_000_000_000_000_000_000.0
-        } else {
-            let started = Date().timeIntervalSinceReferenceDate
-            await block()
-            let ended = Date().timeIntervalSinceReferenceDate
-            print("Duration \(ended - started)")
-            return ended - started
+            return elapsed.fractionalSeconds
         }
+
+        let started = Date().timeIntervalSinceReferenceDate
+        await block()
+        let ended = Date().timeIntervalSinceReferenceDate
+        return ended - started
+    }
+}
+
+@available(iOS 16.0, *)
+private extension Duration {
+    var fractionalSeconds: Double {
+        Double(components.seconds) + Double(components.attoseconds) / 1_000_000_000_000_000_000.0
     }
 }

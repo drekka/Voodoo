@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -10,12 +10,12 @@ let package = Package(
         .macOS(.v12),
     ],
     products: [
-        //.executable(name: "voodoo", targets: ["Voodoo-CMD"]),
-        .executable(name: "magic", targets: ["Voodoo-CMD"]),
+        .executable(name: "voodoo", targets: ["Voodoo-CMD"]),
+//        .executable(name: "magic", targets: ["Voodoo-CMD"]),
         .library(name: "Voodoo", targets: ["Voodoo"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "11.0.0")),
+        .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "12.0.0")),
         .package(url: "https://github.com/hummingbird-project/hummingbird", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/jectivex/JXKit", .upToNextMajor(from: "3.0.0")),

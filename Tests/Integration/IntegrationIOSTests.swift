@@ -233,20 +233,20 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
     // Case testing functions.
 
-    func expectResponse(file: StaticString = #file, line: UInt = #line, _ response: HTTPResponse, toReturnStatus expectedStatus: Int) async {
+    func expectResponse(file: FileString = #file, line: UInt = #line, _ response: HTTPResponse, toReturnStatus expectedStatus: Int) async {
         server.add(.POST, "/abc", response: response)
         let result = await executeAPICall(.POST, "/abc", andExpectStatusCode: expectedStatus, file: file, line: line)
         expect(file: file, line: line, String(data: result.data!, encoding: .utf8)).to(equal(""), description: "Expected an empty response body,")
     }
 
-    func expectResponse(file: StaticString = #file, line: UInt = #line, _ response: (HeaderDictionary?, HTTPResponse.Body) -> HTTPResponse, toReturnStatus expectedStatus: Int) async {
+    func expectResponse(file: FileString = #file, line: UInt = #line, _ response: (HeaderDictionary?, HTTPResponse.Body) -> HTTPResponse, toReturnStatus expectedStatus: Int) async {
         server.add(.POST, "/abc", response: response(["abc": "123"], .text("Hello world!")))
         let result = await executeAPICall(.POST, "/abc", andExpectStatusCode: expectedStatus, file: file, line: line)
         expect(file: file, line: line, String(data: result.data!, encoding: .utf8)).to(equal("Hello world!"), description: "Expected 'Hello world!' as a text body,")
         expect(file: file, line: line, result.response?.value(forHTTPHeaderField: "abc")).to(equal("123"), description: "Header 'abc':'123' incorrect,")
     }
 
-    func expectRedirectResponse(file: StaticString = #file, line: UInt = #line, _ response: (String) -> HTTPResponse, toReturnStatus expectedStatus: Int) async {
+    func expectRedirectResponse(file: FileString = #file, line: UInt = #line, _ response: (String) -> HTTPResponse, toReturnStatus expectedStatus: Int) async {
         server.add(.POST, "/abc", response: response("http://abc.com"))
         let result = await executeAPICall(.POST, "/abc", andExpectStatusCode: expectedStatus, file: file, line: line)
         expect(file: file, line: line, String(data: result.data!, encoding: .utf8)).to(equal(""), description: "Expected an empty response body,")

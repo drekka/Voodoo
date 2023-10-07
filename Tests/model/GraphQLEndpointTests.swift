@@ -89,7 +89,7 @@ class GraphQLEndpointTests: XCTestCase {
 
     // MARK: - Support
 
-    private func expectYML(file: StaticString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
+    private func expectYML(file: FileString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
         do {
             _ = try YAMLDecoder().decode(GraphQLEndpoint.self, from: yml, userInfo: userInfo())
             fail("Error not thrown", file: file, line: line)

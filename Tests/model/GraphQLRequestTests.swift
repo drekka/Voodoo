@@ -186,7 +186,7 @@ class GraphQLRequestTests: XCTestCase {
 
     // MARK: - Test support
 
-    func validate(file: StaticString = #file, line: UInt = #line,
+    func validate(file: FileString = #file, line: UInt = #line,
                   request: GraphQLRequest,
                   hasQuery expectedQuery: String,
                   selectedOperation expectedSelectedOperation: String? = nil,
@@ -204,7 +204,7 @@ class GraphQLRequestTests: XCTestCase {
         expect(file: file, line: line, request.fragments.count).to(equal(expectedFragmentsCount), description: "Fragments count incorrect")
     }
 
-    func validate(file: StaticString = #file, line: UInt = #line,
+    func validate(file: FileString = #file, line: UInt = #line,
                   field: Field?,
                   hasName expectedName: String,
                   alias expectedAlias: String? = nil,
