@@ -16,9 +16,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - uses: swift-actions/setup-swift@v1
-    - run: swift test --enable-code-coverage
-    - uses: michaelhenry/swifty-code-coverage@v1.0.0
-      with:
-        build-path: .build
-        target: VoodooPackageTests.xctest
-        is-spm: true
+    - run: swift test --enable-code-coverage --show-codecov-path
