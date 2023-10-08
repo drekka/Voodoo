@@ -75,7 +75,7 @@ class ResponseDecodingTests: XCTestCase {
         expect(endpoint.response) == expectedResponse
     }
 
-    private func expectYML(file: StaticString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
+    private func expectYML(file: FileString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
         try expectYML(yml) {
             guard case DecodingError.dataCorrupted(let context) = $0 else {
                 fail("Incorrect exception, got \($0.localizedDescription)", file: file, line: line)
@@ -85,7 +85,7 @@ class ResponseDecodingTests: XCTestCase {
         }
     }
 
-    private func expectYML(file: StaticString = #file, line: UInt = #line,
+    private func expectYML(file: FileString = #file, line: UInt = #line,
                            _ yml: String,
                            toFail errorValidation: (Error) -> Void) throws {
         do {

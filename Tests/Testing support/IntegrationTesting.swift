@@ -31,7 +31,7 @@ extension IntegrationTesting {
                         withHeaders headers: [String: String]? = nil,
                         body: Data? = nil,
                         andExpectStatusCode expectedStatusCode: Int? = nil,
-                        file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
+                        file: FileString = #file, line: UInt = #line) async -> ServerResponse {
         var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
         request.httpBody = body
@@ -44,14 +44,16 @@ extension IntegrationTesting {
     @discardableResult
     func executeAPICall(_ request: URLRequest,
                         andExpectStatusCode expectedStatusCode: Int? = nil,
-                        file: StaticString = #file, line: UInt = #line) async -> ServerResponse {
+                        file: FileString = #file, line: UInt = #line) async -> ServerResponse {
         let response: ServerResponse
         do {
-            let session = URLSession(configuration: URLSessionConfiguration.ephemeral, delegate: RedirectStopper(), delegateQueue: nil)
+            let configuration = URLSessionConfiguration.ephemeral
+            configuration.timeoutIntervalForRequest = 2.0 // Fast timeout so tests don't wait too long when the server doesn't respond.
+            let session = URLSession(configuration: configuration, delegate: RedirectStopper(), delegateQueue: nil)
             let callResponse = try await session.data(for: request)
             response = ServerResponse(data: callResponse.0, response: callResponse.1 as? HTTPURLResponse, error: nil)
         } catch {
-            response = ServerResponse(data: nil, response: nil, error: error)
+            return ServerResponse(data: nil, response: nil, error: error)
         }
 
         if let expectedStatusCode {

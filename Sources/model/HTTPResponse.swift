@@ -83,13 +83,13 @@ extension HTTPResponse: Decodable {
             self = .accepted(headers: headers, body: body)
 
         case .movedPermanently:
-            self = .movedPermanently(try container.decode(String.self, forKey: .url))
+            self = try .movedPermanently(container.decode(String.self, forKey: .url))
 
         case .temporaryRedirect:
-            self = .temporaryRedirect(try container.decode(String.self, forKey: .url))
+            self = try .temporaryRedirect(container.decode(String.self, forKey: .url))
 
         case .permanentRedirect:
-            self = .permanentRedirect(try container.decode(String.self, forKey: .url))
+            self = try .permanentRedirect(container.decode(String.self, forKey: .url))
 
         case .badRequest:
             self = .badRequest(headers: headers, body: body)
@@ -141,43 +141,43 @@ extension HTTPResponse {
 
             // Core
 
-        case .raw(let status, headers: let headers, body: let body):
+        case let .raw(status, headers: headers, body: body):
             return try hbResponse(status, headers: headers, body: body)
 
-        case .dynamic(let handler):
+        case let .dynamic(handler):
             return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
 
-        case .javascript(let script):
+        case let .javascript(script):
             let response = try JavascriptExecutor(serverContext: context).execute(script: script, for: request)
             return try await response.hbResponse(for: request, inServerContext: context)
 
             // Convenience
 
-        case .ok(let headers, let body):
+        case let .ok(headers, body):
             return try hbResponse(.ok, headers: headers, body: body)
 
-        case .created(headers: let headers, body: let body):
+        case let .created(headers: headers, body: body):
             return try hbResponse(.created, headers: headers, body: body)
 
-        case .accepted(headers: let headers, body: let body):
+        case let .accepted(headers: headers, body: body):
             return try hbResponse(.accepted, headers: headers, body: body)
 
-        case .movedPermanently(let url):
+        case let .movedPermanently(url):
             return HBResponse(status: .movedPermanently, headers: [Header.location: url])
 
-        case .temporaryRedirect(let url):
+        case let .temporaryRedirect(url):
             return HBResponse(status: .temporaryRedirect, headers: [Header.location: url])
 
-        case .permanentRedirect(let url):
+        case let .permanentRedirect(url):
             return HBResponse(status: .permanentRedirect, headers: [Header.location: url])
 
-        case .badRequest(headers: let headers, body: let body):
+        case let .badRequest(headers: headers, body: body):
             return try hbResponse(.badRequest, headers: headers, body: body)
 
-        case .unauthorised(headers: let headers, body: let body):
+        case let .unauthorised(headers: headers, body: body):
             return try hbResponse(.unauthorized, headers: headers, body: body)
 
-        case .forbidden(headers: let headers, body: let body):
+        case let .forbidden(headers: headers, body: body):
             return try hbResponse(.forbidden, headers: headers, body: body)
 
         case .notFound:
@@ -189,7 +189,7 @@ extension HTTPResponse {
         case .tooManyRequests:
             return HBResponse(status: .tooManyRequests)
 
-        case .internalServerError(headers: let headers, body: let body):
+        case let .internalServerError(headers: headers, body: body):
             return try hbResponse(.internalServerError, headers: headers, body: body)
         }
     }
@@ -200,14 +200,14 @@ extension HTTPResponse {
         }
 
         #if os(macOS) || os(iOS)
-            if #available(macOS 13, *) {
+            if #available(macOS 13, iOS 16.0, *) {
                 // This form of sleep is only available since iOS16 and Mac13, not in Linux as yet.
                 try await Task.sleep(for: .milliseconds(delay * 1000))
                 return
             }
         #endif
 
-        // Older versions of Mac and Linux.
+        // Older versions and Linux.
         try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000.0))
     }
 }

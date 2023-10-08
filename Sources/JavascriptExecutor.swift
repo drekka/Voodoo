@@ -31,7 +31,7 @@ struct JavascriptExecutor {
         do {
             try jsCtx.eval(script)
         } catch {
-            throw VoodooError.javascriptError("Error evaluating javascript: \(error)")
+            throw VoodooError.javascriptError("Error evaluating javascript: \(error.scriptErrorMessage)")
         }
 
         // Extract the function.
@@ -52,7 +52,7 @@ struct JavascriptExecutor {
                 cacheProxy,
             ])
         } catch {
-            throw VoodooError.javascriptError("Javascript execution failed. Error: \(error)")
+            throw VoodooError.javascriptError("Javascript execution failed. Error: \(error.scriptErrorMessage)")
         }
 
         if rawResponse.isUndefined {
@@ -149,6 +149,12 @@ extension JXValue {
             try setup(obj)
             return obj
         }
+    }
+}
+
+extension Error {
+    var scriptErrorMessage: String {
+        (self as? JXError)?.message ?? localizedDescription
     }
 }
 

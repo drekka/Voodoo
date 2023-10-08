@@ -71,7 +71,7 @@ class HTTPEndpointTests: XCTestCase {
 
     // MARK: - Support
 
-    private func expectYML(file: StaticString = #file, line: UInt = #line, _ yml: String, toFailWithTypeMissMatch expectedMessage: String) throws {
+    private func expectYML(file: FileString = #file, line: UInt = #line, _ yml: String, toFailWithTypeMissMatch expectedMessage: String) throws {
         do {
             _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
             fail("Error not thrown", file: file, line: line)
@@ -84,7 +84,7 @@ class HTTPEndpointTests: XCTestCase {
         }
     }
 
-    private func expectYML(file: StaticString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
+    private func expectYML(file: FileString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
         do {
             _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
             fail("Error not thrown", file: file, line: line)

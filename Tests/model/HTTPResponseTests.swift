@@ -234,7 +234,7 @@ class HTTPResponseDecodableTests: XCTestCase {
     func assert(_ yml: String,
                 failsOnPath expectedPath: [String],
                 forKey expectedKey: String,
-                file: StaticString = #file, line: UInt = #line) throws {
+                file: FileString = #file, line: UInt = #line) throws {
         do {
             _ = try YAMLDecoder().decode(HTTPResponse.self, from: yml.data(using: .utf8)!)
             fail("Expected error not thrown")
@@ -244,7 +244,7 @@ class HTTPResponseDecodableTests: XCTestCase {
         }
     }
 
-    func assert(_ yml: String, decodesTo expectedResponse: HTTPResponse, file: StaticString = #file, line: UInt = #line) throws {
+    func assert(_ yml: String, decodesTo expectedResponse: HTTPResponse, file: FileString = #file, line: UInt = #line) throws {
         let response = try YAMLDecoder().decode(HTTPResponse.self, from: yml.data(using: .utf8)!)
         expect(file: file, line: line, response) == expectedResponse
     }

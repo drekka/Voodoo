@@ -15,7 +15,7 @@ import NIOCore
 extension Error {
 
     /// Analyses the error to see if this error is the one thrown when a port is busy.
-    var isPortTakenError: Bool {
+    var isPortTaken: Bool {
         #if os(iOS)
             return self as? NWError == .posix(.EADDRINUSE)
         #else
@@ -119,7 +119,7 @@ public class VoodooServer {
             } catch {
 
                 switch error {
-                case _ where error.isPortTakenError:
+                case _ where error.isPortTaken:
                     if verbose { print("💀 Port \(nextPort) busy, trying next port in range") }
                     continue
 
@@ -261,6 +261,7 @@ public class VoodooServer {
 
     /// Stops the server.
     public func stop() {
+        if verbose { print("💀 Telling server to stop") }
         server.stop()
     }
 }

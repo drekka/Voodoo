@@ -43,7 +43,7 @@ extension HBApplication: VoodooContext {
     }
 }
 
-extension HBRouter {
+extension HBRouterBuilder {
 
     func add(_ endpoint: HTTPEndpoint) {
         on(endpoint.path, method: endpoint.method) {
