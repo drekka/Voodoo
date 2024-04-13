@@ -12,7 +12,7 @@ import XCTest
 
 class MultiServerTests: XCTestCase, IntegrationTesting {
 
-    var server: Voodoo.VoodooServer!
+    var server: VoodooServer!
 
     func testCallForwarding() async throws {
 

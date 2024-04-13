@@ -3,18 +3,18 @@
 
 import PackageDescription
 
-let package = Package(
+_ = Package(
     name: "Voodoo",
     platforms: [
         .iOS(.v15),
         .macOS(.v12),
     ],
     products: [
-        .executable(name: "voodoo", targets: ["Voodoo-CMD"]),
+        .executable(name: "voodoo", targets: ["VoodooCLI"]),
         .library(name: "Voodoo", targets: ["Voodoo"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "12.0.0")),
+        .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "13.0.0")),
         .package(url: "https://github.com/hummingbird-project/hummingbird", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/jectivex/JXKit", .upToNextMajor(from: "3.0.0")),
@@ -39,7 +39,7 @@ let package = Package(
             path: "Sources"
         ),
         .executableTarget(
-            name: "Voodoo-CMD",
+            name: "VoodooCLI",
             dependencies: [
                 "Voodoo",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),

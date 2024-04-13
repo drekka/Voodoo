@@ -43,7 +43,7 @@ class ConfigFileTests: XCTestCase {
           response:
             status: 200
         - http:
-            api: get /def
+            api: post /def
           response:
             status: 201
         """#
@@ -52,7 +52,7 @@ class ConfigFileTests: XCTestCase {
         expect(config.httpEndpoints[0].method) == .GET
         expect(config.httpEndpoints[0].path) == "/abc"
         expect(config.httpEndpoints[0].response) == .ok()
-        expect(config.httpEndpoints[1].method) == .GET
+        expect(config.httpEndpoints[1].method) == .POST
         expect(config.httpEndpoints[1].path) == "/def"
         expect(config.httpEndpoints[1].response) == .created()
     }
