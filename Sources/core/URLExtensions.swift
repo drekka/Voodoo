@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 10/10/2022.
-//
-
 import Foundation
 
 /// The result of making a ``FileManager.default.exists(atPath:isDirectory:)`` query as an enum so we

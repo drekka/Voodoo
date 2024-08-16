@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 6/11/2022.
-//
-
 import Foundation
 
 /// Top level keys for the response choices in a config file.

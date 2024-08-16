@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 4/11/2022.
-//
-
 import Foundation
 import NIOHTTP1
 

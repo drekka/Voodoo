@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson.
-//
-
 import AnyCodable
 import Foundation
 import Hummingbird

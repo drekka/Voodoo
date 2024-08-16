@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 6/8/2022.
-//
-
 /// Protocol for types that can store data between requests.
 @dynamicMemberLookup
 public protocol Cache: AnyObject {

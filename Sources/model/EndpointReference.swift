@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 4/11/2022.
-//
-
 import Foundation
 
 /// Decodes the object from a YAML config file, and attempts to map it into the various types of structures that can exist at the top level.

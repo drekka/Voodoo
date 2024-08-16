@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 2/11/2022.
-//
-
 import Foundation
 
 /// ``Matchable`` allows a type to be matched against another type. What defines a "match" is left up to the type to determine.

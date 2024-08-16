@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Derek Clarkson on 4/11/2022.
-//
-
 import Foundation
 
 /// Extensions for code completeting user info data from the decoder.

@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Derek Clarkson on 31/10/2022.
-//
-
 import Foundation
 
 /// A protocol to support applying dynamic member lookup on a dictionary.

@@ -1,10 +1,3 @@
-//
-//  File.swift
-//
-//
-//  Created by Derek Clarkson on 18/11/2022.
-//
-
 import Foundation
 
 extension String.StringInterpolation {

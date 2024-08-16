@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 10/10/2022.
-//
-
 import Foundation
 
 /// Decodes a config file.

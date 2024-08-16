@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 6/8/2022.
-//
-
 import Foundation
 
 /// Using a protocol to drive the ``EndpointBuilder`` means that a variety of types can produce API endpoints.

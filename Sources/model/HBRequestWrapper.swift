@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 6/8/2022.
-//
-
 import AnyCodable
 import Foundation
 import Hummingbird

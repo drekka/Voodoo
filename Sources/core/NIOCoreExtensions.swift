@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 21/9/2022.
-//
-
 import Foundation
 import NIOCore
 import NIOHTTP1
@@ -15,7 +11,7 @@ extension ByteBuffer {
 }
 
 /// Make the HTTP method decodable from YAML files.
-extension HTTPMethod: Decodable {
+extension HTTPMethod: @retroactive Decodable {
 
     /// Decodes a `HTTPMethod` from a coder in a case-insensitive manner.
     public init(from decoder: Decoder) throws {

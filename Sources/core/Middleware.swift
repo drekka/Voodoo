@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 16/9/2022.
-//
-
 import Foundation
 import GraphQL
 import Hummingbird

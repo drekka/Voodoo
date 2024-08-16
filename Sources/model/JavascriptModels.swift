@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 7/10/2022.
-//
-
 import Foundation
 
 enum JavascriptModels {

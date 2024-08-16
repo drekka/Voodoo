@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 20/9/2022.
-//
-
 import Foundation
 import Hummingbird
 import HummingbirdMustache

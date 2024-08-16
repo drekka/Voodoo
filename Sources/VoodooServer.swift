@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson.
-//
-
 import Foundation
 import Hummingbird
 import HummingbirdFoundation

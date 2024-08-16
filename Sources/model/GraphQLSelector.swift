@@ -1,10 +1,3 @@
-//
-//  File.swift
-//  
-//
-//  Created by Derek Clarkson on 11/11/2022.
-//
-
 import Foundation
 
 /// Matches an incoming GraphQL request to the stored response.

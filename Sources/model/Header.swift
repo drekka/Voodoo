@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 27/10/2022.
-//
-
 import Foundation
 
 /// Code completion and keys for common HTTP headers.
