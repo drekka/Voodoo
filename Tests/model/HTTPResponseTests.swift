@@ -4,7 +4,6 @@
 
 import Foundation
 import Hummingbird
-import HummingbirdMustache
 import Nimble
 @testable import Voodoo
 import XCTest
@@ -31,7 +30,7 @@ class HTTPResponseTests: XCTestCase {
         let response = HTTPResponse.raw(.ok, body: .text("hello"))
         try await assert(response: response,
                          returnsStatus: .ok,
-                         withHeaders: [Header.contentType: Header.ContentType.textPlain],
+                         withHeaders: [HTTPHeader.contentType: HTTPHeader.ContentType.textPlain.contentType],
                          body: "hello")
     }
 
@@ -54,27 +53,27 @@ class HTTPResponseTests: XCTestCase {
     // MARK: - Convenience cases
 
     func testConvenienceCasesWithBodies() async throws {
-        try await assertConvenienceCase(HTTPResponse.ok, returnsStatus: .ok)
-        try await assertConvenienceCase(HTTPResponse.created, returnsStatus: .created)
-        try await assertConvenienceCase(HTTPResponse.accepted, returnsStatus: .accepted)
-        try await assertConvenienceCase(HTTPResponse.badRequest, returnsStatus: .badRequest)
-        try await assertConvenienceCase(HTTPResponse.unauthorised, returnsStatus: .unauthorized)
-        try await assertConvenienceCase(HTTPResponse.forbidden, returnsStatus: .forbidden)
-        try await assertConvenienceCase(HTTPResponse.internalServerError, returnsStatus: .internalServerError)
+        try await assertConvenienceCase(HTTPResponse.ok, returning: .ok)
+        try await assertConvenienceCase(HTTPResponse.created, returning: .created)
+        try await assertConvenienceCase(HTTPResponse.accepted, returning: .accepted)
+        try await assertConvenienceCase(HTTPResponse.badRequest, returning: .badRequest)
+        try await assertConvenienceCase(HTTPResponse.unauthorised, returning: .unauthorized)
+        try await assertConvenienceCase(HTTPResponse.forbidden, returning: .forbidden)
+        try await assertConvenienceCase(HTTPResponse.internalServerError, returning: .internalServerError)
     }
 
     // MARK: - Supporting functions
 
-    func assertConvenienceCase(_ enumInit: (HeaderDictionary, HTTPResponse.Body) -> HTTPResponse, returnsStatus expectedStatus: HTTPResponseStatus) async throws {
+    func assertConvenienceCase(_ enumInit: (Voodoo.HTTPHeaders, HTTPResponse.Body) -> HTTPResponse, returning expectedStatus: HTTPResponseStatus) async throws {
         let response = enumInit(testHeaders, .text("hello"))
         var expectedHeaders = testHeaders
-        expectedHeaders[Header.contentType] = Header.ContentType.textPlain
+        expectedHeaders[HTTPHeader.contentType] = HTTPHeader.ContentType.textPlain.contentType
         try await assert(response: response, returnsStatus: expectedStatus, withHeaders: expectedHeaders, body: "hello")
     }
 
     func assert(response: HTTPResponse,
                 returnsStatus expectedStatus: HTTPResponseStatus,
-                withHeaders expectedHeaders: [String: String]? = nil,
+                withHeaders expectedHeaders: Voodoo.HTTPHeaders = [:],
                 body expectedBody: String? = nil) async throws {
 
         let request = HBRequest.mock().asHTTPRequest
@@ -83,8 +82,8 @@ class HTTPResponseTests: XCTestCase {
 
         expect(hbResponse.status) == expectedStatus
 
-        expect(hbResponse.headers.count) == expectedHeaders?.count ?? 0
-        expectedHeaders?.forEach {
+        expect(hbResponse.headers.count) == expectedHeaders.count
+        expectedHeaders.forEach {
             guard let value = hbResponse.headers.first(name: $0) else {
                 fail("Header '\($0) not found in response.")
                 return

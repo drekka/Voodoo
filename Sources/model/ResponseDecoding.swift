@@ -1,4 +1,5 @@
 import Foundation
+import PathKit
 
 /// Top level keys for the response choices in a config file.
 enum ResponseKeys: CodingKey {
@@ -32,14 +33,14 @@ extension Decoder {
 
         // Look for a script file reference.
         if let scriptFile = try container.decodeIfPresent(String.self, forKey: .javascriptFile) {
-            let scriptFileURL = configDirectory.appendingPathComponent(scriptFile)
-            guard scriptFileURL.fileSystemStatus == .isFile else {
+            let scriptFilePath = configDirectory + scriptFile
+            guard scriptFilePath.exists else {
                 throw DecodingError.dataCorruptedError(forKey: .javascriptFile,
                                                        in: container,
-                                                       debugDescription: "Unable to find referenced javascript file '\(scriptFileURL.filePath)'")
+                                                       debugDescription: "Unable to find referenced javascript file '\(scriptFilePath)'")
             }
 
-            return .javascript(try String(contentsOf: scriptFileURL))
+            return try .javascript(scriptFilePath.read(.utf8))
         }
 
         // Now check for a fixed response.

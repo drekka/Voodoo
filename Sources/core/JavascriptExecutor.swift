@@ -1,5 +1,4 @@
 import Foundation
-import Hummingbird
 import JXKit
 import NIOCore
 
@@ -7,9 +6,9 @@ import NIOCore
 struct JavascriptExecutor {
 
     let jsCtx = JXContext()
-    let serverCtx: VoodooContext
+    let serverCtx: any ServerContext
 
-    init(serverContext: VoodooContext) throws {
+    init(serverContext: any ServerContext) throws {
 
         serverCtx = serverContext
 
@@ -116,7 +115,7 @@ extension JXValue {
 
     /// Builds a container with the keys in the passed keyed values posing as the property names. Each property will return
     /// either an array or value depending on whether there are multiple values with the same key.
-    func defineProperty(_ property: String, populatedWith keyedValues: KeyedValues) throws {
+    func defineProperty(_ property: String, populatedWith keyedValues: [String: String]) throws {
         try defineObjectProperty(property) { obj in
             try keyedValues.uniqueKeys.forEach { key in
                 try obj.defineProperty(key) { property in
@@ -167,7 +166,7 @@ extension Cache {
 
         // If the value is an array or dictionary we encode it to JSON and then to an object.
         if value as? [String: Any] != nil || value as? [Any] != nil {
-            return try context.json(try JSONSerialization.data(withJSONObject: value).string())
+            return try context.json(JSONSerialization.data(withJSONObject: value).string())
         }
 
         // If the value is encodable the we encode it into a JXValue.
@@ -179,14 +178,14 @@ extension Cache {
         return context.null()
     }
 
-    func cacheSet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
+    mutating func cacheSet(context: JXContext, object _: JXValue?, args: [JXValue]) throws -> JXValue {
 
         let key = try args[1].string
 
         switch args[2] {
 
         case let value where value.isNull:
-            remove(key)
+            removeValue(forKey: key)
 
         case let value where value.isBoolean:
             self[key] = value.bool

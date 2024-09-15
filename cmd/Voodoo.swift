@@ -4,16 +4,8 @@
 
 import ArgumentParser
 import Foundation
+import PathKit
 import Voodoo
-
-/// allows us to set a URL as an option type.
-extension URL: ExpressibleByArgument {
-
-    /// Supports casting a command line argument to a URL.
-    public init?(argument: String) {
-        self.init(fileURLWithPath: argument)
-    }
-}
 
 /// Provides a command line wrapper around the server.
 @main
@@ -117,7 +109,7 @@ extension Voodoo {
             Reference here: https://hummingbird-project.github.io/hummingbird/current/hummingbird-mustache/mustache-syntax.html
             """
         )
-        var templatePath: URL?
+        var templatePath: Path?
 
         @Option(
             name: .shortAndLong,
@@ -129,7 +121,7 @@ extension Voodoo {
             See the readme doco for details on all the options that are available.
             """
         )
-        var config: URL
+        var config: Path
 
         @Option(name: [.short, .customLong("file-dir")],
                 help: """
@@ -138,7 +130,7 @@ extension Voodoo {
                 If the server receives a request and does not have an end point configured for it \
                 then it scans this directory to see if the request path maps to a stored file.
                 """)
-        var filePaths: [URL] = []
+        var filePaths: [Path] = []
 
         mutating func run() throws {
 
@@ -161,8 +153,8 @@ extension Voodoo {
 
         mutating func validate() throws {
             try filePaths.forEach {
-                if $0.fileSystemStatus == .notFound {
-                    throw ValidationError("File directory invalid: \($0.filePath)")
+                if !$0.exists {
+                    throw ValidationError("File directory invalid: \($0)")
                 }
             }
         }

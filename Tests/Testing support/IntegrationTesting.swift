@@ -28,14 +28,14 @@ extension IntegrationTesting {
     @discardableResult
     func executeAPICall(_ method: HTTPMethod,
                         _ path: String,
-                        withHeaders headers: [String: String]? = nil,
+                        withHeaders headers: Voodoo.HTTPHeaders = [:],
                         body: Data? = nil,
                         andExpectStatusCode expectedStatusCode: Int? = nil,
                         file: FileString = #file, line: UInt = #line) async -> ServerResponse {
         var request = URLRequest(url: server.url.appendingPathComponent(path))
         request.httpMethod = method.rawValue
         request.httpBody = body
-        headers?.forEach {
+        headers.forEach {
             request.addValue($1, forHTTPHeaderField: $0)
         }
         return await executeAPICall(request, andExpectStatusCode: expectedStatusCode, file: file, line: line)

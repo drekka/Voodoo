@@ -32,7 +32,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
 
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"
-        expect(response.response?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
+        expect(response.response?.value(forHTTPHeaderField: HTTPHeader.contentType)) == "text/plain"
     }
 
     func testJavascriptResponseEmptyDefault() async {
@@ -45,7 +45,7 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
 
         let response = await executeAPICall(.GET, "/abc", andExpectStatusCode: 200)
         expect(response.data) == Data()
-        expect(response.response?.value(forHTTPHeaderField: Header.contentType)).to(beNil())
+        expect(response.response?.value(forHTTPHeaderField: HTTPHeader.contentType)).to(beNil())
     }
 
     func testJavascriptNoFunction() async {
@@ -113,6 +113,6 @@ class IntegrationJavascriptTests: XCTestCase, IntegrationTesting {
         let httpResponse = response.response
 
         expect(String(data: response.data!, encoding: .utf8)) == "Hello world!"
-        expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
+        expect(httpResponse?.value(forHTTPHeaderField: HTTPHeader.contentType)) == "text/plain"
     }
 }

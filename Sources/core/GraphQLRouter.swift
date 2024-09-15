@@ -20,10 +20,9 @@ public class GraphQLRouter {
     ///
     /// This loops through the stored GraphQL endpoints to find a match and execute it for a response.
     public func execute(request: HBRequest) async throws -> HBResponse {
-        if self.verbose { print("💀 Intercepting GraphQL request") }
-        let httpRequest = request.asHTTPRequest
-        if let endpoint = try self.graphQLEndpoint(for: httpRequest) {
-            return try await endpoint.response.hbResponse(for: httpRequest, inServerContext: request.application)
+        if verbose { print("💀 Intercepting GraphQL request") }
+        if let endpoint = try graphQLEndpoint(for: request) {
+            return try await endpoint.response.hbResponse(for: request, context: request.application)
         }
         throw VoodooError.noGraphQLEndpoint
     }

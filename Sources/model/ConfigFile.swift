@@ -10,7 +10,7 @@ struct ConfigFile: Decodable, EndpointSource {
 
     init(from decoder: Decoder) throws {
 
-        // try decoding a list of endpoints first and it that doesn't work, then try decoding a single endpoint.
+        // try decoding a list of endpoints and it that doesn't work, then try a single endpoint.
         let container = try decoder.singleValueContainer()
         do {
             endpoints = try container.decode([EndpointReference].self).flatMap(\.endpoints)

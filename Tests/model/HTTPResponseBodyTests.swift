@@ -4,11 +4,12 @@
 
 import Foundation
 import Hummingbird
-import HummingbirdMustache
 import Nimble
-@testable import Voodoo
+import PathKit
 import XCTest
 import Yams
+
+@testable import Voodoo
 
 class HTTPResponseBodyTests: XCTestCase {
 
@@ -32,28 +33,27 @@ class HTTPResponseBodyTests: XCTestCase {
     func testText() throws {
         try assert(.text(#"def {{xyz}}"#, templateData: ["xyz": 123]),
                    generates: #"def 123"#,
-                   contentType: Header.ContentType.textPlain)
+                   contentType: HTTPHeader.ContentType.textPlain)
     }
 
     func testData() throws {
-        try assert(.data("abc".data(using: .utf8)!, contentType: Header.ContentType.textPlain),
+        try assert(.data("abc".data(using: .utf8)!, contentType: HTTPHeader.ContentType.textPlain),
                    generates: "abc",
-                   contentType: Header.ContentType.textPlain)
+                   contentType: HTTPHeader.ContentType.textPlain)
     }
 
     func testemplate() throws {
-        let template = try HBMustacheTemplate(string: "Hello {{xyz}}")
-        context.mustacheRenderer.register(template, named: "fred")
-        try assert(.template("fred", templateData: ["xyz": 123], contentType: Header.ContentType.textPlain),
+        context.templateRenderer.register(template: "Hello {{xyz}}", withName: "fred")
+        try assert(.template("fred", templateData: ["xyz": 123], contentType: HTTPHeader.ContentType.textPlain),
                    generates: #"Hello 123"#,
-                   contentType: Header.ContentType.textPlain)
+                   contentType: HTTPHeader.ContentType.textPlain)
     }
 
     func testFile() throws {
         let url = Bundle.testBundle.url(forResource: "files/Simple", withExtension: "html")!
-        try assert(.file(url, contentType: Header.ContentType.textHTML),
+        try assert(.file(Path(url.path()), contentType: HTTPHeader.ContentType.textHTML),
                    generates: #"<html><body></body></html>\#n"#,
-                   contentType: Header.ContentType.textHTML)
+                   contentType: HTTPHeader.ContentType.textHTML)
     }
 
     // MARK: - JSON types
@@ -64,7 +64,7 @@ class HTTPResponseBodyTests: XCTestCase {
                    ],
                    templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
-                   contentType: Header.ContentType.applicationJSON)
+                   contentType: HTTPHeader.ContentType.applicationJSON)
     }
 
     func testJSONWithEncodable() throws {
@@ -76,7 +76,7 @@ class HTTPResponseBodyTests: XCTestCase {
         let encodable = JSONTest(abc: #"def {{xyz}}"#)
         try assert(.json(encodable, templateData: ["xyz": 123]),
                    generates: #"{"abc":"def 123"}"#,
-                   contentType: Header.ContentType.applicationJSON)
+                   contentType: HTTPHeader.ContentType.applicationJSON)
     }
 
     // MARK: - YAML types
@@ -87,7 +87,7 @@ class HTTPResponseBodyTests: XCTestCase {
                    ],
                    templateData: ["xyz": 123]),
                    generates: "abc: def 123\n",
-                   contentType: Header.ContentType.applicationYAML)
+                   contentType: HTTPHeader.ContentType.applicationYAML)
     }
 
     func testYAMLWithEncodable() throws {
@@ -99,7 +99,7 @@ class HTTPResponseBodyTests: XCTestCase {
         let encodable = YAMLTest(abc: #"def {{xyz}}"#)
         try assert(.yaml(encodable, templateData: ["xyz": 123]),
                    generates: "abc: def 123\n",
-                   contentType: Header.ContentType.applicationYAML)
+                   contentType: HTTPHeader.ContentType.applicationYAML)
     }
 
     // MARK: - Support functions
@@ -107,7 +107,7 @@ class HTTPResponseBodyTests: XCTestCase {
     func assert(file: FileString = #file, line: UInt = #line,
                 _ body: HTTPResponse.Body,
                 generates expectedBody: String,
-                contentType expectedContentType: String?) throws {
+                contentType expectedContentType: HTTPHeader.ContentType?) throws {
         let request = HBRequest.mock().asHTTPRequest
         let hbBody = try body.hbBody(forRequest: request, serverContext: context)
         expect(file: file, line: line, hbBody.0) == expectedBody.hbResponseBody
@@ -145,14 +145,14 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
                    file: abc/def.md
                    contentType: application/markdown
                    """#,
-                   decodesTo: .file(fileURL(forPath: "abc/def.md"), contentType: "application/markdown"))
+                   decodesTo: .file("abc/def.md", contentType: .applicationMarkdown))
     }
 
     func testDecodeFileWithoutContentType() throws {
         try assert(#"""
                    file: abc/def.json
                    """#,
-                   decodesTo: .file(fileURL(forPath: "abc/def.json"), contentType: "application/json"))
+                   decodesTo: .file("abc/def.json", contentType: .applicationJSON))
     }
 
     func testDecodeTemplate() throws {
@@ -160,14 +160,14 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
                    template: books
                    contentType: application/json
                    """#,
-                   decodesTo: .template("books", contentType: "application/json"))
+                   decodesTo: .template("books", contentType: .applicationJSON))
     }
 
     func testDecodeTemplateWithoutContentType() throws {
         try assert(#"""
                    template: books
                    """#,
-                   decodesTo: .template("books", contentType: "application/json"))
+                   decodesTo: .template("books", contentType: .applicationJSON))
     }
 
     func testUnknownError() throws {
@@ -179,7 +179,7 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
         do {
             _ = try YAMLDecoder().decode(HTTPResponse.Body.self, from: data)
             fail("Error not thrown")
-        } catch let DecodingError.dataCorrupted(context) {
+        } catch DecodingError.dataCorrupted(let context) {
             expect(context.codingPath.count) == 0
             expect(context.debugDescription) == "Unable to determine response body. Possibly incorrect or invalid keys."
         }
@@ -192,13 +192,5 @@ class HTTPResponseBodyDecodableTests: XCTestCase {
                 file: FileString = #file, line: UInt = #line) throws {
         let body = try YAMLDecoder().decode(HTTPResponse.Body.self, from: yml.data(using: .utf8)!)
         expect(file: file, line: line, body) == expectedBody
-    }
-
-    func fileURL(forPath path: String) -> URL {
-        if #available(macOS 13, iOS 16, *) {
-            return URL(filePath: path)
-        } else {
-            return URL(fileURLWithPath: path)
-        }
     }
 }

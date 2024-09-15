@@ -1,8 +1,7 @@
 import Foundation
 import Hummingbird
-import HummingbirdFoundation
-import HummingbirdMustache
 import NIOCore
+import PathKit
 
 #if os(macOS) || os(iOS)
     import Network
@@ -23,10 +22,10 @@ extension Error {
 /// The main Voodoo server.
 public class VoodooServer {
 
-    private let server: HBApplication
-    private var graphQLRouter: GraphQLRouter!
-
+    let server: HBApplication
     let verbose: Bool
+
+    private var graphQLRouter: GraphQLRouter!
 
     /// Gets or sets the delay for all subsequent requests.
     public var delay: Double {
@@ -60,9 +59,9 @@ public class VoodooServer {
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 graphQLPath: String = "/graphql",
                 useAnyAddr: Bool = false,
-                templatePath: URL? = nil,
-                templateExtension: String = "json",
-                filePaths: [URL]? = nil,
+                templatePath: Path? = nil,
+                templateExtension _: String = "json",
+                filePaths: [Path] = [],
                 verbose: Bool = false,
                 hummingbirdVerbose: Bool = false,
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
@@ -80,19 +79,11 @@ public class VoodooServer {
         ]
 
         // Validate the file paths.
-        try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
-            if $0.fileSystemStatus != .isDirectory {
-                throw VoodooError.directoryNotExists($0.filePath)
-            }
+        for directory in filePaths where !directory.isDirectory || !directory.exists {
+            throw VoodooError.directoryNotExists(directory)
         }
 
-        // Initiate the mustache template renderer if it's been set.
-        let mustacheEngine: HBMustacheLibrary
-        if let templatePath {
-            mustacheEngine = try HBMustacheLibrary(directory: templatePath.path, withExtension: templateExtension)
-        } else {
-            mustacheEngine = HBMustacheLibrary()
-        }
+        let templatePaths: [Path] = if let templatePath { [templatePath] } else { [] }
 
         for nextPort in portRange {
 
@@ -100,7 +91,7 @@ public class VoodooServer {
                 server = try HBApplication.start(on: nextPort,
                                                  useAnyAddr: useAnyAddr,
                                                  middleware: middleware,
-                                                 mustacheEngine: mustacheEngine,
+                                                 templateEngine: StencilTemplateRenderer(paths: templatePaths),
                                                  filePaths: filePaths,
                                                  hummingbirdVerbose: hummingbirdVerbose)
 
@@ -259,42 +250,5 @@ public class VoodooServer {
     public func stop() {
         if verbose { print("💀 Telling server to stop") }
         server.stop()
-    }
-}
-
-extension HBApplication {
-
-    /// Configures and starts the server on the specified port or throws an error if that fails.
-    static func start(on port: Int,
-                      useAnyAddr: Bool,
-                      middleware: [HBMiddleware],
-                      mustacheEngine: HBMustacheLibrary,
-                      filePaths: [URL]?,
-                      hummingbirdVerbose: Bool) throws -> HBApplication {
-
-        let configuration = HBApplication.Configuration(
-            address: .hostname(useAnyAddr ? "0.0.0.0" : "127.0.0.1", port: port),
-            serverName: "Voodoo API simulator",
-            logLevel: hummingbirdVerbose ? .trace : .critical
-        )
-
-        let server = HBApplication(configuration: configuration)
-
-        // Add middleware. This must be done before starting the server or
-        // the middleware will execute after Hummingbird's ``TrieRouter``.
-        // This is due to the way hummingbird wires middleware and the router together.
-        // Also note the order is important.
-        middleware.forEach(server.middleware.add(_:))
-
-        // File path middleware requires a server reference so we cannot set them up in advance.
-        filePaths?.map { HBFileMiddleware($0.filePath, application: server) }.forEach(server.middleware.add(_:))
-
-        // Setup resources and engines.
-        server.cache = InMemoryCache()
-        server.mustacheRenderer = mustacheEngine
-        server.delay = 0.0
-
-        try server.start()
-        return server
     }
 }

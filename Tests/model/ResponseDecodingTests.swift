@@ -97,10 +97,9 @@ class ResponseDecodingTests: XCTestCase {
     }
 
     private func userInfo() -> [CodingUserInfoKey: Any] {
-        let resourcesURL = Bundle.testBundle.resourceURL!
-        return [
+        [
             ConfigLoader.userInfoVerboseKey: true,
-            ConfigLoader.userInfoDirectoryKey: resourcesURL,
+            ConfigLoader.userInfoDirectoryKey: Bundle.testBundle,
             ConfigLoader.userInfoFilenameKey: "ResponseDecodingTests",
         ]
     }

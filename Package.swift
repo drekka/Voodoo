@@ -16,13 +16,13 @@ _ = Package(
     dependencies: [
         .package(url: "https://github.com/quick/nimble", .upToNextMajor(from: "13.0.0")),
         .package(url: "https://github.com/hummingbird-project/hummingbird", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/jectivex/JXKit", .upToNextMajor(from: "3.0.0")),
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
-        .package(url: "https://github.com/jpsim/Yams", from: "5.0.0"),
-        .package(url: "https://github.com/Flight-School/AnyCodable", from: "0.6.0"),
-        .package(url: "https://github.com/GraphQLSwift/GraphQL", from: "2.0.0"),
-
+        .package(url: "https://github.com/apple/swift-argument-parser", .upToNextMajor(from: "1.0.0")),
+        .package(url: "https://github.com/jpsim/Yams", .upToNextMajor(from: "5.0.0")),
+        .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.0")),
+        .package(url: "https://github.com/GraphQLSwift/GraphQL", .upToNextMajor(from: "2.0.0")),
+        .package(url: "https://github.com/stencilproject/Stencil", .upToNextMajor(from: "0.15.0")),
+        .package(url: "https://github.com/kylef/PathKit.git", .upToNextMajor(from: "1.0.0")),
     ],
     targets: [
         .target(
@@ -30,7 +30,8 @@ _ = Package(
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdFoundation", package: "hummingbird"),
-                .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
+                "Stencil",
+                "PathKit",
                 "JXKit",
                 "Yams",
                 "AnyCodable",
@@ -42,6 +43,7 @@ _ = Package(
             name: "VoodooCLI",
             dependencies: [
                 "Voodoo",
+                "PathKit",
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "cmd"

@@ -1,18 +1,15 @@
-//
-//  Created by Derek Clarkson on 20/9/2022.
-//
-
 import Foundation
-import HummingbirdMustache
+import Stencil
 @testable import Voodoo
 
+/// SImple mock context for testing purposes.
 struct MockVoodooContext: VoodooContext {
 
-    var delay: Double = 0.0
+    var delay = 0.0
 
-    let port = 8080
+    let port = 4321
 
-    let mustacheRenderer = HBMustacheLibrary()
+    var templateRenderer: any TemplateRenderer = StencilTemplateRenderer(paths: ["."])
 
     var cache: Cache = InMemoryCache()
 }

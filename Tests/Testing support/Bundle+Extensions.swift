@@ -3,6 +3,7 @@
 //
 
 import Foundation
+import PathKit
 
 extension Bundle {
 

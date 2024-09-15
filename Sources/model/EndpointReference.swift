@@ -1,4 +1,5 @@
 import Foundation
+import PathKit
 
 /// Decodes the object from a YAML config file, and attempts to map it into the various types of structures that can exist at the top level.
 struct EndpointReference: Decodable, EndpointSource {
@@ -14,7 +15,7 @@ struct EndpointReference: Decodable, EndpointSource {
         if let fileReference = try? container.decode(String.self) {
             if decoder.verbose { print("💀 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found potential file reference: \(fileReference)") }
             let subLoader = ConfigLoader(verbose: decoder.verbose)
-            endpoints = try subLoader.load(from: decoder.configDirectory.appendingPathComponent(fileReference))
+            endpoints = try subLoader.load(from: decoder.configDirectory + fileReference)
             return
         }
 

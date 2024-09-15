@@ -7,11 +7,12 @@ import Nimble
 import NIOHTTP1
 import Voodoo
 import XCTest
+import PathKit
 
 class IntegrationTests: XCTestCase, IntegrationTesting {
 
     var server: VoodooServer!
-    let resourcesURL: URL = Bundle.testBundle.resourceURL!
+    let resourcePath = Path(Bundle.testBundle.bundlePath)
 
     override func tearDown() {
         tearDownServer()
@@ -49,8 +50,8 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testFileServing() async throws {
 
-        let filesURL = resourcesURL.appendingPathComponent("files")
-        server = try VoodooServer(filePaths: [filesURL])
+        let filesPath = resourcePath + "files"
+        server = try VoodooServer(filePaths: [filesPath])
 
         let response = await executeAPICall(.GET, "/Simple.html", andExpectStatusCode: 200)
         expect(String(data: response.data!, encoding: .utf8)) == "<html><body></body></html>\n"
@@ -59,9 +60,9 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testFileServingInvalidDirectory() async throws {
 
-        let filesURL = resourcesURL.appendingPathComponent("XXXX")
+        let filesPath = resourcePath + "XXXX"
 
-        expect { try VoodooServer(filePaths: [filesURL]) }.to(throwError { (error: Error) in
+        expect { try VoodooServer(filePaths: [filesPath]) }.to(throwError { (error: Error) in
             guard case VoodooError.directoryNotExists(let message) = error else {
                 fail("Incorrect error \(error.localizedDescription)")
                 return
@@ -74,13 +75,13 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testTemplateWithReferences() async throws {
 
-        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/templates"))
+        server = try VoodooServer(templatePath: resourcePath + "files/templates")
         server.add(.GET, "/", response: .ok(body: .template("books")))
 
         let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
         let httpResponse = response.response! as HTTPURLResponse
 
-        expect(httpResponse.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.applicationJSON
+        expect(httpResponse.value(forHTTPHeaderField: HTTPHeader.contentType)) == "application/json"
         let json = try JSONSerialization.jsonObject(with: response.data!) as! [[String: Any]]
 
         expect(json[0]["name"] as? String) == "Consider Phlebas"
@@ -90,7 +91,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testDynamicTemplateIncludesReferencedTemplates() async throws {
 
-        server = try VoodooServer(templatePath: resourcesURL.appendingPathComponent("files/templates"))
+        server = try VoodooServer(templatePath: resourcePath + "files/templates")
         server.add(.GET, "/", response: .ok(body: .json(
             #"""
             [
@@ -104,7 +105,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
         let response = await executeAPICall(.GET, "/", andExpectStatusCode: 200)
         let httpResponse = response.response! as HTTPURLResponse
 
-        expect(httpResponse.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.applicationJSON
+        expect(httpResponse.value(forHTTPHeaderField: HTTPHeader.contentType)) == "application/json"
         let json = try JSONSerialization.jsonObject(with: response.data!) as! [[String: Any]]
 
         expect(json[0]["name"] as? String) == "Consider Phlebas"
@@ -124,8 +125,8 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
     // These tests are part of debugging errors that occured when trying to use Scenario 2.
 
     func testScenario2ConfigConversionError() async throws {
-        let filesURL = resourcesURL.appendingPathComponent("files")
-        let endpoints = try ConfigLoader(verbose: true).load(from: filesURL.appendingPathComponent("/TestConfig2/getConfig.yml"))
+        let filesPath = resourcePath + "files"
+        let endpoints = try ConfigLoader(verbose: true).load(from: filesPath + "/TestConfig2/getConfig.yml")
         server = try VoodooServer { endpoints }
         let response = await executeAPICall(.GET, "/app/config", andExpectStatusCode: 200)
         let payload = try JSONSerialization.jsonObject(with: response.data!) as! [String: Any]

@@ -49,7 +49,7 @@ class EndPointReferenceTests: XCTestCase {
         files/TestConfig1/get-config.yml
         """#
 
-        let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
+        let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle])
         expect(endpoint.endpoints.count) == 1
         let httpEndpoint = endpoint.endpoints[0] as! HTTPEndpoint
         expect(httpEndpoint.method) == .GET

@@ -1,13 +1,11 @@
 import AnyCodable
 import Foundation
 import Hummingbird
-import HummingbirdMustache
 import JXKit
 import NIOFoundationCompat
 
 /// Type for template data used to inject values.
-public typealias TemplateData = [String: Any?]
-public typealias HeaderDictionary = [String: String]
+public typealias TemplateData = [String: Any]
 
 /// Defines a response to an API call.
 public enum HTTPResponse {
@@ -15,7 +13,7 @@ public enum HTTPResponse {
     // Core
 
     /// The base type of response where everything is specified
-    case raw(_: HTTPResponseStatus, headers: HeaderDictionary? = nil, body: Body = .empty)
+    case raw(_: HTTPResponseStatus, headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
 
     /// Custom closure run to generate a response.
     case dynamic(_ handler: (HTTPRequest, Cache) async -> HTTPResponse)
@@ -27,24 +25,24 @@ public enum HTTPResponse {
     // Convenience
 
     /// Return a HTTP 200 with an optional body and headers.
-    case ok(headers: HeaderDictionary? = nil, body: Body = .empty)
+    case ok(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
 
-    case created(headers: HeaderDictionary? = nil, body: Body = .empty)
-    case accepted(headers: HeaderDictionary? = nil, body: Body = .empty)
+    case created(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
+    case accepted(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
 
     case movedPermanently(_ url: String)
     case temporaryRedirect(_ url: String)
     case permanentRedirect(_ url: String)
 
-    case badRequest(headers: HeaderDictionary? = nil, body: Body = .empty)
-    case unauthorised(headers: HeaderDictionary? = nil, body: Body = .empty)
-    case forbidden(headers: HeaderDictionary? = nil, body: Body = .empty)
+    case badRequest(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
+    case unauthorised(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
+    case forbidden(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
 
     case notFound
     case notAcceptable
     case tooManyRequests
 
-    case internalServerError(headers: HeaderDictionary? = nil, body: Body = .empty)
+    case internalServerError(headers: Voodoo.HTTPHeaders? = nil, body: Body = .empty)
 }
 
 /// This extension supports decoding the response from javascript or YAML.
@@ -66,7 +64,7 @@ extension HTTPResponse: Decodable {
         let status = HTTPResponseStatus(statusCode: statusCode)
 
         let body = try container.decodeIfPresent(HTTPResponse.Body.self, forKey: .body) ?? .empty
-        let headers = try container.decodeIfPresent(HeaderDictionary.self, forKey: .headers)
+        let headers = try container.decodeIfPresent(Voodoo.HTTPHeaders.self, forKey: .headers)
 
         switch status {
         case .ok:
@@ -115,19 +113,19 @@ extension HTTPResponse: Decodable {
 /// This extension creates Hummingbird responses.
 extension HTTPResponse {
 
-    func hbResponse(for request: HTTPRequest, inServerContext context: VoodooContext) async throws -> HBResponse {
+    func hbResponse(for request: HTTPRequest, context: ServerContext) async throws -> HBResponse {
 
-        try await sleepIfRequired(for: context.delay)
+        try await sleep(for: context.delay)
 
         // Captures the request and cache before generating the response.
-        func hbResponse(_ status: HTTPResponseStatus, headers: HeaderDictionary?, body: HTTPResponse.Body) throws -> HBResponse {
+        func hbResponse(_ status: HTTPResponseStatus, headers: Voodoo.HTTPHeaders?, body: HTTPResponse.Body) throws -> HBResponse {
 
-            let body = try body.hbBody(forRequest: request, serverContext: context)
+            let body = try body.hbBody(forRequest: request, context: context)
 
             // Add additional headers returned with the body.
             var finalHeaders = headers ?? [:]
             if let contentType = body.1 {
-                finalHeaders[Header.contentType] = contentType
+                finalHeaders[HTTPHeader.contentType] = contentType.contentType
             }
 
             return HBResponse(status: status, headers: finalHeaders.hbHeaders, body: body.0)
@@ -141,11 +139,11 @@ extension HTTPResponse {
             return try hbResponse(status, headers: headers, body: body)
 
         case let .dynamic(handler):
-            return try await handler(request, context.cache).hbResponse(for: request, inServerContext: context)
+            return try await handler(request, context.cache).hbResponse(for: request, context: context)
 
         case let .javascript(script):
             let response = try JavascriptExecutor(serverContext: context).execute(script: script, for: request)
-            return try await response.hbResponse(for: request, inServerContext: context)
+            return try await response.hbResponse(for: request, context: context)
 
             // Convenience
 
@@ -159,13 +157,13 @@ extension HTTPResponse {
             return try hbResponse(.accepted, headers: headers, body: body)
 
         case let .movedPermanently(url):
-            return HBResponse(status: .movedPermanently, headers: [Header.location: url])
+            return HBResponse(status: .movedPermanently, headers: [HTTPHeader.location: url])
 
         case let .temporaryRedirect(url):
-            return HBResponse(status: .temporaryRedirect, headers: [Header.location: url])
+            return HBResponse(status: .temporaryRedirect, headers: [HTTPHeader.location: url])
 
         case let .permanentRedirect(url):
-            return HBResponse(status: .permanentRedirect, headers: [Header.location: url])
+            return HBResponse(status: .permanentRedirect, headers: [HTTPHeader.location: url])
 
         case let .badRequest(headers: headers, body: body):
             return try hbResponse(.badRequest, headers: headers, body: body)
@@ -190,7 +188,7 @@ extension HTTPResponse {
         }
     }
 
-    private func sleepIfRequired(for delay: Double) async throws {
+    private func sleep(for delay: Double) async throws {
         guard delay > 0.0 else {
             return
         }
@@ -210,9 +208,9 @@ extension HTTPResponse {
 
 // MARK: - Headers
 
-extension HeaderDictionary {
+extension Voodoo.HTTPHeaders {
 
-    var hbHeaders: HTTPHeaders {
-        HTTPHeaders(map { $0 })
+    var hbHeaders: Hummingbird.HTTPHeaders {
+        .init(map { $0 })
     }
 }

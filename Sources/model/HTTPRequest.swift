@@ -1,16 +1,6 @@
 import Foundation
 import Hummingbird
 
-/// Provides access to header and query parameters.
-@dynamicMemberLookup
-public protocol KeyedValues {
-    var uniqueKeys: [String] { get }
-    subscript(_: String) -> String? { get }
-    subscript(_: String) -> [String] { get }
-    subscript(dynamicMember _: String) -> String? { get }
-    subscript(dynamicMember _: String) -> [String] { get }
-}
-
 /// Contains the details of a received request and provide convenient access to commonly used data.
 public protocol HTTPRequest {
 
@@ -18,24 +8,27 @@ public protocol HTTPRequest {
     var method: HTTPMethod { get }
 
     /// A dictionary of headers.
-    var headers: KeyedValues { get }
+    var headers: [(String, String)] { get }
 
-    /// The URL path.
+    /// The URL's path.
     var path: String { get }
 
-    /// The components of the path. Always starts with the root '/' component.
+    /// The components of the path.
+    ///
+    /// These are derived by splitting the path by '/' characters.
     var pathComponents: [String] { get }
 
     /// A dictionary of parameters extracted from the path.
-    var pathParameters: [String: String] { get }
+    var pathArguments: [String: String] { get }
 
     // The URL query string.
     var query: String? { get }
 
-    /// An array of query key value tuples.
+    /// Query key value pairs.
     ///
-    /// This is done as an array because it's possible to repeat keys with different values.
-    var queryParameters: KeyedValues { get }
+    /// Unlike other ``KeyedData`` returned from the request,  is done as an array because it's possible for there to be multiple occurances
+    /// of the same key on a path, but with different values.
+    var queryArguments: [(String, String)] { get }
 
     /// The raw body of the request if there is one.
     var body: Data? { get }
@@ -59,12 +52,11 @@ public protocol HTTPRequest {
     /// Returns true if the passed content type is a match.
     ///
     /// Note that this does a contains to allow for extra parameters added to a content type such as encoding.
-    func contentType(is contentType: String) -> Bool
+    func contentType(is contentType: HTTPHeader.ContentType) -> Bool
 
     /// Decodes the incoming JSON body as the expected type.
     ///
     /// - parameter type: The decodable type we are expecting to find in the request body.
     /// - returns: An instant of `type` if the decode succeeds. `nil` otherwise.
     func decodeBodyJSON<T>(as type: T.Type) -> T? where T: Decodable
-
 }

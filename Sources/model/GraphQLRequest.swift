@@ -1,7 +1,6 @@
 import AnyCodable
 import Foundation
 import GraphQL
-import Hummingbird
 
 /// Used to decode a incoming request.
 struct GraphQLPayload: Codable {
@@ -69,7 +68,7 @@ public class GraphQLRequest {
 
         // If the content type is graphQL then treat the whole body as the query.
         // Per https://graphql.org/learn/serving-over-http/#post-request
-        case .POST where request.contentType(is: Header.ContentType.applicationGraphQL):
+        case .POST where request.contentType(is: .applicationGraphQL):
             guard let body = request.body,
                   let query = String(data: body, encoding: .utf8) else {
                 throw VoodooError.invalidGraphQLRequest("Missing GraphQL query argument in body of request.")
@@ -78,7 +77,7 @@ public class GraphQLRequest {
 
         // If the content type is JSON then assume the body contains a dictionary.
         // Per https://graphql.org/learn/serving-over-http/#post-request
-        case .POST where request.contentType(is: Header.ContentType.applicationJSON):
+        case .POST where request.contentType(is: .applicationJSON):
             guard let body = request.body,
                   let content = try? JSONDecoder().decode(GraphQLPayload.self, from: body) else {
                 throw VoodooError.invalidGraphQLRequest("Missing GraphQL query argument in body of request.")

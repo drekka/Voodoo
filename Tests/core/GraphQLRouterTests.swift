@@ -32,7 +32,7 @@ class GraphQLRouterTests: XCTestCase {
     func testMissMatchMethod() async throws {
         router.add(GraphQLEndpoint(.GET, .operations("getConfig"), response: .ok()))
         let request = HBRequest.mock(.POST,
-                                     headers: [("content-type", "application/json")],
+                                     headers: ["content-type": "application/json"],
                                      body: #"""
                                      {
                                          "query":"query getConfig { a }"
@@ -53,7 +53,7 @@ class GraphQLRouterTests: XCTestCase {
     }
 
     func testSelectorEndpoint() async throws {
-        router.add(GraphQLEndpoint(.GET, .query(try GraphQLRequest(query: "query getConfig { a }")), response: .ok()))
+        try router.add(GraphQLEndpoint(.GET, .query(GraphQLRequest(query: "query getConfig { a }")), response: .ok()))
         let request = HBRequest.mock(query: "query=query getConfig { a }")
         let response = try await router.execute(request: request)
         expect(response.status) == .ok

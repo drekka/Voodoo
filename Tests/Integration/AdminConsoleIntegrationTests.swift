@@ -66,6 +66,45 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
         }
     }
 
+    func testSettingCacheWithSimpleValue() async throws {
+
+        let body = try JSONSerialization.data(withJSONObject: ["key": 5])
+        await executeAPICall(.POST,
+                             VoodooServer.cache,
+                             withHeaders: .init(contentType: .applicationJSON),
+                             body: body,
+                             andExpectStatusCode: 201)
+
+        server.add(.GET, "/cachedData", response: .ok(body: .text("Hello {{key}}")))
+        let response = await executeAPICall(.GET, "/cachedData", andExpectStatusCode: 200)
+
+        expect(try response.data?.string()) == "Hello 5"
+    }
+
+    func testSettingCacheWithAComplexValue() async throws {
+
+        let body = try JSONSerialization.data(withJSONObject: [
+            "key1": [
+                "abc": "Hello",
+            ],
+            "key2": [
+                "def": "World",
+            ],
+        ])
+        await executeAPICall(.POST,
+                             VoodooServer.cache,
+                             withHeaders: .init(contentType: .applicationJSON),
+                             body: body,
+                             andExpectStatusCode: 201)
+
+        server.add(.GET, "/cachedData", response: .ok(body: .text("Hello {{key2[def]}}")))
+        let response = await executeAPICall(.GET, "/cachedData", andExpectStatusCode: 200)
+
+        expect(try response.data?.string()) == "Hello 5"
+    }
+
+    // MARK: - Support
+
     private func measureDuration(of block: () async -> Void) async -> Double {
         if #available(macOS 13, iOS 16, *) {
             let clock = ContinuousClock()

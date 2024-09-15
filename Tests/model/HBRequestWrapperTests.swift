@@ -17,12 +17,12 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testHeaders() {
-        let wrapper = HBRequest.mock(headers: [("def", "xyz")]).asHTTPRequest
+        let wrapper = HBRequest.mock(headers: ["def": "xyz"]).asHTTPRequest
         expect(wrapper.headers.def) == "xyz"
     }
 
     func testHeadersCaseInsensitivity() {
-        let wrapper = HBRequest.mock(headers: [("def", "xyz")]).asHTTPRequest
+        let wrapper = HBRequest.mock(headers: ["def": "xyz"]).asHTTPRequest
         expect(wrapper.headers["DeF"]) == "xyz"
     }
 
@@ -63,14 +63,14 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testJSONContent() {
-        let wrapper = HBRequest.mock(contentType: Header.ContentType.applicationJSON,
+        let wrapper = HBRequest.mock(contentType: HTTPHeader.ContentType.applicationJSON,
                                      body: #"{"abc":"def"}"#).asHTTPRequest
         let json = wrapper.bodyJSON as! [String: Any]
         expect(json["abc"] as? String) == "def"
     }
 
     func testYAMLContent() {
-        let wrapper = HBRequest.mock(contentType: Header.ContentType.applicationYAML,
+        let wrapper = HBRequest.mock(contentType: HTTPHeader.ContentType.applicationYAML,
                                      body: #"""
                                      abc: def
                                      """#).asHTTPRequest
@@ -79,7 +79,7 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testFormValues() {
-        let wrapper = HBRequest.mock(contentType: "application/x-www-form-urlencoded",
+        let wrapper = HBRequest.mock(contentType: HTTPHeader.ContentType.applicationFormData,
                                      body: #"formField1=Hello%20world&formField2&formField3=Goodbye!"#).asHTTPRequest
 
         expect(String(data: wrapper.body ?? Data(), encoding: .utf8)) == "formField1=Hello%20world&formField2&formField3=Goodbye!"
@@ -96,7 +96,7 @@ class HBRequestWrapperTests: XCTestCase {
     }
 
     func testFormValuesFromExtendedContentType() {
-        let wrapper = HBRequest.mock(contentType: "application/x-www-form-urlencoded; charset=utf-8",
+        let wrapper = HBRequest.mock(contentType: HTTPHeader.ContentType.applicationFormData,
                                      body: #"formField1=Hello%20world&formField2&formField3=Goodbye!"#).asHTTPRequest
 
         expect(String(data: wrapper.body ?? Data(), encoding: .utf8)) == "formField1=Hello%20world&formField2&formField3=Goodbye!"
@@ -119,7 +119,7 @@ class HBRequestWrapperTests: XCTestCase {
             let y: String
         }
 
-        let wrapper = HBRequest.mock(contentType: Header.ContentType.applicationJSON,
+        let wrapper = HBRequest.mock(contentType: HTTPHeader.ContentType.applicationJSON,
                                      body: #"{"x":123, "y":"Hello"}"#).asHTTPRequest
         let payload = wrapper.decodeBodyJSON(as: Payload.self)!
         expect(payload.x) == 123

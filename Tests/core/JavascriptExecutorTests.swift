@@ -9,6 +9,7 @@ import Nimble
 import NIOHTTP1
 @testable import Voodoo
 import XCTest
+import PathKit
 
 import JXKit
 
@@ -38,7 +39,7 @@ class JavascriptExecutorTests: XCTestCase {
 
             expect(results["method"] as? String) == "GET"
             expect(results["path"] as? String) == "/abc"
-            expect(results["pathComponents"] as? [String]) == ["/", "abc"]
+            expect(results["pathComponents"] as? [String]) == ["abc"]
 
             let headers = results["headers"] as! [String: Any]
             expect(headers.count) == 1
@@ -58,10 +59,10 @@ class JavascriptExecutorTests: XCTestCase {
     func testRequestDetails() throws {
 
         let request = HBRequest.mock(path: "/abc/def",
-                                            pathParameters: ["pp1": "p123", "pp2": "p456"],
-                                            query: "q1=q123&q2=q123&q1=q456",
-                                            headers: [("h1", "hxyz"), ("h2", "h123"), ("h2", "h456")],
-                                            body: "Hello world!")
+                                     pathParameters: ["pp1": "p123", "pp2": "p456"],
+                                     query: "q1=q123&q2=q123&q1=q456",
+                                     headers: ["h1": "hxyz", "h2": "h456"],
+                                     body: "Hello world!")
         try expectRequest(request.asHTTPRequest, javascript: #"""
             console.log("Query parameters: " + request.queryParameters.length);
             var data = {
@@ -79,11 +80,11 @@ class JavascriptExecutorTests: XCTestCase {
 
             expect(results["method"] as? String) == "GET"
             expect(results["path"] as? String) == "/abc/def"
-            expect(results["pathComponents"] as? [String]) == ["/", "abc", "def"]
+            expect(results["pathComponents"] as? [String]) == ["abc", "def"]
 
             let headers = results["headers"] as! [String: Any]
             expect(headers["h1"] as? String) == "hxyz"
-            expect(headers["h2"] as? [String]) == ["h123", "h456"]
+            expect(headers["h2"] as? String) == "h456"
 
             let pathParameters = results["pathParameters"] as! [String: Any]
             expect(pathParameters["pp1"] as? String) == "p123"
@@ -101,7 +102,7 @@ class JavascriptExecutorTests: XCTestCase {
     func testRequestFormParameters() throws {
 
         let request = HBRequest.mock(
-            contentType: Header.ContentType.applicationFormData,
+            contentType: HTTPHeader.ContentType.applicationFormData,
             body: #"formField1=Hello%20world!"#
         )
         try expectRequest(request.asHTTPRequest, javascript: #"""
@@ -121,7 +122,7 @@ class JavascriptExecutorTests: XCTestCase {
     func testRequestBodyJSON() throws {
 
         let request = HBRequest.mock(
-            contentType: Header.ContentType.applicationJSON,
+            contentType: HTTPHeader.ContentType.applicationJSON,
             body: #"{"abc":"def"}"#
         )
         try expectRequest(request.asHTTPRequest, javascript: #"""
@@ -292,17 +293,17 @@ class JavascriptExecutorTests: XCTestCase {
 
     func testResponseBodyFile() throws {
         try expectResponse(#"return Response.ok(Body.file("/dir/file.dat", "text/plain"));"#,
-                           toReturn: .ok(body: .file(URL(fileURLWithPath: "/dir/file.dat"), contentType: Header.ContentType.textPlain)))
+                           toReturn: .ok(body: .file("/dir/file.dat", contentType: HTTPHeader.ContentType.textPlain)))
     }
 
     func testResponseBodyTemplate() throws {
         try expectResponse(#"return Response.ok(Body.template("template-name", "text/plain"));"#,
-                           toReturn: .ok(body: .template("template-name", contentType: Header.ContentType.textPlain)))
+                           toReturn: .ok(body: .template("template-name", contentType: HTTPHeader.ContentType.textPlain)))
     }
 
     func testResponseBodyTemplateWithTemplateData() throws {
         try expectResponse(#"return Response.ok(Body.template("template-name", "text/plain", {abc: "Hello"}));"#,
-                           toReturn: .ok(body: .template("template-name", templateData: ["abc": "Hello"], contentType: Header.ContentType.textPlain)))
+                           toReturn: .ok(body: .template("template-name", templateData: ["abc": "Hello"], contentType: HTTPHeader.ContentType.textPlain)))
     }
 
     // MARK: - Errors
@@ -346,7 +347,7 @@ class JavascriptExecutorTests: XCTestCase {
                            console.log("abc: " + abc);
                            return Response.ok(Body.text(abc));
                            """#,
-                           withHeaders: [("abc", "123")],
+                           withHeaders: ["abc": "123"],
                            toReturn: .ok(body: .text("123")))
     }
 
@@ -453,7 +454,7 @@ class JavascriptExecutorTests: XCTestCase {
     // MARK: - Support
 
     private func expectResponse(_ response: String,
-                                withHeaders headers: [(String, String)]? = nil,
+                                withHeaders headers: Voodoo.HTTPHeaders = [:],
                                 inContext: VoodooContext = MockVoodooContext(),
                                 toReturn expectedResponse: HTTPResponse) throws {
         let executor = try JavascriptExecutor(serverContext: inContext)

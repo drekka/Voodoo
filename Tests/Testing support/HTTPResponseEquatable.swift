@@ -9,7 +9,7 @@ import Hummingbird
 
 // Whilst using `Equatable` isn't my preferred method for asserts, with tests in this code base it makes more sense.
 
-extension HBResponseBody: Equatable {
+extension HBResponseBody: @retroactive Equatable {
 
     public static func == (lhs: HummingbirdCore.HBResponseBody, rhs: HummingbirdCore.HBResponseBody) -> Bool {
         switch (lhs, rhs) {
@@ -96,8 +96,8 @@ extension HTTPResponse.Body: Equatable {
             return lhsData == rhsData
                 && AnyCodable(lhsContentType) == AnyCodable(rhsContentType)
 
-        case (.file(let lhsURL, let lhsContentType), .file(let rhsURL, let rhsContentType)):
-            return lhsURL == rhsURL && lhsContentType == rhsContentType
+        case (.file(let lhsPath, let lhsContentType), .file(let rhsPath, let rhsContentType)):
+            return lhsPath == rhsPath && lhsContentType == rhsContentType
 
         default:
             return false

@@ -70,7 +70,7 @@ class ConfigFileTests: XCTestCase {
           response:
             status: 200
         """#
-        let config = try decoder.decode(ConfigFile.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
+        let config = try decoder.decode(ConfigFile.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle])
         expect(config.endpoints.count) == 3
         expect(config.httpEndpoints[0].method) == .PUT
         expect(config.httpEndpoints[0].path) == "/config"

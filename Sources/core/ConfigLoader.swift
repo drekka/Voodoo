@@ -1,4 +1,5 @@
 import Foundation
+import PathKit
 import Yams
 
 /// Loads all the endpoints found in a YAML file, or a directory of YAML files.
@@ -16,53 +17,35 @@ public struct ConfigLoader {
 
     /// Loads all the endpoints found in a YAML file, or a directory of YAML files.
     ///
-    /// - parameter path: A file URL that references either a file or directory.
-    public func load(from path: URL) throws -> [Endpoint] {
+    /// - parameter path: A path referencing a file or directory.
+    public func load(from path: Path) throws -> [Endpoint] {
 
-        switch path.fileSystemStatus {
-
-        case .isFile:
+        if path.isFile {
             return try readConfig(file: path)
+        }
 
-        case .isDirectory:
-            if verbose { print("💀 Reading config from \(path.filePath)") }
+        if path.isDirectory {
+            if verbose { print("💀 Reading config from \(path)") }
 
-            #if os(macOS) || os(iOS)
-                // `.produceRelativePathURLs` does not appear to be available in the Linux version of swift.
-                let options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles, .producesRelativePathURLs]
-            #else
-                let options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles]
-            #endif
-            let resourceKeys: [URLResourceKey] = [.isDirectoryKey]
-            guard let files = FileManager.default.enumerator(at: path, includingPropertiesForKeys: resourceKeys, options: options) else {
-                return []
-            }
-
-            let resourceKeysSet = Set(resourceKeys)
-            return try files.lazy
-                .compactMap { $0 as? URL }
+            return try path.children()
                 .filter {
-                    let properties = try? $0.resourceValues(forKeys: resourceKeysSet)
-                    return !(properties?.isDirectory ?? false) && $0.pathExtension.lowercased() == "yml"
+                    $0.isFile && $0.extension?.lowercased() == "yml"
                 }
                 .flatMap(readConfig)
-
-        default:
-            let fileSystemPath = path.filePath
-            if verbose { print("💀 Config file or directory does not exist '\(fileSystemPath)'") }
-            throw VoodooError.invalidConfigPath(fileSystemPath)
         }
+
+        if verbose { print("💀 Config file or directory does not exist '\(path.description)'") }
+        throw VoodooError.invalidConfigPath(path)
     }
 
-    private func readConfig(file: URL) throws -> [Endpoint] {
-        if verbose { print("💀 Reading config file \(file.relativePath)") }
-        let data = try Data(contentsOf: file)
-        let directory = file.deletingLastPathComponent()
+    private func readConfig(file: Path) throws -> [Endpoint] {
+        if verbose { print("💀 Reading config file \(file)") }
+        let directory = file.parent()
         return try YAMLDecoder().decode(ConfigFile.self,
-                                        from: data,
+                                        from: try file.read(),
                                         userInfo: [
                                             ConfigLoader.userInfoDirectoryKey: directory,
-                                            ConfigLoader.userInfoFilenameKey: file.lastPathComponent,
+                                            ConfigLoader.userInfoFilenameKey: file.lastComponent,
                                             ConfigLoader.userInfoVerboseKey: verbose,
                                         ]).endpoints
     }

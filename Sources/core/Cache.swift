@@ -1,61 +1,19 @@
-/// Protocol for types that can store data between requests.
-@dynamicMemberLookup
-public protocol Cache: AnyObject {
+import Foundation
 
-    /// Returns the cache as a dictionary.
-    func dictionaryRepresentation() -> [String: Any]
+/// Used to define an in-memory cache for sharing data between calls.
+public typealias Cache = [String: Any]
 
-    /// Removes the key the store.
-    func remove(_ key: String)
+extension Cache {
 
-    /// Key based access to stored data.
-    subscript<Value>(_: String) -> Value? { get }
-
-    /// Dynamic lookup access to stored data.
-    subscript<Value>(dynamicMember _: String) -> Value? { get }
-
-    /// Base subscript for accessing and storing cache values.
+    /// Called just before rendering a template, this combines the cache with data from the request and any additional enpoint data ready
+    /// for use by a template.
     ///
-    /// Subscript that supports setting `nil` without having to cast to a type.
-    subscript(_: String) -> Any? { get set }
-
-    /// Dynamic lookup access to stored data.
-    ///
-    /// This subscript supports setting `nil` without having to cast to a type.
-    subscript(dynamicMember _: String) -> Any? { get set }
+    /// - parameter request: The request the data is needed for. This is checked for a `host` header and if found,
+    /// it's value is set as the template data's `mockServer` value.
+    /// - parameter responseData: Additional data specified with the response being returned.
+    func templateData(forRequest request: HTTPRequest, adding responseData: TemplateData) -> TemplateData {
+        let hostAddress = request.headers["host"].map { ["mockServer": $0] as TemplateData } ?? [:]
+        return merging(responseData) { $1 }.merging(hostAddress) { $1 }
+    }
 }
 
-/// In memory only cache based around a simple dictionary.
-class InMemoryCache: Cache {
-
-    private var cache: [String: Any] = [:]
-
-    subscript<Value>(key: String) -> Value? { self[key] as? Value }
-
-    subscript<Value>(dynamicMember key: String) -> Value? { self[key] as? Value }
-
-    subscript(key: String) -> Any? {
-        get { get(key) }
-        set { set(newValue, forKey: key) }
-    }
-
-    subscript(dynamicMember key: String) -> Any? {
-        get { get(key) }
-        set { set(newValue, forKey: key) }
-    }
-
-    func dictionaryRepresentation() -> [String: Any] { cache }
-
-    func remove(_ key: String) { cache.removeValue(forKey: key) }
-
-    // MARK: - Support functions
-
-    private func get(_ key: String) -> Any? { cache[key] }
-    private func set(_ value: Any?, forKey key: String) {
-        if let value {
-            cache[key] = value
-        } else {
-            remove(key)
-        }
-    }
-}

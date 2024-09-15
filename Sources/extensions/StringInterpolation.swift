@@ -2,6 +2,7 @@ import Foundation
 
 extension String.StringInterpolation {
 
+    /// Supports specifying decimal places when printing numbers.
     mutating func appendInterpolation(_ number: Double, decimalPlaces: Int? = nil) {
 
         guard let decimalPlaces else {

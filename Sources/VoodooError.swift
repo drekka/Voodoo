@@ -1,6 +1,7 @@
 import Foundation
 import Hummingbird
 import NIOHTTP1
+import PathKit
 
 public enum VoodooError: Error, CustomStringConvertible, CustomDebugStringConvertible {
 
@@ -10,8 +11,8 @@ public enum VoodooError: Error, CustomStringConvertible, CustomDebugStringConver
     case unexpectedError(Error)
 
     case configLoadFailure(String)
-    case invalidConfigPath(String)
-    case directoryNotExists(String)
+    case invalidConfigPath(Path)
+    case directoryNotExists(Path)
 
     case noHTTPEndpoint(String)
 
@@ -42,7 +43,7 @@ public enum VoodooError: Error, CustomStringConvertible, CustomDebugStringConver
             return "Invalid config path \(path)"
 
         case .directoryNotExists(let path):
-            return "Missing or URL was not a directory: \(path)"
+            return "Invalid directory: \(path)"
 
         case .unexpectedError(let error):
             return error.localizedDescription
@@ -71,8 +72,8 @@ extension VoodooError: HBHTTPResponseError {
         }
     }
 
-    public var headers: HTTPHeaders {
-        [Header.contentType: Header.ContentType.textPlain]
+    public var headers: Hummingbird.HTTPHeaders {
+        [HTTPHeader.contentType: HTTPHeader.ContentType.textPlain.contentType]
     }
 
     public func body(allocator _: ByteBufferAllocator) -> NIOCore.ByteBuffer? {

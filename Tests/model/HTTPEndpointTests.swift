@@ -36,7 +36,6 @@ class HTTPEndpointTests: XCTestCase {
         expect(container2.canDecode) == false
     }
 
-
     func testDecodeWithResponse() throws {
         let yaml = #"""
         http:
@@ -98,10 +97,9 @@ class HTTPEndpointTests: XCTestCase {
     }
 
     private func userInfo() -> [CodingUserInfoKey: Any] {
-        let resourcesURL = Bundle.testBundle.resourceURL!
-        return [
+        [
             ConfigLoader.userInfoVerboseKey: true,
-            ConfigLoader.userInfoDirectoryKey: resourcesURL,
+            ConfigLoader.userInfoDirectoryKey: Bundle.testBundle,
             ConfigLoader.userInfoFilenameKey: "HTTPEndpointTests",
         ]
     }

@@ -6,20 +6,21 @@ import Nimble
 import NIOHTTP1
 @testable import Voodoo
 import XCTest
+import PathKit
 
 class ConfigLoaderTests: XCTestCase {
 
-    private let resourcesURL = Bundle.testBundle.resourceURL!
+    private let resourcePath = Path(Bundle.testBundle.bundlePath)
     private let loader = ConfigLoader(verbose: true)
 
     func testLoadSingleEndpoint() throws {
-        let endpoints = try loader.load(from: resourcesURL.appendingPathComponent("files/TestConfig1/get-config.yml"))
+        let endpoints = try loader.load(from: resourcePath + "files/TestConfig1/get-config.yml")
         expect(endpoints.count) == 1
         expectHTTPEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .json(["version": 1.0])))
     }
 
     func testEndpointList() throws {
-        let endpoints = try loader.load(from: resourcesURL.appendingPathComponent("files/scenario 1.yml"))
+        let endpoints = try loader.load(from: resourcePath + "files/scenario 1.yml")
         expect(endpoints.count) == 4
         expectHTTPEndpoint(endpoints[0], mapsTo: .POST, "/created/text", returning: .created(body: .text("Hello world!")))
         expectHTTPEndpoint(endpoints[1], mapsTo: .GET, "/config", returning: .ok(body: .json(["version": 1.0])))
@@ -40,7 +41,7 @@ class ConfigLoaderTests: XCTestCase {
     }
 
     func testLoadDirectory() throws {
-        let endpoints = try loader.load(from: resourcesURL.appendingPathComponent("files/TestConfig1"))
+        let endpoints = try loader.load(from: resourcePath + "files/TestConfig1")
 
         expect(endpoints.count) == 3
         expectHTTPEndpoint(endpoints[0], mapsTo: .GET, "/config", returning: .ok(body: .json(["version": 1.0])))
@@ -48,9 +49,9 @@ class ConfigLoaderTests: XCTestCase {
         expectHTTPEndpoint(endpoints[2], mapsTo: .POST, "/login", returning: .javascript("login.js"))
     }
 
-    func testLoadFromInvalidURL() throws {
+    func testLoadFromInvalidPath() throws {
         do {
-            _ = try loader.load(from: resourcesURL.appendingPathComponent("files/XXXX.yml"))
+            _ = try loader.load(from: resourcePath + "files/XXXX.yml")
             fail("Error not thrown")
         } catch {
             guard case VoodooError.invalidConfigPath(let message) = error else {
@@ -63,7 +64,7 @@ class ConfigLoaderTests: XCTestCase {
 
     func testLoadInvalidYAML() throws {
         do {
-            _ = try loader.load(from: resourcesURL.appendingPathComponent("files/Invalid.yml"))
+            _ = try loader.load(from: resourcePath + "files/Invalid.yml")
             fail("Error not thrown")
         } catch {
             guard case DecodingError.dataCorrupted(let context) = error else {

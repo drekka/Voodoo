@@ -136,7 +136,7 @@ class GraphQLRequestTests: XCTestCase {
         let query = "query {hero{name}}"
         let payload = GraphQLPayload(query: query, operation: nil, variables: nil)
         let body = String(data: try JSONEncoder().encode(payload), encoding: .utf8)!
-        let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationJSON)],
+        let hbRequest = HBRequest.mock(.POST, headers: [HTTPHeader.contentType: "application/json"],
                                        body: body)
 
         let request = try parse(request: hbRequest)
@@ -150,7 +150,7 @@ class GraphQLRequestTests: XCTestCase {
 
     func testPostGraphQL() throws {
         let query = "query {hero{name}}"
-        let hbRequest = HBRequest.mock(.POST, headers: [(Header.contentType, Header.ContentType.applicationGraphQL)],
+        let hbRequest = HBRequest.mock(.POST, headers: [HTTPHeader.contentType: "application/json"],
                                        body: query)
 
         let request = try parse(request: hbRequest)

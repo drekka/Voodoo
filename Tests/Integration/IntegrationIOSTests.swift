@@ -7,15 +7,15 @@ import Nimble
 import NIOHTTP1
 import Voodoo
 import XCTest
+import PathKit
 
 class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
     var server: VoodooServer!
-    var resourcesUrl: URL = Bundle.testBundle.resourceURL!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
-        server = try VoodooServer(templatePath: resourcesUrl)
+        server = try VoodooServer(templatePath: Path(Bundle.testBundle.bundlePath))
     }
 
     override func tearDown() {
@@ -93,7 +93,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         }
 
         await executeAPICall(.POST, "/abc",
-                             withHeaders: [Header.contentType: Header.ContentType.applicationJSON],
+                             withHeaders: .init(contentType: .applicationJSON),
                              body: #"{"x":123, "y":"Hello"}"#.data(using: .utf8),
                              andExpectStatusCode: 200)
     }
@@ -115,7 +115,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         }
 
         await executeAPICall(.POST, "/abc",
-                             withHeaders: [Header.contentType: Header.ContentType.applicationJSON],
+                             withHeaders: .init(contentType:.applicationJSON),
                              body: #"{"x":123, "y":"Hello"}"#.data(using: .utf8),
                              andExpectStatusCode: 200)
     }
@@ -138,7 +138,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(String(data: response.data!, encoding: .utf8)) == #"Hello world! 123"#
 
         expect(httpResponse?.allHeaderFields.count) == 6
-        expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
+        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "text/plain"
         expect(httpResponse?.value(forHTTPHeaderField: "abc")) == "def"
         expect(httpResponse?.value(forHTTPHeaderField: "server")) == "Voodoo API simulator"
     }
@@ -192,11 +192,11 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     // MARK: - Convenience responses
 
     func testResponseAccepted() async {
-        await expectResponse(HTTPResponse.accepted, toReturnStatus: 202)
+        await expectResponse(HTTPResponse.accepted(), toReturnStatus: 202)
     }
 
     func testResponseCreated() async {
-        await expectResponse(HTTPResponse.created, toReturnStatus: 201)
+        await expectResponse(HTTPResponse.created(), toReturnStatus: 201)
     }
 
     func testResponseMovedPermanently() async {
@@ -212,7 +212,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     }
 
     func testResponseBadRequest() async {
-        await expectResponse(HTTPResponse.badRequest, toReturnStatus: 400)
+        await expectResponse(HTTPResponse.badRequest(), toReturnStatus: 400)
     }
 
     func testResponseNotFound() async {
@@ -228,7 +228,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
     }
 
     func testResponseInternalServerError() async {
-        await expectResponse(HTTPResponse.internalServerError, toReturnStatus: 500)
+        await expectResponse(HTTPResponse.internalServerError(), toReturnStatus: 500)
     }
 
     // Case testing functions.
@@ -239,18 +239,11 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
         expect(file: file, line: line, String(data: result.data!, encoding: .utf8)).to(equal(""), description: "Expected an empty response body,")
     }
 
-    func expectResponse(file: FileString = #file, line: UInt = #line, _ response: (HeaderDictionary?, HTTPResponse.Body) -> HTTPResponse, toReturnStatus expectedStatus: Int) async {
-        server.add(.POST, "/abc", response: response(["abc": "123"], .text("Hello world!")))
-        let result = await executeAPICall(.POST, "/abc", andExpectStatusCode: expectedStatus, file: file, line: line)
-        expect(file: file, line: line, String(data: result.data!, encoding: .utf8)).to(equal("Hello world!"), description: "Expected 'Hello world!' as a text body,")
-        expect(file: file, line: line, result.response?.value(forHTTPHeaderField: "abc")).to(equal("123"), description: "Header 'abc':'123' incorrect,")
-    }
-
     func expectRedirectResponse(file: FileString = #file, line: UInt = #line, _ response: (String) -> HTTPResponse, toReturnStatus expectedStatus: Int) async {
         server.add(.POST, "/abc", response: response("http://abc.com"))
         let result = await executeAPICall(.POST, "/abc", andExpectStatusCode: expectedStatus, file: file, line: line)
         expect(file: file, line: line, String(data: result.data!, encoding: .utf8)).to(equal(""), description: "Expected an empty response body,")
-        expect(file: file, line: line, result.response?.value(forHTTPHeaderField: Header.location)).to(equal("http://abc.com"), description: "Expected a location header of 'http://abc.com',")
+        expect(file: file, line: line, result.response?.value(forHTTPHeaderField: "location")).to(equal("http://abc.com"), description: "Expected a location header of 'http://abc.com',")
     }
 
     // MARK: - Bodies
@@ -263,7 +256,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
         expect(httpResponse?.allHeaderFields.count) == 6
         expect(String(data: response.data!, encoding: .utf8)) == "Hello"
-        expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
+        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "text/plain"
     }
 
     func testResponseWithInlineTextTemplate() async {
@@ -274,7 +267,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
         expect(httpResponse?.allHeaderFields.count) == 5
         expect(String(data: response.data!, encoding: .utf8)) == "Hello Derek"
-        expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.textPlain
+        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "text/plain"
     }
 
     func testResponseWithInlineJSONTemplate() async {
@@ -285,7 +278,7 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
         expect(String(data: response.data!, encoding: .utf8)) == #"{"abc":"def Derek"}"#
         expect(httpResponse?.allHeaderFields.count) == 5
-        expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.applicationJSON
+        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "application/json"
     }
 
     func testResponseWithFileTemplate() async {
@@ -296,6 +289,6 @@ class IntegrationIOSTests: XCTestCase, IntegrationTesting {
 
         expect(httpResponse?.allHeaderFields.count) == 5
         expect(String(data: response.data!, encoding: .utf8)) == #"{\#n    "url": "\#(server.url.host!):\#(server.url.port!)",\#n    "path": "/abc"\#n}\#n"#
-        expect(httpResponse?.value(forHTTPHeaderField: Header.contentType)) == Header.ContentType.applicationJSON
+        expect(httpResponse?.value(forHTTPHeaderField: "content-type")) == "application/json"
     }
 }

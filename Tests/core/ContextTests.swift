@@ -9,7 +9,7 @@ import Nimble
 @testable import Voodoo
 import XCTest
 
-class VoodooContextTests: XCTestCase {
+class ContextTests: XCTestCase {
 
     var context: MockVoodooContext!
 
@@ -23,7 +23,7 @@ class VoodooContextTests: XCTestCase {
 
         context.cache["abc"] = "def"
         let request = HBRequest.mock().asHTTPRequest
-        let templateData = context.requestTemplateData(forRequest: request, adding: nil)
+        let templateData = context.cache.templateData(forRequest: request, adding: [:])
 
         expect(templateData.count) == 2
         expect(templateData["abc"] as? String) == "def"
@@ -34,7 +34,7 @@ class VoodooContextTests: XCTestCase {
 
         context.cache["abc"] = "def"
         let request = HBRequest.mock().asHTTPRequest
-        let templateData = context.requestTemplateData(forRequest: request, adding: ["xyz": 123])
+        let templateData = context.cache.templateData(forRequest: request, adding: ["xyz": 123])
 
         expect(templateData.count) == 3
         expect(templateData["abc"] as? String) == "def"
@@ -45,7 +45,7 @@ class VoodooContextTests: XCTestCase {
     func testRequestTemplateDataOverridesMockServer() {
 
         let request = HBRequest.mock().asHTTPRequest
-        let templateData = context.requestTemplateData(forRequest: request, adding: ["mockServer": "http://127.0.0.1:9999"])
+        let templateData = context.cache.templateData(forRequest: request, adding: ["mockServer": "http://127.0.0.1:9999"])
 
         expect(templateData.count) == 1
         expect(templateData["mockServer"] as? String) == "http://127.0.0.1:9999"
@@ -55,7 +55,7 @@ class VoodooContextTests: XCTestCase {
 
         context.cache["abc"] = "def"
         let request = HBRequest.mock().asHTTPRequest
-        let templateData = context.requestTemplateData(forRequest: request, adding: ["abc": 123])
+        let templateData = context.cache.templateData(forRequest: request, adding: ["abc": 123])
 
         expect(templateData.count) == 2
         expect(templateData["abc"] as? Int) == 123
