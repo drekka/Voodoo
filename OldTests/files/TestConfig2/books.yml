@@ -2,13 +2,14 @@
     api: get /books
   response:
     status: 200
-    body: 
+    body:
       template: books
       contentType: application/json
-      
+
 - http:
     api: get /book/:bookId
-  javascript: |
+  response:
+    javascript: |
     function response(request, cache) {
       console.log("Book " + request.pathParameters.bookId + " requested");
       if (request.pathParameters.bookId == "1000-01") {

@@ -1,8 +1,0 @@
-http:
-  api: get /config
-response:
-  status: 200
-  body:
-    json: {
-      version: 1.0
-    }

@@ -1,6 +1,5 @@
 import Foundation
 import Hummingbird
-import HummingbirdFoundation
 import HummingbirdMustache
 import NIOCore
 
@@ -67,6 +66,9 @@ public class VoodooServer {
                 hummingbirdVerbose: Bool = false,
                 @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
 
+        let router = Router()
+        router.on("", method: , responder: <#T##HTTPResponder#>)
+
         self.verbose = verbose
         self.graphQLPath = graphQLPath
 
@@ -74,7 +76,7 @@ public class VoodooServer {
         // the middleware will execute after Hummingbird's ``TrieRouter``.
         // This is due to the way hummingbird wires middleware and the router together.
         // Also note the order is important.
-        let middleware: [HBMiddleware] = [
+        let middleware: [RouterMiddleware] = [
             RequestLogger(verbose: verbose),
             NoResponseFoundMiddleware(),
         ]
@@ -97,7 +99,7 @@ public class VoodooServer {
         for nextPort in portRange {
 
             do {
-                server = try HBApplication.start(on: nextPort,
+                server = try Application.start(on: nextPort,
                                                  useAnyAddr: useAnyAddr,
                                                  middleware: middleware,
                                                  mustacheEngine: mustacheEngine,

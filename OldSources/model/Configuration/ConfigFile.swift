@@ -3,7 +3,7 @@ import Foundation
 /// Decodes a config file.
 ///
 /// Usually a YAML file, this is the entry point for decoding the servers configuration from a file.
-struct ConfigFile: Decodable, EndpointSource {
+struct ConfigFile: Decodable, EndpointFactory {
 
     /// The end points read from the file and all the files it references.
     let endpoints: [Endpoint]

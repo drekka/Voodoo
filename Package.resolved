@@ -1,4 +1,5 @@
 {
+  "originHash" : "87574460930e5fdff4754a108b01db9fc63c057b84d1792c33e4120d4f5a869a",
   "pins" : [
     {
       "identity" : "anycodable",
@@ -10,21 +11,12 @@
       }
     },
     {
-      "identity" : "cwlcatchexception",
+      "identity" : "async-http-client",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mattgallagher/CwlCatchException.git",
+      "location" : "https://github.com/swift-server/async-http-client.git",
       "state" : {
-        "revision" : "3ef6999c73b6938cc0da422f2c912d0158abb0a0",
-        "version" : "2.2.0"
-      }
-    },
-    {
-      "identity" : "cwlpreconditiontesting",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/mattgallagher/CwlPreconditionTesting.git",
-      "state" : {
-        "revision" : "2ef56b2caf25f55fa7eef8784c30d5a767550f54",
-        "version" : "2.2.1"
+        "revision" : "0ae99db85b2b9d1e79b362bd31fd1ffe492f7c47",
+        "version" : "1.21.2"
       }
     },
     {
@@ -41,53 +33,44 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/hummingbird-project/hummingbird",
       "state" : {
-        "revision" : "94820eab2b9c044eb614a2d40cae60a027950e26",
-        "version" : "1.12.1"
+        "revision" : "d4f792d209f02b26a17c0105751220da65207fb2",
+        "version" : "2.0.1"
       }
     },
     {
-      "identity" : "hummingbird-core",
+      "identity" : "pathkit",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/hummingbird-project/hummingbird-core.git",
+      "location" : "https://github.com/kylef/PathKit",
       "state" : {
-        "revision" : "502abf07438b0d254ca8a28a50aab2ac5bca4599",
-        "version" : "1.6.0"
+        "revision" : "3bfd2737b700b9a36565a8c94f4ad2b050a5e574",
+        "version" : "1.0.1"
       }
     },
     {
-      "identity" : "hummingbird-mustache",
+      "identity" : "spectre",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/hummingbird-project/hummingbird-mustache",
+      "location" : "https://github.com/kylef/Spectre.git",
       "state" : {
-        "revision" : "fa5617622333da6334252a9d7e3633129b89120d",
-        "version" : "1.0.3"
+        "revision" : "26cc5e9ae0947092c7139ef7ba612e34646086c7",
+        "version" : "0.10.1"
       }
     },
     {
-      "identity" : "jxkit",
+      "identity" : "swift-algorithms",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/jectivex/JXKit.git",
+      "location" : "https://github.com/apple/swift-algorithms",
       "state" : {
-        "revision" : "1d2c56ada375aa14c9ec2eb299d27690949fb5a4",
-        "version" : "3.5.1"
+        "revision" : "f6919dfc309e7f1b56224378b11e28bab5bccc42",
+        "version" : "1.2.0"
       }
     },
     {
-      "identity" : "nimble",
+      "identity" : "swift-async-algorithms",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/quick/nimble",
+      "location" : "https://github.com/apple/swift-async-algorithms.git",
       "state" : {
-        "revision" : "1c49fc1243018f81a7ea99cb5e0985b00096e9f4",
-        "version" : "13.3.0"
-      }
-    },
-    {
-      "identity" : "swift-argument-parser",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/apple/swift-argument-parser",
-      "state" : {
-        "revision" : "46989693916f56d1186bd59ac15124caef896560",
-        "version" : "1.3.1"
+        "revision" : "6ae9a051f76b81cc668305ceed5b0e0a7fd93d20",
+        "version" : "1.0.1"
       }
     },
     {
@@ -97,15 +80,6 @@
       "state" : {
         "revision" : "cd142fd2f64be2100422d658e7411e39489da985",
         "version" : "1.2.0"
-      }
-    },
-    {
-      "identity" : "swift-backtrace",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swift-server/swift-backtrace.git",
-      "state" : {
-        "revision" : "80746bdd0ac8a7d83aad5d89dac3cbf15de652e6",
-        "version" : "1.3.4"
       }
     },
     {
@@ -149,8 +123,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-metrics.git",
       "state" : {
-        "revision" : "971ba26378ab69c43737ee7ba967a896cb74c0d1",
-        "version" : "2.4.1"
+        "revision" : "e0165b53d49b413dd987526b641e05e246782685",
+        "version" : "2.5.0"
       }
     },
     {
@@ -199,6 +173,15 @@
       }
     },
     {
+      "identity" : "swift-numerics",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-numerics.git",
+      "state" : {
+        "revision" : "0a5bc04095a675662cf24757cc0640aa2204253b",
+        "version" : "1.0.2"
+      }
+    },
+    {
       "identity" : "swift-service-context",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-service-context.git",
@@ -212,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swift-server/swift-service-lifecycle.git",
       "state" : {
-        "revision" : "22363fed316cd9942b56bcd1a1df8875df79b794",
-        "version" : "1.0.0-alpha.11"
+        "revision" : "24c800fb494fbee6e42bc156dc94232dc08971af",
+        "version" : "2.6.1"
       }
     },
     {
@@ -235,5 +218,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

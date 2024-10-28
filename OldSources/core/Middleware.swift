@@ -3,21 +3,21 @@ import GraphQL
 import Hummingbird
 
 /// Logs all incoming requests.
-struct RequestLogger: HBMiddleware {
+public struct RequestLogger<Context: RequestContext>: RouterMiddleware {
 
     let verbose: Bool
 
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         if verbose { print("💀 Received \(request.method) \(request.uri)") }
-        return next.respond(to: request)
+        return try await next(request, context)
     }
 }
 
 /// Logs errors coming back from the routers.
-public struct NoResponseFoundMiddleware: HBMiddleware {
+public struct NoResponseFoundMiddleware<Context: RequestContext>: RouterMiddleware {
 
-    public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        next.respond(to: request)
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+        next( request, context)
             .flatMapError { error in
                 switch error {
                 case let error as GraphQLError:

@@ -1,7 +1,7 @@
 import Foundation
 
 /// Decodes the object from a YAML config file, and attempts to map it into the various types of structures that can exist at the top level.
-struct EndpointReference: Decodable, EndpointSource {
+struct EndpointReference: Decodable, EndpointFactory {
 
     /// Required by ``EndpointSource``.
     let endpoints: [Endpoint]

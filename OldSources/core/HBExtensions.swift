@@ -4,7 +4,7 @@ import HummingbirdMustache
 
 // Voodoo extensions to Hummingbird.
 
-extension HBApplication: VoodooContext {
+extension Application: VoodooContext {
 
     public var port: Int {
         guard let port = configuration.address.port else {
@@ -48,7 +48,7 @@ extension HBRouterBuilder {
     }
 }
 
-extension HBRequest {
+extension Request {
 
     /// Convenience variable to obtain a wrapped request.
     var asHTTPRequest: HTTPRequest {

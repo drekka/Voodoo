@@ -1,81 +1,26 @@
 import Foundation
-import Hummingbird
-import NIOHTTP1
+@preconcurrency import PathKit
 
-public enum VoodooError: Error, CustomStringConvertible, CustomDebugStringConvertible {
+public enum VoodooError: Error {
 
-    /// Thrown when the server cannot find a free port.
-    case noPortAvailable(Int, Int)
+    enum Configuration: Error {
 
-    case unexpectedError(Error)
+        /// Path is not a valid directory or YAML file.
+        case notAConfiguration(Path)
 
-    case configLoadFailure(String)
-    case invalidConfigPath(String)
-    case directoryNotExists(String)
+        /// Path is not a valid directory or YAML file.
+        case fileNotFound(Path)
 
-    case noHTTPEndpoint(String)
+        /// The referened configuration does not exist.
+        case referencedFileNotFound(Path, String)
 
-    case invalidGraphQLRequest(String)
-    case noGraphQLEndpoint
+        case invalidHTTPSelector(Path, String)
 
-    case javascriptError(String)
-    case conversionError(String)
-    case templateRenderingFailure(String)
+        case invalidResponseStatusCode(Path, String, Int)
+        case unknownResponse(Path, String)
 
-    public var localizedDescription: String {
-        switch self {
-        case .conversionError(let message),
-                .templateRenderingFailure(let message),
-                .javascriptError(let message),
-                .configLoadFailure(let message),
-                .invalidGraphQLRequest(let message),
-                .noHTTPEndpoint(let message):
-            return message
-
-        case .noGraphQLEndpoint:
-            return "Request does not match any registred endpoint."
-
-        case .noPortAvailable(let lower, let upper):
-            return "No port available in range \(lower) - \(upper)"
-
-        case .invalidConfigPath(let path):
-            return "Invalid config path \(path)"
-
-        case .directoryNotExists(let path):
-            return "Missing or URL was not a directory: \(path)"
-
-        case .unexpectedError(let error):
-            return error.localizedDescription
-
-        }
+        case noEndpointsRead(Path)
     }
 
-    public var description: String {
-        localizedDescription
-    }
-
-    public var debugDescription: String {
-        localizedDescription
-    }
-}
-
-/// Extension to turn a ``VoodooError`` into a Hummingbird error.
-extension VoodooError: HBHTTPResponseError {
-
-    public var status: HTTPResponseStatus {
-        switch self {
-        case .noGraphQLEndpoint, .noHTTPEndpoint:
-            return .notFound
-        default:
-            return .internalServerError
-        }
-    }
-
-    public var headers: HTTPHeaders {
-        [Header.contentType: Header.ContentType.textPlain]
-    }
-
-    public func body(allocator _: ByteBufferAllocator) -> NIOCore.ByteBuffer? {
-        ByteBuffer(string: localizedDescription)
-    }
+    case invalidHeaderLocationURL(String)
 }
