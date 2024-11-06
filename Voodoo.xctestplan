@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "37448424-3BD7-4C45-9976-BFC09A8D544D",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:",
+      "identifier" : "Voodoo",
+      "name" : "Voodoo"
+    },
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "VoodooTests",
+        "name" : "VoodooTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -15,7 +15,7 @@ extension ByteBuffer {
 }
 
 /// Make the HTTP method decodable from YAML files.
-extension HTTPMethod: Decodable {
+extension HTTPMethod: @retroactive Decodable {
 
     /// Decodes a `HTTPMethod` from a coder in a case-insensitive manner.
     public init(from decoder: Decoder) throws {

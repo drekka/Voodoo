@@ -14,5 +14,5 @@ struct MockVoodooContext: VoodooContext {
 
     let mustacheRenderer = HBMustacheLibrary()
 
-    var cache: Cache = InMemoryCache()
+    var cache = Cache()
 }

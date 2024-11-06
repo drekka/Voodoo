@@ -356,7 +356,7 @@ class JavascriptExecutorTests: XCTestCase {
 
         struct NonCodable {}
 
-        let cache = InMemoryCache()
+        let cache = Cache()
         cache.abc = NonCodable()
 
         let context = JXContext()

@@ -1,7 +1,3 @@
-//
-//  Created by Derek Clarkson on 15/9/2022.
-//
-
 import Foundation
 import Nimble
 @testable import Voodoo
@@ -13,7 +9,7 @@ class CacheTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        cache = InMemoryCache()
+        cache = Cache()
     }
 
     func testDictionaryRepresentation() {

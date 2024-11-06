@@ -1,5 +1,4 @@
-// swift-tools-version:5.9
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version:5.10
 
 import PackageDescription
 
@@ -10,7 +9,7 @@ _ = Package(
         .macOS(.v12),
     ],
     products: [
-        .executable(name: "voodoo", targets: ["VoodooCLI"]),
+        .executable(name: "voodoo-server", targets: ["VoodooCLI"]),
         .library(name: "Voodoo", targets: ["Voodoo"]),
     ],
     dependencies: [
@@ -41,7 +40,7 @@ _ = Package(
         .executableTarget(
             name: "VoodooCLI",
             dependencies: [
-                "Voodoo",
+                .target(name: "Voodoo"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "cmd"

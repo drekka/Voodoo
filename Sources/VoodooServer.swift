@@ -294,7 +294,7 @@ extension HBApplication {
         filePaths?.map { HBFileMiddleware($0.filePath, application: server) }.forEach(server.middleware.add(_:))
 
         // Setup resources and engines.
-        server.cache = InMemoryCache()
+        server.cache = Cache()
         server.mustacheRenderer = mustacheEngine
         server.delay = 0.0
 

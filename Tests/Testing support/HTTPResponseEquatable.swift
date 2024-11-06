@@ -9,7 +9,7 @@ import Hummingbird
 
 // Whilst using `Equatable` isn't my preferred method for asserts, with tests in this code base it makes more sense.
 
-extension HBResponseBody: Equatable {
+extension HBResponseBody: @retroactive Equatable {
 
     public static func == (lhs: HummingbirdCore.HBResponseBody, rhs: HummingbirdCore.HBResponseBody) -> Bool {
         switch (lhs, rhs) {
