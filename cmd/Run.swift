@@ -48,16 +48,10 @@ extension Voodoo {
             transform: { value in
 
                 // Use a regex to extract the parts of the range from the text.
-                let valueRange = NSRange(location: 0, length: value.utf8.count)
-                let expression = try! NSRegularExpression(pattern: #"(?<lower>\d+)-(?<upper>\d+)"#)
-
-                if let match = expression.firstMatch(in: value, range: valueRange),
-                   let lowerRange = Range(match.range(withName: "lower"), in: value),
-                   let lower = Int(String(value[lowerRange])),
-                   let upperRange = Range(match.range(withName: "upper"), in: value),
-                   let upper = Int(String(value[upperRange])),
-                   lower <= upper
-                {
+                if let match = value.firstMatch(of: #/(?<lower>\d+)-(?<upper>\d+)/#),
+                   let lower = Int(match.1),
+                   let upper = Int(match.2),
+                   lower <= upper {
                     return lower ... upper
                 }
 
