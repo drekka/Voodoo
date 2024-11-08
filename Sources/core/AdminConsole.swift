@@ -14,7 +14,7 @@ extension VoodooServer {
     func addAdminConsole() {
 
         add(.POST, VoodooServer.adminShutdown) { _, _ in
-            print("💀 Received shutdown request, shutting down server ...")
+            voodooLog("Received shutdown request ...")
             self.stop()
             return .ok()
         }
@@ -25,7 +25,7 @@ extension VoodooServer {
 
             if let rawDelay = request.pathParameters.delay,
                let delay = Double(rawDelay) {
-                if verbose { print("💀 Setting new request delay \(delay, decimalPlaces: 2) seconds") }
+                voodooLog("Setting new request delay \(delay, decimalPlaces: 2) seconds")
                 self.delay = delay
                 return .ok()
             }

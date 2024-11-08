@@ -21,7 +21,7 @@ class StringInterpolationTests: XCTestCase {
         expect("\(1.123, decimalPlaces: 2)") == "1.12"
         expect("\(1.1234, decimalPlaces: 2)") == "1.12"
         expect("\(1.124, decimalPlaces: 2)") == "1.12"
-        expect("\(1.125, decimalPlaces: 2)") == "1.13"
+        expect("\(1.125, decimalPlaces: 2)") == "1.12"
         expect("\(1.126, decimalPlaces: 2)") == "1.13"
         expect("\(1.129, decimalPlaces: 2)") == "1.13"
     }

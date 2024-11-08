@@ -125,7 +125,7 @@ class IntegrationTests: XCTestCase, IntegrationTesting {
 
     func testScenario2ConfigConversionError() async throws {
         let filesURL = resourcesURL.appendingPathComponent("files")
-        let endpoints = try ConfigLoader(verbose: true).load(from: filesURL.appendingPathComponent("/TestConfig2/getConfig.yml"))
+        let endpoints = try ConfigLoader().load(from: filesURL.appendingPathComponent("/TestConfig2/getConfig.yml"))
         server = try VoodooServer { endpoints }
         let response = await executeAPICall(.GET, "/app/config", andExpectStatusCode: 200)
         let payload = try JSONSerialization.jsonObject(with: response.data!) as! [String: Any]

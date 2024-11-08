@@ -62,9 +62,7 @@ private extension KeyedDecodingContainer where Key == HTTPEndpoint.EndpointKeys 
         let selectorContainer = try nestedContainer(keyedBy: EndpointSelectorKeys.self, forKey: .http)
         let api = try selectorContainer.decode(String.self, forKey: .api)
 
-        if try superDecoder(forKey: .http).verbose {
-            print("💀 \(try superDecoder(forKey: .http).configFileName), found endpoint config: \(api)")
-        }
+        try voodooLog(level: .debug, "\(superDecoder(forKey: .http).configFileName), found endpoint config: \(api)")
 
         // Split the api value into the method and path.
         let components = api.split(separator: " ")

@@ -1,14 +1,8 @@
-//
-//  File.swift
-//
-//
-//  Created by Derek Clarkson on 18/11/2022.
-//
-
 import Foundation
 
 extension String.StringInterpolation {
 
+    /// Adds support for a numeric interpolation with decimal pplaces.
     mutating func appendInterpolation(_ number: Double, decimalPlaces: Int? = nil) {
 
         guard let decimalPlaces else {
@@ -16,11 +10,7 @@ extension String.StringInterpolation {
             return
         }
 
-        let formatter = NumberFormatter()
-        formatter.maximumFractionDigits = decimalPlaces
-        formatter.roundingMode = .halfUp
-        if let result = formatter.string(from: number as NSNumber) {
-            appendLiteral(result)
-        }
+        let formatted = number.formatted(.number.precision(.fractionLength(0...decimalPlaces)))
+        appendLiteral(formatted)
     }
 }

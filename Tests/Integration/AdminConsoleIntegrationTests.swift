@@ -17,7 +17,7 @@ class AdminConsoleIntegrationTests: XCTestCase, IntegrationTesting {
     override func setUp() async throws {
         try await super.setUp()
         shutdownServer = true
-        server = try VoodooServer(verbose: true)
+        server = try VoodooServer()
         server.add(.GET, "/abc", response: .ok())
     }
 

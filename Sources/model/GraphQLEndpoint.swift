@@ -48,15 +48,15 @@ extension GraphQLEndpoint: Endpoint {
         } else if let operations = try selectorContainer.decodeIfPresent([String].self, forKey: .operations) {
             selector = .operations(operations)
         } else if let query = try selectorContainer.decodeIfPresent(String.self, forKey: .query) {
-            selector = .query(try GraphQLRequest(query: query))
+            selector = try .query(GraphQLRequest(query: query))
         } else {
             let message = "Expected to find '\(SelectorKeys.operations.stringValue)' or '\(SelectorKeys.query.stringValue)'"
-            print("💀 Error: Reading endpoint definition at \(container.codingPath.map(\.stringValue)) - \(message)")
+            voodooLog("Error: Reading endpoint definition at \(container.codingPath.map(\.stringValue)) - \(message)")
             let context = DecodingError.Context(codingPath: container.codingPath, debugDescription: message)
             throw DecodingError.dataCorrupted(context)
         }
 
-        if decoder.verbose { print("💀 Found graphQL endpoint \(method) - \(selector)") }
+        voodooLog(level: .debug, "Found graphQL endpoint \(method) - \(selector)")
 
         response = try decoder.decodeResponse()
     }

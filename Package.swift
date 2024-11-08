@@ -5,8 +5,8 @@ import PackageDescription
 _ = Package(
     name: "Voodoo",
     platforms: [
-        .iOS(.v15),
-        .macOS(.v12),
+        .iOS(.v16),
+        .macOS(.v13),
     ],
     products: [
         .executable(name: "voodoo-server", targets: ["VoodooCLI"]),

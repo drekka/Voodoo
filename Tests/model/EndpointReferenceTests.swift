@@ -18,7 +18,7 @@ class EndPointReferenceTests: XCTestCase {
         response:
           status: 200
         """#
-        let endpoint = try decoder.decode(EndpointReference.self, from: yml)
+        let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: mockUserInfo())
         expect(endpoint.endpoints.count) == 1
         let httpEndpoint = endpoint.endpoints[0] as! HTTPEndpoint
         expect(httpEndpoint.method) == .GET
@@ -35,7 +35,7 @@ class EndPointReferenceTests: XCTestCase {
         response:
           status: 200
         """#
-        let endpoint = try decoder.decode(EndpointReference.self, from: yml)
+        let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: mockUserInfo())
         expect(endpoint.endpoints.count) == 1
         let graphQLEndpoint = endpoint.endpoints[0] as! GraphQLEndpoint
         expect(graphQLEndpoint.method) == .GET
@@ -49,7 +49,7 @@ class EndPointReferenceTests: XCTestCase {
         files/TestConfig1/get-config.yml
         """#
 
-        let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: [ConfigLoader.userInfoDirectoryKey: Bundle.testBundle.resourceURL!])
+        let endpoint = try decoder.decode(EndpointReference.self, from: yml, userInfo: mockUserInfo())
         expect(endpoint.endpoints.count) == 1
         let httpEndpoint = endpoint.endpoints[0] as! HTTPEndpoint
         expect(httpEndpoint.method) == .GET

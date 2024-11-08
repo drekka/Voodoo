@@ -17,12 +17,12 @@ class MultiServerTests: XCTestCase, IntegrationTesting {
     func testCallForwarding() async throws {
 
         // Setup a Voodoo Server as a target.
-        let server2 = try VoodooServer(verbose: true) {
+        let server2 = try VoodooServer() {
             HTTPEndpoint(.GET, "/token", response: .ok(body: .json(["token": "abcd-1234"])))
         }
 
         // Setup another Voodoo server as an intermediary.
-        let server1 = try VoodooServer(verbose: true) {
+        let server1 = try VoodooServer() {
             HTTPEndpoint(.GET, "/token", response: .dynamic { _, _ in
                 let server2Request = URLRequest(url: server2.url.appendingPathComponent("token"))
                 let server2Results = await self.executeAPICall(server2Request, andExpectStatusCode: 200)

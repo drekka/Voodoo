@@ -15,7 +15,7 @@ class GraphQLIntegrationTests: XCTestCase, IntegrationTesting {
     var server: VoodooServer!
 
     override func setUp() async throws {
-        server = try VoodooServer(verbose: true)
+        server = try VoodooServer()
     }
 
     func testSimpleOperationQuery() async {

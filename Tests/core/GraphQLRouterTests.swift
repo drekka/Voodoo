@@ -17,7 +17,7 @@ class GraphQLRouterTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        router = GraphQLRouter(verbose: true)
+        router = GraphQLRouter()
     }
 
     func testNotEndpoint() async throws {

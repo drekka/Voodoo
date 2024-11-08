@@ -70,7 +70,7 @@ class ResponseDecodingTests: XCTestCase {
 
     private func expectYML(_ yml: String,
                            toDecodeAsResponse expectedResponse: HTTPResponse) throws {
-        let endpoint = try YAMLDecoder().decode(DummyEndPoint.self, from: yml, userInfo: userInfo())
+        let endpoint = try YAMLDecoder().decode(DummyEndPoint.self, from: yml, userInfo: mockUserInfo())
 
         expect(endpoint.response) == expectedResponse
     }
@@ -89,19 +89,10 @@ class ResponseDecodingTests: XCTestCase {
                            _ yml: String,
                            toFail errorValidation: (Error) -> Void) throws {
         do {
-            _ = try YAMLDecoder().decode(DummyEndPoint.self, from: yml, userInfo: userInfo())
+            _ = try YAMLDecoder().decode(DummyEndPoint.self, from: yml, userInfo: mockUserInfo())
             fail("Error not thrown", file: file, line: line)
         } catch {
             errorValidation(error)
         }
-    }
-
-    private func userInfo() -> [CodingUserInfoKey: Any] {
-        let resourcesURL = Bundle.testBundle.resourceURL!
-        return [
-            ConfigLoader.userInfoVerboseKey: true,
-            ConfigLoader.userInfoDirectoryKey: resourcesURL,
-            ConfigLoader.userInfoFilenameKey: "ResponseDecodingTests",
-        ]
     }
 }

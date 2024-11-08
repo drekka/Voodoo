@@ -10,7 +10,7 @@ import XCTest
 class ConfigLoaderTests: XCTestCase {
 
     private let resourcesURL = Bundle.testBundle.resourceURL!
-    private let loader = ConfigLoader(verbose: true)
+    private let loader = ConfigLoader()
 
     func testLoadSingleEndpoint() throws {
         let endpoints = try loader.load(from: resourcesURL.appendingPathComponent("files/TestConfig1/get-config.yml"))

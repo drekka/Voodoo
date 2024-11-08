@@ -45,7 +45,7 @@ class HTTPEndpointTests: XCTestCase {
           status: 200
         """#
 
-        let endpoint = try YAMLDecoder().decode(HTTPEndpoint.self, from: yaml, userInfo: userInfo())
+        let endpoint = try YAMLDecoder().decode(HTTPEndpoint.self, from: yaml, userInfo: mockUserInfo())
 
         expect(endpoint.method) == .POST
         expect(endpoint.path) == "/abc"
@@ -73,7 +73,7 @@ class HTTPEndpointTests: XCTestCase {
 
     private func expectYML(file: FileString = #file, line: UInt = #line, _ yml: String, toFailWithTypeMissMatch expectedMessage: String) throws {
         do {
-            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
+            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: mockUserInfo())
             fail("Error not thrown", file: file, line: line)
         } catch {
             guard case DecodingError.typeMismatch(_, let context) = error else {
@@ -86,7 +86,7 @@ class HTTPEndpointTests: XCTestCase {
 
     private func expectYML(file: FileString = #file, line: UInt = #line, _ yml: String, toFailWithDataCorrupt expectedMessage: String) throws {
         do {
-            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: userInfo())
+            _ = try YAMLDecoder().decode(HTTPEndpoint.self, from: yml, userInfo: mockUserInfo())
             fail("Error not thrown", file: file, line: line)
         } catch {
             guard case DecodingError.dataCorrupted(let context) = error else {
@@ -95,14 +95,5 @@ class HTTPEndpointTests: XCTestCase {
             }
             expect(file: file, line: line, context.debugDescription) == expectedMessage
         }
-    }
-
-    private func userInfo() -> [CodingUserInfoKey: Any] {
-        let resourcesURL = Bundle.testBundle.resourceURL!
-        return [
-            ConfigLoader.userInfoVerboseKey: true,
-            ConfigLoader.userInfoDirectoryKey: resourcesURL,
-            ConfigLoader.userInfoFilenameKey: "HTTPEndpointTests",
-        ]
     }
 }

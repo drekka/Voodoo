@@ -8,13 +8,7 @@ import Hummingbird
 /// Router for GraphQL requests.
 public class GraphQLRouter {
 
-    private let verbose: Bool
-
     private var mockGraphQLResponses: [GraphQLEndpoint] = []
-
-    init(verbose: Bool) {
-        self.verbose = verbose
-    }
 
     func add(_ endpoint: GraphQLEndpoint) {
         mockGraphQLResponses.append(endpoint)
@@ -24,9 +18,9 @@ public class GraphQLRouter {
     ///
     /// This loops through the stored GraphQL endpoints to find a match and execute it for a response.
     public func execute(request: HBRequest) async throws -> HBResponse {
-        if self.verbose { print("💀 Intercepting GraphQL request") }
+        voodooLog("Intercepting GraphQL request")
         let httpRequest = request.asHTTPRequest
-        if let endpoint = try self.graphQLEndpoint(for: httpRequest) {
+        if let endpoint = try graphQLEndpoint(for: httpRequest) {
             return try await endpoint.response.hbResponse(for: httpRequest, inServerContext: request.application)
         }
         throw VoodooError.noGraphQLEndpoint
@@ -46,10 +40,10 @@ public class GraphQLRouter {
             // Then check using the endpoint selector to see if it matches the incoming request.
             switch endpoint.selector {
 
-            case .operations(let operations):
+            case let .operations(operations):
                 return operations.allSatisfy { graphQLRequest.operations.keys.contains($0) }
 
-            case .query(let graphQLSelector):
+            case let .query(graphQLSelector):
                 return graphQLSelector.matches(graphQLRequest)
             }
         }

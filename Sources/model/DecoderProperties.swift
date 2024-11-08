@@ -25,9 +25,4 @@ extension Decoder {
         }
         return filename
     }
-
-    /// The server's verbose setting.
-    var verbose: Bool {
-        userInfo[ConfigLoader.userInfoVerboseKey] as? Bool ?? false
-    }
 }

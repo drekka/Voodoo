@@ -30,8 +30,6 @@ public class VoodooServer {
     private let server: HBApplication
     private var graphQLRouter: GraphQLRouter!
 
-    let verbose: Bool
-
     /// Gets or sets the delay for all subsequent requests.
     public var delay: Double {
         get { server.delay }
@@ -58,8 +56,6 @@ public class VoodooServer {
     ///     - templatePath: The path to the template folder where template will be loaded from.
     ///     - templateExtension: The extension to use for templates. By default this is `json`.
     ///     - filePaths: A list of paths to directories where file will be searched for if there is no matching API endpoint found.
-    ///     - verbose: When true, tells Voodoo to print more information about it's setup and the incoming requests.
-    ///     - hummingbirdVerbose: Enables verbose mode on the internal Hummingbird server.
     ///     - endpoints: An optional list of endpoint to setup.
     public init(portRange: ClosedRange<Int> = 8080 ... 8090,
                 graphQLPath: String = "/graphql",
@@ -67,11 +63,9 @@ public class VoodooServer {
                 templatePath: URL? = nil,
                 templateExtension: String = "json",
                 filePaths: [URL]? = nil,
-                verbose: Bool = false,
-                hummingbirdVerbose: Bool = false,
-                @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws {
+                @EndpointBuilder endpoints: () -> [Endpoint] = { [] }) throws
+    {
 
-        self.verbose = verbose
         self.graphQLPath = graphQLPath
 
         // Setup middleware. middleware must be added before starting the server or
@@ -79,7 +73,7 @@ public class VoodooServer {
         // This is due to the way hummingbird wires middleware and the router together.
         // Also note the order is important.
         let middleware: [HBMiddleware] = [
-            RequestLogger(verbose: verbose),
+            RequestLogger(),
             NoResponseFoundMiddleware(),
         ]
 
@@ -105,8 +99,7 @@ public class VoodooServer {
                                                  useAnyAddr: useAnyAddr,
                                                  middleware: middleware,
                                                  mustacheEngine: mustacheEngine,
-                                                 filePaths: filePaths,
-                                                 hummingbirdVerbose: hummingbirdVerbose)
+                                                 filePaths: filePaths)
 
                 // Add any passed endpoints.
                 add(endpoints)
@@ -120,31 +113,31 @@ public class VoodooServer {
 
                 switch error {
                 case _ where error.isPortTaken:
-                    if verbose { print("💀 Port \(nextPort) busy, trying next port in range") }
+                    voodooLog(level: .debug, "Port \(nextPort) busy, trying next port in range")
                     continue
 
                 case let error as VoodooError:
-                    print("💀 Unexpected error: \(error.localizedDescription)")
+                    voodooLog("Unexpected error: \(error.localizedDescription)")
                     throw error
 
                 default:
-                    print("💀 Unexpected error: \(error.localizedDescription)")
+                    voodooLog("Unexpected error: \(error.localizedDescription)")
                     throw VoodooError.unexpectedError(error)
                 }
             }
         }
 
-        print("💀 Exhausted all ports in range \(portRange)")
+        voodooLog("Exhausted all ports in range \(portRange)")
         throw VoodooError.noPortAvailable(portRange.lowerBound, portRange.upperBound)
     }
 
     /// Called from the command line driver this instructs the server to keep listening for requests until requested to stop.
     public func wait() {
-        if verbose {
-            print(#"💀 CTRL+C or 'curl -X "POST" \#(url.absoluteString)\#(VoodooServer.adminShutdown)' to shutdown."#)
-            print(#"💀 Have a nice day 🙂"#)
+        if voodooLogLevel == .server {
+            voodooLog(level: .server, url.absoluteString)
         } else {
-            print(url.absoluteString)
+            voodooLog(#"CTRL+C or 'curl -X "POST" \#(url.absoluteString)\#(VoodooServer.adminShutdown)' to shutdown."#)
+            voodooLog(#"Have a nice day."#)
         }
         server.wait()
     }
@@ -233,7 +226,7 @@ public class VoodooServer {
     ///
     /// - parameter endpoint: The ``HTTPEndpoint`` to add.
     public func add(_ endpoint: HTTPEndpoint) {
-        if verbose { print("💀 Adding endpoint:\(endpoint.method) \(endpoint.path)") }
+        voodooLog("Adding endpoint:\(endpoint.method) \(endpoint.path)")
         server.router.add(endpoint)
     }
 
@@ -244,7 +237,7 @@ public class VoodooServer {
 
         // If the GraphQL router has not been setup then configure and install it.
         if graphQLRouter == nil {
-            graphQLRouter = GraphQLRouter(verbose: verbose)
+            graphQLRouter = GraphQLRouter()
             server.router.get(graphQLPath) { request in
                 try await self.graphQLRouter.execute(request: request)
             }
@@ -253,7 +246,7 @@ public class VoodooServer {
             }
         }
 
-        if verbose { print("💀 Adding GraphQL endpoint:\(endpoint.method) \(endpoint.selector)") }
+        voodooLog("Adding GraphQL endpoint:\(endpoint.method) \(endpoint.selector)")
         graphQLRouter.add(endpoint)
     }
 
@@ -261,7 +254,7 @@ public class VoodooServer {
 
     /// Stops the server.
     public func stop() {
-        if verbose { print("💀 Telling server to stop") }
+        voodooLog("Telling server to stop")
         server.stop()
     }
 }
@@ -273,13 +266,13 @@ extension HBApplication {
                       useAnyAddr: Bool,
                       middleware: [HBMiddleware],
                       mustacheEngine: HBMustacheLibrary,
-                      filePaths: [URL]?,
-                      hummingbirdVerbose: Bool) throws -> HBApplication {
+                      filePaths: [URL]?) throws -> HBApplication
+    {
 
         let configuration = HBApplication.Configuration(
             address: .hostname(useAnyAddr ? "0.0.0.0" : "127.0.0.1", port: port),
             serverName: "Voodoo API simulator",
-            logLevel: hummingbirdVerbose ? .trace : .critical
+            logLevel: voodooLogLevel == .internal ? .trace : .critical
         )
 
         let server = HBApplication(configuration: configuration)

@@ -9,11 +9,19 @@ extension Voodoo {
 
         static var configuration: CommandConfiguration {
             CommandConfiguration(
-                abstract: "Configures and starts the server",
+                abstract: "Configures and starts Voodoo",
                 discussion: """
-                This scans the port range (Default: 8080-8090) for the first free port. \
-                It then starts the server on that port. This allows for parallel testing. \
+                This starts by scanning for a free port within a specified range (8080-8090 by default). \
+                The server is then started on the free port and it's configuration loaded. \
                 The port range change be changed using the --port-range argument.
+
+                Note that if embedding this command in a script where you need to retrieve the server URL, \
+                add the '--log-level server' argument to ensure that Voodoo returns the URL to the script. \
+                Then use something like:
+
+                export SERVER_URL=`voodoo-server run --log-level server …`
+
+                To retrieve the URL so it can be passed to your test suites.
                 """
             )
         }
@@ -22,17 +30,9 @@ extension Voodoo {
         @OptionGroup var options: Voodoo.Options
 
         @Flag(
-            name: [.long],
-            help: """
-            Activates trace mode in the Hummingbird server for tracking errors.
-            """
-        )
-        var hummingbirdVerbose = false
-
-        @Flag(
             name: .customLong("use-any-addr"),
             help: """
-            By default the server uses 127.0.0.1 as it's IP address. However that will not work in containers suck as Docker where 0.0.0.0 is need. Enabling this \
+            By default the server uses 127.0.0.1 as it's IP address. However that will not work in containers such as Docker. Enabling this \
             flag sets the server's IP to the any address (0.0.0.0). However be aware that this may cause firewalls and other security software to flag the server.
             """
         )
@@ -56,7 +56,8 @@ extension Voodoo {
                    let lower = Int(String(value[lowerRange])),
                    let upperRange = Range(match.range(withName: "upper"), in: value),
                    let upper = Int(String(value[upperRange])),
-                   lower <= upper {
+                   lower <= upper
+                {
                     return lower ... upper
                 }
 
@@ -107,19 +108,20 @@ extension Voodoo {
 
         mutating func run() throws {
 
+            voodooLogLevel = options.logLevel
+
             do {
-                let endpoints = try ConfigLoader(verbose: options.verbose).load(from: config)
+                let endpoints = try ConfigLoader().load(from: config)
                 let server = try VoodooServer(portRange: portRange,
                                               useAnyAddr: useAnyAddr,
                                               templatePath: templatePath,
-                                              filePaths: filePaths,
-                                              verbose: options.verbose) { endpoints }
+                                              filePaths: filePaths) { endpoints }
                 server.wait()
-            } catch DecodingError.dataCorrupted(let context) {
-                print("💀 Decoding error: \(context.codingPath.map(\.stringValue)) - \(context.debugDescription) \(String(describing: context.underlyingError))")
+            } catch let DecodingError.dataCorrupted(context) {
+                voodooLog("Decoding error: \(context.codingPath.map(\.stringValue)) - \(context.debugDescription) \(String(describing: context.underlyingError))")
                 throw ExitCode.failure
             } catch {
-                print("💀 Error: \(error.localizedDescription)")
+                voodooLog("Error: \(error.localizedDescription)")
                 throw ExitCode.failure
             }
         }

@@ -69,7 +69,7 @@ struct JavascriptExecutor {
     private func redirectLogging() throws {
         // Update the log function to print log messages.
         let redirect = JXValue(newFunctionIn: jsCtx) { context, _, messages in
-            messages.forEach { print("Javascript: \($0)") }
+            messages.forEach { voodooLog("Javascript: \($0)") }
             return context.undefined()
         }
         try jsCtx.global["console"].setProperty("log", redirect)
@@ -171,7 +171,7 @@ extension Cache {
 
         // If the value is an array or dictionary we encode it to JSON and then to an object.
         if value as? [String: Any] != nil || value as? [Any] != nil {
-            return try context.json(try JSONSerialization.data(withJSONObject: value).string())
+            return try context.json(JSONSerialization.data(withJSONObject: value).string())
         }
 
         // If the value is encodable the we encode it into a JXValue.

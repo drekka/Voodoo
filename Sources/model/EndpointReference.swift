@@ -16,16 +16,15 @@ struct EndpointReference: Decodable, EndpointSource {
 
         // First we look for a string which we assume to be a file reference.
         if let fileReference = try? container.decode(String.self) {
-            if decoder.verbose { print("💀 \(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found potential file reference: \(fileReference)") }
-            let subLoader = ConfigLoader(verbose: decoder.verbose)
-            endpoints = try subLoader.load(from: decoder.configDirectory.appendingPathComponent(fileReference))
+            voodooLog(level: .debug, "\(decoder.userInfo[ConfigLoader.userInfoFilenameKey] as? String ?? ""), found potential file reference: \(fileReference)")
+            endpoints = try ConfigLoader().load(from: decoder.configDirectory.appendingPathComponent(fileReference))
             return
         }
 
         // Now try and decode one of the Endpoint types.
         let endpointTypes: [Endpoint.Type] = [HTTPEndpoint.self, GraphQLEndpoint.self]
         if let decodableEndpointType = try endpointTypes.first(where: { try $0.canDecode(from: decoder) }) {
-            endpoints = [try container.decode(decodableEndpointType)]
+            endpoints = try [container.decode(decodableEndpointType)]
             return
         }
 
