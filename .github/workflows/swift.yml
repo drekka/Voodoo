@@ -17,4 +17,4 @@ jobs:
     - uses: actions/checkout@v4
     # - uses: swift-actions/setup-swift@v1
     - run: swift test --enable-code-coverage # --show-code-coverage-path
-    - uses: maxep/spm-lcov-action@0.3.0
+    - uses: codecov/codecov-action@v3
