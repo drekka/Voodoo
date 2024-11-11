@@ -15,7 +15,5 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    # - uses: swift-actions/setup-swift@v1
-    - run: swift test --enable-code-coverage # --show-code-coverage-path
-    - name: Print to Log
-      uses: drekka/swift-coverage-action@main
+    - run: swift test --enable-code-coverage
+    - uses: drekka/swift-coverage-action@main
