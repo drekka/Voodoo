@@ -9,6 +9,15 @@
     }
   ],
   "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:",
+          "identifier" : "Voodoo",
+          "name" : "Voodoo"
+        }
+      ]
+    },
     "targetForVariableExpansion" : {
       "containerPath" : "container:",
       "identifier" : "Voodoo",

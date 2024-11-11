@@ -79,7 +79,7 @@ public class VoodooServer {
 
         // Validate the file paths.
         try filePaths?.forEach { // Directories to search for files when there is no matching endpoint.
-            if $0.fileSystemStatus != .isDirectory {
+            if $0.fileSystemStatus != .directory {
                 throw VoodooError.directoryNotExists($0.filePath)
             }
         }

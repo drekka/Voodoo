@@ -11,7 +11,7 @@ class URLExtensionsTests: XCTestCase {
 
     func testFileExistsWithValidFile() {
         let url = Bundle.testBundle.url(forResource: "files/Simple", withExtension: "json")!
-        expect(url.fileSystemStatus) == .isFile
+        expect(url.fileSystemStatus) == .file
     }
 
     func testFileExistsWithInValidFile() {
@@ -21,6 +21,6 @@ class URLExtensionsTests: XCTestCase {
 
     func testFileExistsWithDirectory() {
         let url = Bundle.testBundle.url(forResource: "files", withExtension: nil)!
-        expect(url.fileSystemStatus) == .isDirectory
+        expect(url.fileSystemStatus) == .directory
     }
 }

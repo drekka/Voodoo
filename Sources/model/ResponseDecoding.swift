@@ -37,7 +37,7 @@ extension Decoder {
         // Look for a script file reference.
         if let scriptFile = try container.decodeIfPresent(String.self, forKey: .javascriptFile) {
             let scriptFileURL = configDirectory.appendingPathComponent(scriptFile)
-            guard scriptFileURL.fileSystemStatus == .isFile else {
+            guard scriptFileURL.fileSystemStatus == .file else {
                 throw DecodingError.dataCorruptedError(forKey: .javascriptFile,
                                                        in: container,
                                                        debugDescription: "Unable to find referenced javascript file '\(scriptFileURL.filePath)'")

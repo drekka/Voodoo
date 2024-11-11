@@ -1,52 +1,56 @@
-import Foundation
-import Nimble
 @testable import Voodoo
-import XCTest
+import Testing
 
-class CacheTests: XCTestCase {
+@Suite("Cache tests")
+struct NewCacheTests {
 
-    private var cache: Cache!
+    private let cache: Cache
 
-    override func setUp() {
-        super.setUp()
+    init() {
         cache = Cache()
     }
 
-    func testDictionaryRepresentation() {
+    @Test("Converting to a dictionary", .tags(.cache))
+    func dictionaryRepresentation() {
         cache["abc"] = "def"
         let rep = cache.dictionaryRepresentation()
-        expect(rep.count) == 1
-        expect(rep["abc"] as? String) == "def"
+        #expect(rep.count == 1)
+        #expect(rep["abc"] as? String == "def")
     }
 
-    func testGetSetValue() {
+    @Test("Setting and getting a value via subscript", .tags(.cache))
+    func subscriptGetSet() {
         cache["abc"] = "def"
-        expect(self.cache["abc"]) == "def"
+        #expect(cache["abc"] == "def")
     }
 
-    func testGetSetValueViaDynamicName() {
+    @Test("Setting and getting a value via dunamic lookup", .tags(.cache))
+    func dynamicGetSet() {
         cache.abc = "def"
-        expect(self.cache.abc) == "def"
+        #expect(cache.abc == "def")
     }
 
-    func testSettingNilRemovesValue() {
+    @Test("Setting a nil removes entry", .tags(.cache))
+    func subscriptSettingNilRemovesValue() {
         cache["abc"] = "def"
-        expect(self.cache["abc"]) == "def"
+        #expect(cache["abc"] == "def")
         cache["abc"] = nil
-        expect(self.cache["abc"]).to(beNil())
+        #expect(cache["abc"] == nil)
     }
 
-    func testSettingNilRemovesValueViaDynamicName() {
+    @Test("Setting a nil via dynamic lookup removes entry", .tags(.cache))
+    func dynamicLookupSettingNilRemovesValue() {
         cache.abc = "def"
-        expect(self.cache.abc) == "def"
+        #expect(cache.abc == "def")
         cache.abc = nil
-        expect(self.cache.abc).to(beNil())
+        #expect(cache.abc == nil)
     }
 
-    func testRemove() {
+    @Test("Removing", .tags(.cache))
+    func remove() {
         cache.abc = "def"
-        expect(self.cache.abc) == "def"
+        #expect(cache.abc == "def")
         cache.remove("abc")
-        expect(self.cache.abc).to(beNil())
+        #expect(cache.abc == nil)
     }
 }

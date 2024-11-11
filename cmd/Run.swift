@@ -123,7 +123,7 @@ extension Voodoo {
         mutating func validate() throws {
             try filePaths.forEach {
                 if $0.fileSystemStatus == .notFound {
-                    throw ValidationError("File directory invalid: \($0.filePath)")
+                    throw ValidationError("File directory invalid: \($0)")
                 }
             }
         }
