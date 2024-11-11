@@ -18,4 +18,4 @@ jobs:
     # - uses: swift-actions/setup-swift@v1
     - run: swift test --enable-code-coverage # --show-code-coverage-path
     - name: Print to Log
-      uses: actions/swiftCoverageGitHubAction@main
+      uses: drekka/swift-coverage-action@main
