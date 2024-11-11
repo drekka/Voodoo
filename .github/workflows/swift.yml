@@ -16,4 +16,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     # - uses: swift-actions/setup-swift@v1
-    - run: swift test --enable-code-coverage
+    - run: swift test --enable-code-coverage --show-code-coverage-path
