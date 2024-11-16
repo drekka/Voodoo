@@ -19,3 +19,4 @@ jobs:
     - uses: drekka/swift-coverage-action@main
       with:
         show-all-files: true
+        sort-by-name: true
