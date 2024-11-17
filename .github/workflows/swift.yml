@@ -16,6 +16,6 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: swift test --enable-code-coverage
-    - uses: drekka/swift-coverage-action@main
+    - uses: drekka/swift-coverage-action@v1
       with:
         show-all-files: true
